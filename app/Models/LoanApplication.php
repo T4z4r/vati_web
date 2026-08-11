@@ -82,4 +82,9 @@ class LoanApplication extends Model
     {
         return $this->hasOne(LoanCancellation::class);
     }
+
+    public function utilizations()
+    {
+        return $this->hasMany(LoanUtilization::class);
+    }
 }

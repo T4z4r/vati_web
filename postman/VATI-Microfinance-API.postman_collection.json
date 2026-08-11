@@ -31,7 +31,7 @@
     "variable": [
         {
             "key": "base_url",
-            "value": "https://vati1.juno.co.tz/api",
+            "value": "https://vati1.juno.co.tz",
             "type": "string"
         },
         {
@@ -180,6 +180,126 @@
                                 "type": "text/javascript",
                                 "exec": [
                                     "if (pm.response.code === 200) pm.collectionVariables.unset('token');"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Onboarding (run after organization and product setup)",
+            "description": "Transactional onboarding APIs. First create the organization branch and a loan product in their respective folders. Then run Group Onboarding, Member Onboarding, and Loan Application Onboarding in that order. Successful responses save `group_id`, `member_id`, and `loan_application_id` for subsequent requests.",
+            "item": [
+                {
+                    "name": "Onboard Group",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/onboarding/groups",
+                        "description": "Creates an active lending group. Required: `branch_id`, unique `group_code`, `group_name`, `meeting_day`, and `location`. `loan_officer_id`, when supplied, must identify an active user assigned to the same branch. Requires the `create-groups` permission. Returns HTTP 201.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"group_code\": \"VATI-G-{{$timestamp}}\",\n  \"group_name\": \"Ubungo Market Group\",\n  \"meeting_day\": \"Tuesday\",\n  \"meeting_time\": \"09:30\",\n  \"region\": \"Dar es Salaam\",\n  \"district\": \"Ubungo\",\n  \"ward\": \"Ubungo\",\n  \"location\": \"Ubungo Market\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Group onboarded', function () { pm.response.to.have.status(201); });",
+                                    "const json = pm.response.json();",
+                                    "if (json.data && json.data.id) pm.collectionVariables.set('group_id', json.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Onboard Member",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/onboarding/members",
+                        "description": "Atomically registers a member in an active group, generates the VATI membership number, creates KYC, records the active membership history, and saves optional nominees. Required: `branch_id`, `group_id`, first/last name, and unique phone. The group must be active and belong to the branch. If `nominees` is supplied, allocations must total exactly 100%. Requires the `create-members` permission. Returns HTTP 201; validation failures return HTTP 422.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"group_id\": {{group_id}},\n  \"first_name\": \"Asha\",\n  \"middle_name\": \"Juma\",\n  \"last_name\": \"Musa\",\n  \"guardian_name\": \"Musa Juma\",\n  \"phone\": \"2557{{$randomInt}}\",\n  \"alternate_phone\": \"255713000001\",\n  \"national_id\": \"19900101-12345-00001-00\",\n  \"voter_id\": \"VOTER-10001\",\n  \"date_of_birth\": \"1990-01-01\",\n  \"gender\": \"Female\",\n  \"marital_status\": \"Married\",\n  \"occupation\": \"Trader\",\n  \"nationality\": \"Tanzanian\",\n  \"physical_address\": \"Ubungo, Dar es Salaam\",\n  \"region\": \"Dar es Salaam\",\n  \"district\": \"Ubungo\",\n  \"ward\": \"Ubungo\",\n  \"street\": \"Market Street\",\n  \"admission_date\": \"2026-08-11\",\n  \"passbook_issue_date\": \"2026-08-11\",\n  \"kyc\": {\n    \"mpesa_phone\": \"255713000001\",\n    \"bank_account_number\": \"0123456789\",\n    \"bank_account_name\": \"Asha Juma Musa\",\n    \"bank_name\": \"Example Bank\",\n    \"house_number\": \"UBG-101\",\n    \"police_station\": \"Ubungo Police Station\",\n    \"business_name\": \"Asha Produce\",\n    \"business_type\": \"Food trading\",\n    \"business_address\": \"Ubungo Market, Stall 12\",\n    \"household_monthly_income\": 800000,\n    \"household_monthly_expenses\": 300000,\n    \"number_of_dependants\": 2,\n    \"head_of_household\": \"Asha Juma Musa\",\n    \"house_ownership_status\": \"Tenant\",\n    \"house_roof_type\": \"Metal sheet\",\n    \"house_fence_type\": \"Concrete\"\n  },\n  \"nominees\": [\n    {\n      \"name\": \"Neema Musa\",\n      \"relationship\": \"Child\",\n      \"percentage\": 60\n    },\n    {\n      \"name\": \"Juma Musa\",\n      \"relationship\": \"Spouse\",\n      \"percentage\": 40\n    }\n  ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Member onboarded', function () { pm.response.to.have.status(201); });",
+                                    "const json = pm.response.json();",
+                                    "if (json.data && json.data.id) pm.collectionVariables.set('member_id', json.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Onboard Loan Application",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/onboarding/loan-applications",
+                        "description": "Creates a complete draft loan application in one transaction. The API derives branch and group from the member, verifies that the member/group/product are active, prevents a second open application, calculates affordability figures, and records every use-of-funds allocation. Required: member, product, application type, amount, duration, purpose, business summary, assessment, and utilization lines. Utilization allocations must total the requested amount. A member with no current loan uses `main`; a member with a pending, active, or overdue loan must use `refinance` or `top_up`. For those types provide `existing_loan_balance`, plus a positive `refinancing_amount` or `increment_amount` respectively. Requires `create-loan-applications`. Returns HTTP 201 and saves `loan_application_id`.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"member_id\": {{member_id}},\n  \"loan_product_id\": {{loan_product_id}},\n  \"application_type\": \"main\",\n  \"requested_amount\": 1000000,\n  \"duration_months\": 6,\n  \"existing_loan_balance\": 0,\n  \"refinancing_amount\": 0,\n  \"increment_amount\": 0,\n  \"loan_purpose\": \"Increase produce inventory and improve the market stall\",\n  \"business_summary\": \"Established food trader serving repeat customers at Ubungo Market.\",\n  \"assessment\": {\n    \"core_business_income\": 1200000,\n    \"other_income\": 100000,\n    \"business_expenses\": 450000,\n    \"household_expenses\": 300000,\n    \"existing_external_debt\": 0,\n    \"assessment_comment\": \"Cash flow verified against the member interview and business visit.\"\n  },\n  \"utilizations\": [\n    {\n      \"purpose\": \"Working capital\",\n      \"allocation_amount\": 800000,\n      \"current_asset_value\": 250000\n    },\n    {\n      \"purpose\": \"Equipment and stall improvements\",\n      \"allocation_amount\": 200000,\n      \"current_asset_value\": 0\n    }\n  ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Loan application onboarded', function () { pm.response.to.have.status(201); });",
+                                    "const json = pm.response.json();",
+                                    "if (json.data && json.data.id) pm.collectionVariables.set('loan_application_id', json.data.id);"
                                 ]
                             }
                         }

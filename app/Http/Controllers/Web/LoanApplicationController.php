@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Web;
 
 use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OnboardLoanApplicationRequest;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Services\ApplicationComplianceService;
 use App\Services\LoanApprovalService;
-use App\Services\NumberGeneratorService;
+use App\Services\OnboardingService;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,41 +26,37 @@ class LoanApplicationController extends Controller
 
     public function create(Request $request)
     {
-        return view('admin.loan-applications.create', ['members' => Member::with('group')->where('status', 'active')->whereHas('activeGroupMembership')->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('first_name')->get(), 'products' => LoanProduct::where('status', true)->orderBy('name')->get(), 'selectedMember' => $request->integer('member_id')]);
+        return view('admin.loan-applications.form', $this->formData($request, new LoanApplication, $request->integer('member_id')));
     }
 
-    public function store(Request $request, NumberGeneratorService $numbers)
+    public function store(OnboardLoanApplicationRequest $request, OnboardingService $service)
     {
-        $data = $request->validate(['member_id' => ['required', 'exists:members,id'], 'loan_product_id' => ['required', 'exists:loan_products,id'], 'application_type' => ['required', 'in:main,refinance,top_up'], 'requested_amount' => ['required', 'numeric', 'gt:0'], 'duration_months' => ['required', 'integer', 'gt:0'], 'loan_purpose' => ['nullable', 'string'], 'business_summary' => ['nullable', 'string'], 'core_business_income' => ['nullable', 'numeric', 'min:0'], 'other_income' => ['nullable', 'numeric', 'min:0'], 'business_expenses' => ['nullable', 'numeric', 'min:0'], 'household_expenses' => ['nullable', 'numeric', 'min:0']]);
         try {
-            $application = DB::transaction(function () use ($data, $request, $numbers) {
-                $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
-                $user = $request->user();
-                if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
-                    abort(403);
-                }
-                $product = LoanProduct::findOrFail($data['loan_product_id']);
-                if ($member->status !== 'active' || ! $member->group?->status || $member->activeGroupMembership?->group_id !== $member->group_id) {
-                    throw new DomainException('Member must have a valid active group membership.');
-                }
-                if ($data['requested_amount'] < $product->minimum_amount || $data['requested_amount'] > $product->maximum_amount) {
-                    throw new DomainException('Requested amount is outside the product limits.');
-                }
-                if ($data['duration_months'] < $product->minimum_duration_months || $data['duration_months'] > $product->maximum_duration_months) {
-                    throw new DomainException('Duration is outside the product limits.');
-                }
-                $application = LoanApplication::create(['application_number' => $numbers->application(), 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $member->group_id, 'branch_id' => $member->branch_id, 'application_type' => $data['application_type'], 'requested_amount' => $data['requested_amount'], 'duration_months' => $data['duration_months'], 'loan_purpose' => $data['loan_purpose'] ?? null, 'business_summary' => $data['business_summary'] ?? null, 'status' => 'draft', 'created_by' => $request->user()->id]);
-                $income = ($data['core_business_income'] ?? 0) + ($data['other_income'] ?? 0);
-                $expenses = ($data['business_expenses'] ?? 0) + ($data['household_expenses'] ?? 0);
-                $application->assessment()->create(['core_business_income' => $data['core_business_income'] ?? 0, 'other_income' => $data['other_income'] ?? 0, 'business_expenses' => $data['business_expenses'] ?? 0, 'household_expenses' => $data['household_expenses'] ?? 0, 'monthly_profit' => $income - ($data['business_expenses'] ?? 0), 'disposable_income' => $income - $expenses]);
-
-                return $application;
-            });
+            $application = $service->loanApplication($request->validated(), $request->user());
         } catch (DomainException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
 
         return redirect()->route('admin.loan-applications.show', $application)->with('success', 'Loan application created.');
+    }
+
+    public function edit(Request $request, LoanApplication $loanApplication)
+    {
+        abort_unless($loanApplication->status === ApplicationStatus::DRAFT, 409, 'Only draft applications can be edited.');
+        $loanApplication->load('assessment', 'utilizations');
+
+        return view('admin.loan-applications.form', $this->formData($request, $loanApplication, $loanApplication->member_id));
+    }
+
+    public function update(OnboardLoanApplicationRequest $request, LoanApplication $loanApplication, OnboardingService $service)
+    {
+        try {
+            $service->updateLoanApplication($loanApplication, $request->validated(), $request->user());
+        } catch (DomainException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.loan-applications.show', $loanApplication)->with('success', 'Draft loan application updated.');
     }
 
     public function show(LoanApplication $loanApplication)
@@ -136,5 +133,15 @@ class LoanApplicationController extends Controller
         $user = $request->user();
 
         return $user->hasAnyRole(['super_admin', 'head_office_admin']) ? ($request->integer('branch_id') ?: null) : $user->branch_id;
+    }
+
+    private function formData(Request $request, LoanApplication $application, int $selectedMember): array
+    {
+        return [
+            'application' => $application,
+            'members' => Member::with('group')->where('status', 'active')->whereHas('activeGroupMembership')->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('first_name')->get(),
+            'products' => LoanProduct::where('status', true)->orderBy('name')->get(),
+            'selectedMember' => $selectedMember,
+        ];
     }
 }

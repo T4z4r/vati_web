@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\LoanSettlementController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\MemberKycController;
 use App\Http\Controllers\Api\V1\MemberPassbookController;
+use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\SecurityAccountController;
@@ -32,6 +33,10 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('profile', [AuthController::class, 'profile']);
         Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:view-dashboard');
+
+        Route::post('onboarding/groups', [OnboardingController::class, 'group'])->middleware('permission:create-groups');
+        Route::post('onboarding/members', [OnboardingController::class, 'member'])->middleware('permission:create-members');
+        Route::post('onboarding/loan-applications', [OnboardingController::class, 'loanApplication'])->middleware('permission:create-loan-applications');
 
         Route::apiResource('regions', RegionController::class)->middleware('permission:manage-organization');
         Route::apiResource('areas', AreaController::class)->middleware('permission:manage-organization');

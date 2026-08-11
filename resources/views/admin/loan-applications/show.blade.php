@@ -12,6 +12,7 @@
     <div class="head-actions">
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
         @if($status === 'draft')
+            <a class="btn btn-secondary" href="{{ route('admin.loan-applications.edit', $application) }}">Edit draft</a>
             <form method="POST" action="{{ route('admin.loan-applications.submit', $application) }}">@csrf<button class="btn btn-primary">Submit for review</button></form>
         @endif
         @if($application->cancellation_deadline && !$application->cancellation && !$application->loan?->disbursement)

@@ -20,6 +20,8 @@ class MemberResource extends JsonResource
             'branch' => $this->whenLoaded('branch'),
             'group' => $this->whenLoaded('group'),
             'kyc' => $this->whenLoaded('kyc'),
+            'active_group_membership' => $this->whenLoaded('activeGroupMembership'),
+            'nominees' => $this->whenLoaded('nominees'),
             'status' => $this->status,
             'created_at' => $this->created_at,
         ];

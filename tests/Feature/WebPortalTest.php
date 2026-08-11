@@ -71,10 +71,16 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group');
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
 
-        $this->post('/admin/loan-applications', ['member_id' => $member->id, 'loan_product_id' => $this->product->id, 'application_type' => 'main', 'requested_amount' => 1000000, 'duration_months' => 6, 'core_business_income' => 500000, 'business_expenses' => 100000, 'household_expenses' => 100000])->assertRedirect();
+        $this->post('/admin/loan-applications', $this->applicationPayload($member))->assertRedirect();
         $this->assertDatabaseHas('loan_applications', ['member_id' => $member->id, 'group_id' => $this->group->id, 'branch_id' => $this->branch->id, 'status' => 'draft']);
         $application = $member->loanApplications()->firstOrFail();
         $this->get(route('admin.loan-applications.show', $application))->assertOk()->assertSee($application->application_number);
+        $updated = $this->applicationPayload($member);
+        $updated['requested_amount'] = 1200000;
+        $updated['utilizations'] = [['purpose' => 'Working capital', 'allocation_amount' => 1200000, 'current_asset_value' => 0]];
+        $this->put(route('admin.loan-applications.update', $application), $updated)->assertRedirect(route('admin.loan-applications.show', $application));
+        $this->assertDatabaseHas('loan_applications', ['id' => $application->id, 'requested_amount' => 1200000]);
+        $this->assertDatabaseHas('loan_utilizations', ['loan_application_id' => $application->id, 'allocation_amount' => 1200000]);
     }
 
     public function test_branch_staff_cannot_open_head_office_administration(): void
@@ -91,7 +97,7 @@ class WebPortalTest extends TestCase
         $firstWitness = $this->member('Witness One', '255713000002');
         $secondWitness = $this->member('Witness Two', '255713000003');
 
-        $this->post('/admin/loan-applications', ['member_id' => $borrower->id, 'loan_product_id' => $this->product->id, 'application_type' => 'main', 'requested_amount' => 1000000, 'duration_months' => 6])->assertRedirect();
+        $this->post('/admin/loan-applications', $this->applicationPayload($borrower))->assertRedirect();
         $application = $borrower->loanApplications()->firstOrFail();
         $this->makeCompliant($application);
         $this->post(route('admin.loan-applications.submit', $application))->assertRedirect();
@@ -128,5 +134,23 @@ class WebPortalTest extends TestCase
         foreach (['member_identity', 'guarantor_identity'] as $type) {
             $application->documents()->create(['document_type' => $type, 'file_path' => "tests/{$type}.pdf", 'is_required' => true, 'verification_status' => 'verified', 'uploaded_by' => $this->admin->id, 'verified_by' => $this->admin->id, 'verified_at' => now()]);
         }
+    }
+
+    private function applicationPayload(Member $member): array
+    {
+        return [
+            'member_id' => $member->id,
+            'loan_product_id' => $this->product->id,
+            'application_type' => 'main',
+            'requested_amount' => 1000000,
+            'duration_months' => 6,
+            'existing_loan_balance' => 0,
+            'refinancing_amount' => 0,
+            'increment_amount' => 0,
+            'loan_purpose' => 'Working capital expansion',
+            'business_summary' => 'Established group-based trading business.',
+            'assessment' => ['core_business_income' => 500000, 'other_income' => 0, 'business_expenses' => 100000, 'household_expenses' => 100000, 'existing_external_debt' => 0],
+            'utilizations' => [['purpose' => 'Working capital', 'allocation_amount' => 1000000, 'current_asset_value' => 0]],
+        ];
     }
 }
