@@ -15,6 +15,8 @@ Laravel 12 REST backend for VATI Microfinance Limited. MySQL is the production d
 - Member security accounts and immutable security transactions
 - Loan settlement, digital passbook, dashboard/PAR metrics, branch isolation, pagination, and search
 - Schema support for guarantors, documents, family/assets/nominees, refinancing, group meetings/collections, payment provider callbacks, offline sync/device registration, cashbooks, and audit logs
+- Responsive Laravel Blade administration portal using the VATI green/gold visual system
+- Browser workflows for organization setup, staff accounts, groups, member/KYC registration, loan products, applications, witnesses, approvals, disbursement, repayments, reversals, security accounts, settlements, and portfolio reports
 
 Payment-provider credentials and production-specific fee/interest rules are intentionally not hardcoded. Confirm the exact VATI rules before production use.
 
@@ -51,6 +53,8 @@ php artisan serve
 ```
 
 The API base URL is `/api/v1`. Log in at `POST /api/v1/auth/login` and send the returned token as `Authorization: Bearer <token>`.
+
+The web administration portal is available at `/login`. It uses secure Laravel session authentication and applies the same role, permission, branch-access, and transactional business rules as the API.
 
 Member registration requires both `branch_id` and an active `group_id` belonging to that branch. Loan-application clients submit `member_id`, product, amount, and duration; the backend derives `branch_id` and `group_id` from the member’s active membership.
 

@@ -1,0 +1,1461 @@
+{
+  "info": {
+    "_postman_id": "e76df713-1cda-4a85-a77d-f0c4a9a49f54",
+    "name": "VATI Microfinance API",
+    "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nThe collection automatically stores IDs returned by create/approve/payment requests. Validation errors use HTTP 422; unauthenticated requests use HTTP 401.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response is not a server error', function () {",
+          "    pm.expect(pm.response.code).to.be.below(500);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "region_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "area_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "branch_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "group_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "member_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "witness_member_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "witness_member_2_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loan_product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loan_application_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loan_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login",
+            "description": "Authenticates a user and saves the Sanctum Bearer token to the collection.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"device_name\": \"Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeded', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) pm.collectionVariables.set('token', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/auth/logout",
+            "description": "Revokes the current access token."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) pm.collectionVariables.unset('token');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/dashboard"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organization Structure",
+      "item": [
+        {
+          "name": "List Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/regions?search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Region",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/regions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"code\": \"DSM\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"region_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/regions/{{region_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Region",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/regions/{{region_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"code\": \"DSM\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Areas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/areas?region_id={{region_id}}&search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Area",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/areas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"code\": \"KIN\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"area_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Area",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/areas/{{area_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Area",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/areas/{{area_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"code\": \"KIN\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/branches?area_id={{area_id}}&search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/branches",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_code\": \"KIN-001\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"branch_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Branch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/branches/{{branch_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Branch",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/branches/{{branch_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_code\": \"KIN-001\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users and Access",
+      "item": [
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/roles"
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/users?branch_id={{branch_id}}&search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Loan Officer\",\n  \"email\": \"loan.officer@vati.test\",\n  \"password\": \"Password123!\",\n  \"branch_id\": \"{{branch_id}}\",\n  \"status\": true,\n  \"roles\": [\n    \"loan_officer\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"user_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/users/{{user_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/users/{{user_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Loan Officer\",\n  \"email\": \"loan.officer@vati.test\",\n  \"branch_id\": \"{{branch_id}}\",\n  \"status\": true,\n  \"roles\": [\n    \"loan_officer\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "List Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups?branch_id={{branch_id}}&search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/groups",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_code\": \"GRP-POSTMAN-001\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"group_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Group",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_code\": \"GRP-POSTMAN-001\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Group Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/dashboard"
+          },
+          "response": []
+        },
+        {
+          "name": "Group Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/members?status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Group Loan Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/applications?status=&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Group Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/loans?status=&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Group Meetings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/meetings?from=&to=&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Group Collections",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}/collections?from=&to=&per_page=20"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Members and KYC",
+      "item": [
+        {
+          "name": "List Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/members?branch_id={{branch_id}}&group_id={{group_id}}&search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Borrower Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_id\": \"{{group_id}}\",\n  \"first_name\": \"Asha\",\n  \"middle_name\": \"Juma\",\n  \"last_name\": \"Mashauri\",\n  \"gender\": \"female\",\n  \"date_of_birth\": \"1990-04-20\",\n  \"phone\": \"+255710000001\",\n  \"national_id\": \"19900420-00001-00001-01\",\n  \"physical_address\": \"Kinondoni, Dar es Salaam\",\n  \"kyc\": {\n    \"household_monthly_income\": 850000,\n    \"household_monthly_expenses\": 350000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"member_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Witness Member 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_id\": \"{{group_id}}\",\n  \"first_name\": \"Neema\",\n  \"last_name\": \"Joseph\",\n  \"gender\": \"female\",\n  \"phone\": \"+255710000002\",\n  \"national_id\": \"19920312-00002-00002-02\",\n  \"physical_address\": \"Kinondoni, Dar es Salaam\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"witness_member_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Witness Member 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_id\": \"{{group_id}}\",\n  \"first_name\": \"Rehema\",\n  \"last_name\": \"Peter\",\n  \"gender\": \"female\",\n  \"phone\": \"+255710000003\",\n  \"national_id\": \"19881105-00003-00003-03\",\n  \"physical_address\": \"Kinondoni, Dar es Salaam\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"witness_member_2_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Member",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"{{group_id}}\",\n  \"first_name\": \"Asha\",\n  \"middle_name\": \"Juma\",\n  \"last_name\": \"Mashauri\",\n  \"phone\": \"+255710000001\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Member KYC",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}/kyc",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mpesa_phone\": \"+255710000001\",\n  \"bank_name\": \"CRDB Bank\",\n  \"bank_account_name\": \"Asha Juma Mashauri\",\n  \"bank_account_number\": \"0150123456789\",\n  \"business_name\": \"Asha Retail Shop\",\n  \"business_type\": \"Retail shop\",\n  \"business_address\": \"Kinondoni, Dar es Salaam\",\n  \"household_monthly_income\": 850000,\n  \"household_monthly_expenses\": 350000,\n  \"number_of_dependants\": 2,\n  \"head_of_household\": \"Asha Juma Mashauri\",\n  \"house_ownership_status\": \"rented\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Loan Products and Calculator",
+      "item": [
+        {
+          "name": "List Loan Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-products?search=&status=active&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Loan Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"code\": \"VATI-GROUP-POSTMAN\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"loan_product_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Loan Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-products/{{loan_product_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Loan Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-products/{{loan_product_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"code\": \"VATI-GROUP-POSTMAN\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-calculator",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"amount\": 1000000,\n  \"duration_months\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Loan Applications and Witnesses",
+      "item": [
+        {
+          "name": "List Loan Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-applications?branch_id={{branch_id}}&group_id={{group_id}}&member_id={{member_id}}&status=&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Loan Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_id\": \"{{member_id}}\",\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"application_type\": \"main\",\n  \"requested_amount\": 1000000,\n  \"duration_months\": 12,\n  \"loan_purpose\": \"Purchase additional retail stock and equipment\",\n  \"business_summary\": \"Established neighborhood retail shop\",\n  \"assessment\": {\n    \"core_business_income\": 850000,\n    \"other_income\": 100000,\n    \"business_expenses\": 250000,\n    \"household_expenses\": 100000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"loan_application_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Loan Application",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Draft Application",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_id\": \"{{member_id}}\",\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"application_type\": \"main\",\n  \"requested_amount\": 1000000,\n  \"duration_months\": 12,\n  \"loan_purpose\": \"Purchase additional retail stock and equipment\",\n  \"business_summary\": \"Established neighborhood retail shop\",\n  \"assessment\": {\n    \"core_business_income\": 850000,\n    \"other_income\": 100000,\n    \"business_expenses\": 250000,\n    \"household_expenses\": 100000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Application Witnesses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/group-witnesses"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Witness 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/group-witnesses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_id\": \"{{witness_member_id}}\",\n  \"signature_path\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Witness 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/group-witnesses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_id\": \"{{witness_member_2_id}}\",\n  \"signature_path\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Application",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/submit"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/approve",
+            "description": "Approves a submitted application and saves the generated loan ID.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Approved after successful group and affordability review\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const loanId = json.data && json.data.loan && json.data.loan.id;",
+                  "if (loanId) pm.collectionVariables.set('loan_id', loanId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/reject",
+            "description": "Alternative to approval. Use only on a submitted application that should be rejected.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Rejected after credit assessment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Loans, Disbursement and Collections",
+      "item": [
+        {
+          "name": "List Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loans?branch_id={{branch_id}}&group_id={{group_id}}&member_id={{member_id}}&status=&per_page=20"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Loan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loans/{{loan_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Disburse Loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loans/{{loan_id}}/disburse",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"mpesa\",\n  \"recipient_number\": \"+255710000001\",\n  \"reference_number\": \"POSTMAN-DISB-{{$timestamp}}\",\n  \"disbursed_at\": \"{{$isoTimestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Loan Repayment Schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loans/{{loan_id}}/schedule"
+          },
+          "response": []
+        },
+        {
+          "name": "Record Loan Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loans/{{loan_id}}/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100000,\n  \"payment_method\": \"mpesa\",\n  \"reference_number\": \"POSTMAN-PAY-{{$timestamp}}\",\n  \"paid_at\": \"{{$isoTimestamp}}\",\n  \"idempotency_key\": \"postman-{{$guid}}\",\n  \"remarks\": \"Installment received through Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data.id) pm.collectionVariables.set(\"payment_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Settle Loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/loans/{{loan_id}}/settle",
+            "description": "Set `cash_payment` to the current settlement amount returned by the loan endpoint.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settlement_date\": \"{{$isoTimestamp}}\",\n  \"interest_waived\": 0,\n  \"security_offset\": 0,\n  \"cash_payment\": 1000000,\n  \"security_refund\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reverse Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/{{payment_id}}/reverse",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Payment recorded against the wrong transaction reference\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Passbook and Member Security",
+      "item": [
+        {
+          "name": "Member Passbook",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}/passbook?from=&to=&per_page=50"
+          },
+          "response": []
+        },
+        {
+          "name": "Member Security Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}/security"
+          },
+          "response": []
+        },
+        {
+          "name": "Record Security Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}/security-transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_type\": \"deposit\",\n  \"amount\": 50000,\n  \"transaction_date\": \"{{$isoTimestamp}}\",\n  \"remarks\": \"Member security contribution\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Security Withdrawal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}/security-transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_type\": \"withdrawal\",\n  \"amount\": 10000,\n  \"transaction_date\": \"{{$isoTimestamp}}\",\n  \"remarks\": \"Authorized security withdrawal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Destructive Cleanup",
+      "description": "Run these manually and in reverse dependency order only when you want to remove the sample records.",
+      "item": [
+        {
+          "name": "[Destructive] Delete Draft Application",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Loan Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/loan-products/{{loan_product_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/members/{{member_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Group",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/groups/{{group_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/users/{{user_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/branches/{{branch_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Area",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/areas/{{area_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "[Destructive] Delete Region",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/regions/{{region_id}}"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

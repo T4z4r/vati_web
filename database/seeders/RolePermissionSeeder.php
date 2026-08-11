@@ -33,6 +33,9 @@ class RolePermissionSeeder extends Seeder
         Role::findByName('super_admin')->syncPermissions(Permission::all());
         Role::findByName('head_office_admin')->syncPermissions(Permission::all());
         Role::findByName('branch_manager')->syncPermissions(Permission::whereNotIn('name', ['manage-organization', 'manage-users', 'view-audit-logs', 'reverse-payments'])->get());
+        Role::findByName('regional_manager')->syncPermissions(Role::findByName('branch_manager')->permissions);
+        Role::findByName('area_manager')->syncPermissions(Role::findByName('branch_manager')->permissions);
+        Role::findByName('assistant_branch_manager')->syncPermissions(Role::findByName('branch_manager')->permissions->whereNotIn('name', ['approve-loan-applications', 'disburse-loans', 'settle-loans']));
         Role::findByName('loan_officer')->syncPermissions(['view-dashboard', 'view-members', 'create-members', 'edit-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'manage-group-witnesses', 'view-loan-products', 'view-loan-applications', 'create-loan-applications', 'view-loans', 'view-payments', 'collect-payments', 'view-security']);
         Role::findByName('cashier')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'view-security', 'manage-security']);
         Role::findByName('finance_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security', 'settle-loans', 'view-reports', 'export-reports']);

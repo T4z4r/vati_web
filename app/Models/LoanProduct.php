@@ -21,4 +21,9 @@ class LoanProduct extends Model
             'required_group_witnesses' => 'integer',
         ];
     }
+
+    public function applications()
+    {
+        return $this->hasMany(LoanApplication::class);
+    }
 }
