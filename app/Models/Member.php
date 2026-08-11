@@ -56,4 +56,14 @@ class Member extends Model
     {
         return $this->hasOne(MemberSecurityAccount::class);
     }
+
+    public function nominees()
+    {
+        return $this->hasMany(MemberNominee::class);
+    }
+
+    public function passbookReplacements()
+    {
+        return $this->hasMany(PassbookReplacement::class);
+    }
 }

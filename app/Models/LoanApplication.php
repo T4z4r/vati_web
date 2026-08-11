@@ -15,7 +15,12 @@ class LoanApplication extends Model
 
     protected function casts(): array
     {
-        return ['status' => ApplicationStatus::class, 'submitted_at' => 'datetime'];
+        return [
+            'status' => ApplicationStatus::class,
+            'submitted_at' => 'datetime',
+            'consented_at' => 'datetime',
+            'cancellation_deadline' => 'datetime',
+        ];
     }
 
     public function member()
@@ -56,5 +61,25 @@ class LoanApplication extends Model
     public function groupWitnesses()
     {
         return $this->hasMany(LoanGroupWitness::class);
+    }
+
+    public function term()
+    {
+        return $this->belongsTo(LoanTerm::class, 'loan_term_id');
+    }
+
+    public function guarantors()
+    {
+        return $this->hasMany(LoanGuarantor::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(LoanDocument::class);
+    }
+
+    public function cancellation()
+    {
+        return $this->hasOne(LoanCancellation::class);
     }
 }

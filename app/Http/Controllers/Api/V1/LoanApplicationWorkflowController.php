@@ -6,13 +6,15 @@ use App\Enums\ApplicationStatus;
 use App\Http\Resources\LoanApplicationResource;
 use App\Models\LoanApplication;
 use App\Services\LoanApprovalService;
+use App\Services\ApplicationComplianceService;
 use Illuminate\Http\Request;
 
 class LoanApplicationWorkflowController extends ApiController
 {
-    public function submit(Request $request, LoanApplication $loanApplication)
+    public function submit(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $compliance)
     {
         abort_unless($loanApplication->status === ApplicationStatus::DRAFT, 409, 'Only draft applications can be submitted.');
+        $compliance->assertReadyForSubmission($loanApplication);
         $loanApplication->update(['status' => ApplicationStatus::SUBMITTED, 'submitted_at' => now()]);
         activity()->causedBy($request->user())->performedOn($loanApplication)->log('Loan application submitted');
 

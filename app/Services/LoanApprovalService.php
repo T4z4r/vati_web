@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class LoanApprovalService
 {
-    public function __construct(private LoanCalculatorService $calculator, private NumberGeneratorService $numbers) {}
+    public function __construct(private LoanCalculatorService $calculator, private NumberGeneratorService $numbers, private ApplicationComplianceService $compliance) {}
 
     public function decide(LoanApplication $application, User $user, string $decision, ?string $remarks = null): LoanApplication
     {
@@ -26,6 +26,7 @@ class LoanApprovalService
 
             $to = $decision === 'approved' ? ApplicationStatus::APPROVED : ApplicationStatus::REJECTED;
             if ($to === ApplicationStatus::APPROVED) {
+                $this->compliance->assertReadyForApproval($application);
                 $application->loadMissing(['member.activeGroupMembership', 'group', 'product']);
                 if ($application->member->status !== 'active' || ! $application->group->status || $application->member->activeGroupMembership?->group_id !== $application->group_id) {
                     throw new DomainException('The borrower must still be an active member of the originating group.');

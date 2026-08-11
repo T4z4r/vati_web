@@ -6,4 +6,19 @@
 <div class="card"><div class="card-head"><h2>Loan history</h2></div><div class="table-wrap"><table><thead><tr><th>Loan</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead><tbody>@forelse($loans as $loan)<tr><td><a class="table-link" href="{{ route('admin.loans.show',$loan) }}">{{ $loan->loan_number }}</a></td><td>{{ $loan->product->name }}</td><td class="money">TZS {{ number_format($loan->total_balance) }}</td><td><span class="badge {{ $loan->status->value }}">{{ $loan->status->value }}</span></td></tr>@empty<tr><td colspan="4" class="empty">No loans yet.</td></tr>@endforelse</tbody></table></div></div></div>
 <div><div class="card"><div class="card-head"><h2>KYC & business information</h2><span class="badge {{ $member->kyc?'active':'pending' }}">{{ $member->kyc?'Captured':'Incomplete' }}</span></div><form class="card-body" method="POST" action="{{ route('admin.members.kyc.update',$member) }}">@csrf @method('PUT')<div class="form-grid"><label>M-Pesa phone<input name="mpesa_phone" value="{{ $member->kyc?->mpesa_phone }}"></label><label>House number<input name="house_number" value="{{ $member->kyc?->house_number }}"></label><label>Business name<input name="business_name" value="{{ $member->kyc?->business_name }}"></label><label>Business type<input name="business_type" value="{{ $member->kyc?->business_type }}"></label><label>Monthly income<input type="number" name="household_monthly_income" value="{{ $member->kyc?->household_monthly_income }}"></label><label>Monthly expenses<input type="number" name="household_monthly_expenses" value="{{ $member->kyc?->household_monthly_expenses }}"></label><label>Dependants<input type="number" name="number_of_dependants" value="{{ $member->kyc?->number_of_dependants }}"></label><label>House ownership<input name="house_ownership_status" value="{{ $member->kyc?->house_ownership_status }}"></label><label class="full">Business address<textarea name="business_address">{{ $member->kyc?->business_address }}</textarea></label></div><div class="form-actions"><button class="btn btn-primary">Save KYC</button></div></form></div><br>
 <div class="card"><div class="card-head"><h2>Security account</h2><strong class="money">TZS {{ number_format($member->securityAccount?->balance ?? 0) }}</strong></div><form class="card-body" method="POST" action="{{ route('admin.security.store',$member) }}">@csrf<div class="form-grid"><label>Transaction<select name="transaction_type"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option><option value="refund">Refund</option><option value="adjustment">Adjustment</option></select></label><label>Amount<input type="number" name="amount" min="1" required></label><label class="full">Remarks<input name="remarks"></label></div><div class="form-actions"><button class="btn btn-gold">Post transaction</button></div></form></div></div></div>
+<br>
+@can('replace-passbooks')
+<div class="card">
+    <div class="card-head"><h2>Duplicate passbook</h2><span>TZS 1,000 required charge</span></div>
+    <form class="card-body" method="POST" action="{{ route('admin.members.passbook-replacements.store', $member) }}">
+        @csrf
+        <div class="form-grid">
+            <label>Reason<select name="reason"><option value="lost">Lost</option><option value="damaged">Damaged</option></select></label>
+            <label>Payment reference<input name="payment_reference" required></label>
+            <label class="full">Remarks<input name="remarks"></label>
+        </div>
+        <div class="form-actions"><button class="btn btn-gold">Record payment and issue duplicate</button></div>
+    </form>
+</div>
+@endcan
 @endsection

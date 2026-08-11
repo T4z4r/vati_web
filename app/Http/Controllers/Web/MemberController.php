@@ -48,7 +48,7 @@ class MemberController extends Controller
 
     public function show(Member $member)
     {
-        return view('admin.members.show', ['member' => $member->load(['branch', 'group', 'kyc', 'activeGroupMembership', 'securityAccount.transactions']), 'applications' => $member->loanApplications()->with('product')->latest()->get(), 'loans' => $member->loans()->with('product')->latest()->get()]);
+        return view('admin.members.show', ['member' => $member->load(['branch', 'group', 'kyc', 'activeGroupMembership', 'securityAccount.transactions', 'passbookReplacements']), 'applications' => $member->loanApplications()->with('product')->latest()->get(), 'loans' => $member->loans()->with('product')->latest()->get()]);
     }
 
     public function updateKyc(Request $request, Member $member)

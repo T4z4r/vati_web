@@ -48,7 +48,7 @@ class LoanApplicationController extends ApiController
 
     public function show(LoanApplication $loanApplication)
     {
-        return response()->json(['success' => true, 'data' => new LoanApplicationResource($loanApplication->load('member', 'product', 'assessment', 'approvals.user', 'loan'))]);
+        return response()->json(['success' => true, 'data' => new LoanApplicationResource($loanApplication->load('member.nominees', 'product', 'assessment', 'approvals.user', 'loan', 'term', 'guarantors', 'documents', 'cancellation'))]);
     }
 
     public function update(StoreLoanApplicationRequest $request, LoanApplication $loanApplication)

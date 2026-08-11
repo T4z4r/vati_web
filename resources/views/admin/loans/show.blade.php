@@ -10,4 +10,37 @@
 <div>@if(in_array($status,['active','overdue']))<div class="card"><div class="card-head"><h2>Post repayment</h2></div><form class="card-body" method="POST" action="{{ route('admin.payments.store',$loan) }}">@csrf<div class="form-grid"><label>Amount (TZS)<input type="number" name="amount" min="1" max="{{ $loan->total_balance }}" required></label><label>Method<select name="payment_method"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank transfer</option></select></label><label>Reference<input name="reference_number"></label><label>Paid at<input type="datetime-local" name="paid_at" value="{{ now()->format('Y-m-d\TH:i') }}"></label><label class="full">Remarks<input name="remarks"></label></div><div class="form-actions"><button class="btn btn-gold">Post repayment</button></div></form></div><br>
 <div class="card"><div class="card-head"><h2>Early settlement</h2></div><form class="card-body" method="POST" action="{{ route('admin.loans.settle',$loan) }}">@csrf<p class="muted">The combined cash, security offset, and interest waiver must exactly clear TZS {{ number_format($loan->total_balance) }}.</p><div class="form-grid"><label>Cash payment<input type="number" name="cash_payment" min="0" value="{{ $loan->total_balance }}"></label><label>Security offset<input type="number" name="security_offset" min="0" value="0"></label><label>Interest waived<input type="number" name="interest_waived" min="0" max="{{ $loan->interest_balance }}" value="0"></label><label>Security refund<input type="number" name="security_refund" min="0" value="0"></label></div><div class="form-actions"><button class="btn btn-danger" data-confirm="Settle and close this loan?">Settle loan</button></div></form></div>@endif
 <br><div class="card"><div class="card-head"><h2>Loan details</h2></div><div class="card-body detail-grid" style="grid-template-columns:1fr 1fr"><div class="detail"><small>Disbursed</small><strong>{{ $loan->disbursement_date?->format('d M Y')??'—' }}</strong></div><div class="detail"><small>Maturity</small><strong>{{ $loan->maturity_date?->format('d M Y')??'—' }}</strong></div><div class="detail"><small>Principal balance</small><strong>TZS {{ number_format($loan->principal_balance) }}</strong></div><div class="detail"><small>Interest balance</small><strong>TZS {{ number_format($loan->interest_balance) }}</strong></div></div></div></div></div>
+<br>
+@if(in_array($status, ['active', 'overdue']))
+@can('issue-default-notices')
+<div class="card">
+    <div class="card-head"><h2>Fourteen-day default notice</h2><span>{{ $loan->defaultNotices->count() }} issued</span></div>
+    <form class="card-body" method="POST" action="{{ route('admin.loans.default-notices.store', $loan) }}">
+        @csrf
+        <div class="form-grid">
+            <label>Delivery method<select name="delivery_method"><option value="hand">Hand delivery</option><option value="sms">SMS</option><option value="email">Email</option><option value="registered_mail">Registered mail</option></select></label>
+            <label>Delivery reference<input name="delivery_reference"></label>
+        </div>
+        <div class="form-actions"><button class="btn btn-danger" data-confirm="Issue a formal 14-day default notice?">Issue notice</button></div>
+    </form>
+</div>
+@endcan
+@endif
+
+@if($status === 'settled')
+<div class="card">
+    <div class="card-head"><h2>Loan-clearance authorization</h2><span>{{ $loan->clearance?->status ?? 'pending' }}</span></div>
+    @if($loan->clearance?->status === 'authorized')
+        <div class="card-body"><p>This member has no debts or dues left with VATI, and VATI has no loan dues outstanding to the member.</p><p class="muted">Authorized {{ $loan->clearance->authorized_at?->format('d M Y H:i') }}</p></div>
+    @else
+        @can('authorize-loan-clearances')
+        <form class="card-body" method="POST" enctype="multipart/form-data" action="{{ route('admin.loans.clearance.store', $loan) }}">
+            @csrf
+            <div class="form-grid"><label>Branch-manager signature<input type="file" name="manager_signature" accept="image/*" required></label><label>Comments<input name="comments"></label></div>
+            <div class="form-actions"><button class="btn btn-primary">Authorize loan clearance</button></div>
+        </form>
+        @endcan
+    @endif
+</div>
+@endif
 @endsection

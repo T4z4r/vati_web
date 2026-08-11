@@ -62,4 +62,19 @@ class Loan extends Model
     {
         return $this->hasOne(LoanDisbursement::class);
     }
+
+    public function defaultNotices()
+    {
+        return $this->hasMany(LoanDefaultNotice::class);
+    }
+
+    public function clearance()
+    {
+        return $this->hasOne(LoanClearance::class);
+    }
+
+    public function settlement()
+    {
+        return $this->hasOne(LoanSettlement::class);
+    }
 }

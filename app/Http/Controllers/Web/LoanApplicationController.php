@@ -8,6 +8,7 @@ use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Services\LoanApprovalService;
+use App\Services\ApplicationComplianceService;
 use App\Services\NumberGeneratorService;
 use DomainException;
 use Illuminate\Http\Request;
@@ -63,18 +64,24 @@ class LoanApplicationController extends Controller
 
     public function show(LoanApplication $loanApplication)
     {
-        $loanApplication->load(['member.kyc', 'product', 'group', 'assessment', 'approvals.user', 'groupWitnesses.member', 'loan']);
+        $loanApplication->load(['member.kyc', 'member.nominees', 'product', 'group', 'assessment', 'approvals.user', 'groupWitnesses.member', 'loan', 'term', 'guarantors', 'documents', 'cancellation']);
         $used = $loanApplication->groupWitnesses->pluck('member_id')->push($loanApplication->member_id);
         $eligible = $loanApplication->group->members()->where('status', 'active')->whereNotIn('id', $used)->whereHas('activeGroupMembership', fn ($q) => $q->where('group_id', $loanApplication->group_id))->orderBy('first_name')->get();
 
         return view('admin.loan-applications.show', ['application' => $loanApplication, 'eligibleWitnesses' => $eligible]);
     }
 
-    public function submit(LoanApplication $loanApplication)
+    public function submit(LoanApplication $loanApplication, ApplicationComplianceService $compliance)
     {
         if ($loanApplication->status !== ApplicationStatus::DRAFT) {
             return back()->with('error', 'Only draft applications can be submitted.');
-        }$loanApplication->update(['status' => ApplicationStatus::SUBMITTED, 'submitted_at' => now()]);
+        }
+        try {
+            $compliance->assertReadyForSubmission($loanApplication);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+        $loanApplication->update(['status' => ApplicationStatus::SUBMITTED, 'submitted_at' => now()]);
 
         return back()->with('success', 'Application submitted for review.');
     }

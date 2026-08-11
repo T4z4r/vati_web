@@ -22,6 +22,12 @@ class DisbursementService
             if ($loan->status !== LoanStatus::PENDING_DISBURSEMENT || $loan->application->status !== ApplicationStatus::APPROVED) {
                 throw new DomainException('Only an approved, pending loan can be disbursed.');
             }
+            if (! $loan->application->cancellation_deadline || now()->isBefore($loan->application->cancellation_deadline)) {
+                throw new DomainException('The three-day cooling-off period must expire before disbursement.');
+            }
+            if ($loan->application->cancellation()->exists()) {
+                throw new DomainException('A cancelled application cannot be disbursed.');
+            }
 
             $date = Carbon::parse($data['disbursed_at'] ?? now());
             $firstPayment = Carbon::parse($data['first_payment_date'] ?? ($loan->product->repayment_frequency === 'weekly' ? $date->copy()->addWeek() : $date->copy()->addMonth()));

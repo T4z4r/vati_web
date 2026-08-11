@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\ComplianceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GroupController;
 use App\Http\Controllers\Web\LoanApplicationController;
@@ -46,6 +47,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loan-applications/{loanApplication}/witnesses', [LoanApplicationController::class, 'witness'])->name('loan-applications.witnesses.store')->middleware('permission:manage-group-witnesses');
     Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationController::class, 'approve'])->name('loan-applications.approve')->middleware('permission:approve-loan-applications');
     Route::post('loan-applications/{loanApplication}/reject', [LoanApplicationController::class, 'reject'])->name('loan-applications.reject')->middleware('permission:reject-loan-applications');
+    Route::put('loan-applications/{loanApplication}/compliance/applicant', [ComplianceController::class, 'applicant'])->name('loan-applications.compliance.applicant')->middleware('permission:manage-loan-compliance');
+    Route::post('loan-applications/{loanApplication}/compliance/guarantors', [ComplianceController::class, 'guarantor'])->name('loan-applications.compliance.guarantors')->middleware('permission:manage-loan-compliance');
+    Route::put('loan-applications/{loanApplication}/compliance/nominees', [ComplianceController::class, 'nominees'])->name('loan-applications.compliance.nominees')->middleware('permission:manage-loan-compliance');
+    Route::post('loan-applications/{loanApplication}/compliance/documents', [ComplianceController::class, 'document'])->name('loan-applications.compliance.documents')->middleware('permission:manage-loan-compliance');
+    Route::post('loan-applications/{loanApplication}/compliance/documents/{loanDocument}/verify', [ComplianceController::class, 'verifyDocument'])->name('loan-applications.compliance.documents.verify')->middleware('permission:verify-loan-documents');
+    Route::post('loan-applications/{loanApplication}/cancel', [ComplianceController::class, 'cancel'])->name('loan-applications.cancel')->middleware('permission:create-loan-applications');
 
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show')->middleware('permission:view-loans');
@@ -54,6 +61,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loans/{loan}/payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('permission:collect-payments');
     Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse'])->name('payments.reverse')->middleware('permission:reverse-payments');
     Route::post('members/{member}/security', [SecurityController::class, 'store'])->name('security.store')->middleware('permission:manage-security');
+    Route::post('members/{member}/passbook-replacements', [ComplianceController::class, 'passbook'])->name('members.passbook-replacements.store')->middleware('permission:replace-passbooks');
+    Route::post('loans/{loan}/default-notices', [ComplianceController::class, 'defaultNotice'])->name('loans.default-notices.store')->middleware('permission:issue-default-notices');
+    Route::post('loans/{loan}/clearance', [ComplianceController::class, 'clearance'])->name('loans.clearance.store')->middleware('permission:authorize-loan-clearances');
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:view-reports');
 });

@@ -43,6 +43,13 @@ class SettlementService
                 'approved_at' => now(),
             ]);
             $loan->update(['principal_balance' => 0, 'interest_balance' => 0, 'total_balance' => 0, 'status' => LoanStatus::SETTLED]);
+            $loan->clearance()->updateOrCreate(['loan_id' => $loan->id], [
+                'loan_outstanding_amount' => 0,
+                'security_offset' => $security,
+                'cash_collection' => $cash,
+                'security_refund' => $data['security_refund'] ?? 0,
+                'status' => 'pending',
+            ]);
             activity()->causedBy($user)->performedOn($loan)->log('Loan settled');
 
             return $settlement;

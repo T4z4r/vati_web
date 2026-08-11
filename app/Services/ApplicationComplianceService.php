@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\ApplicationStatus;
+use App\Models\LoanApplication;
+use App\Models\LoanDocument;
+use App\Models\LoanTerm;
+use App\Models\User;
+use DomainException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+
+class ApplicationComplianceService
+{
+    public const GUARANTOR_DECLARATION = 'I accept responsibility for repayment of this loan if the applicant defaults, subject to the signed loan agreement and applicable law.';
+
+    public const REQUIRED_DOCUMENTS = ['member_identity', 'guarantor_identity'];
+
+    public function captureApplicant(LoanApplication $application, array $data, ?UploadedFile $signature, ?UploadedFile $thumbprint, string $ip): LoanApplication
+    {
+        $this->ensureDraft($application);
+        $term = LoanTerm::query()->where('is_active', true)->whereDate('effective_from', '<=', today())->where(fn ($q) => $q->whereNull('effective_until')->orWhereDate('effective_until', '>=', today()))->latest('effective_from')->firstOrFail();
+        $application->update([
+            'loan_term_id' => $term->id,
+            'consent_declaration' => $term->body,
+            'consented_at' => now(),
+            'consented_ip' => $ip,
+            'cancellation_deadline' => now()->addDays(3),
+            'applicant_signature_path' => $signature?->store('loan-compliance/applicants') ?? $application->applicant_signature_path,
+            'applicant_thumbprint_path' => $thumbprint?->store('loan-compliance/applicants') ?? $application->applicant_thumbprint_path,
+        ]);
+
+        activity()->performedOn($application)->withProperties(['term_version' => $term->version])->log('Applicant declaration accepted');
+
+        return $application->refresh();
+    }
+
+    public function addGuarantor(LoanApplication $application, array $data, UploadedFile $signature, UploadedFile $thumbprint, UploadedFile $jointPhoto)
+    {
+        $this->ensureDraft($application);
+
+        return $application->guarantors()->create([
+            ...$data,
+            'signature_path' => $signature->store('loan-compliance/guarantors'),
+            'thumbprint_path' => $thumbprint->store('loan-compliance/guarantors'),
+            'joint_photo_path' => $jointPhoto->store('loan-compliance/guarantors'),
+            'declaration_text' => self::GUARANTOR_DECLARATION,
+            'declaration_accepted_at' => now(),
+        ]);
+    }
+
+    public function replaceNominees(LoanApplication $application, array $nominees): void
+    {
+        $this->ensureDraft($application);
+        $total = round((float) collect($nominees)->sum('percentage'), 2);
+        if (abs($total - 100) > 0.009) {
+            throw new DomainException('Nominee allocations must total exactly 100%.');
+        }
+
+        DB::transaction(function () use ($application, $nominees) {
+            $application->member->nominees()->delete();
+            foreach ($nominees as $nominee) {
+                $application->member->nominees()->create([...$nominee, 'attested_at' => now()]);
+            }
+        });
+    }
+
+    public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = true): LoanDocument
+    {
+        $this->ensureDraft($application);
+
+        return $application->documents()->create([
+            'document_type' => $type,
+            'is_required' => $required,
+            'file_path' => $file->store('loan-compliance/documents'),
+            'verification_status' => 'pending',
+            'uploaded_by' => $user->id,
+        ]);
+    }
+
+    public function verifyDocument(LoanDocument $document, User $user, string $decision, ?string $remarks): LoanDocument
+    {
+        $document->update([
+            'verification_status' => $decision,
+            'verification_remarks' => $remarks,
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+
+        return $document->refresh();
+    }
+
+    public function assertReadyForSubmission(LoanApplication $application): void
+    {
+        $application->loadMissing(['guarantors', 'documents', 'member.nominees', 'term']);
+        if (! $application->term || ! $application->consented_at || ! $application->applicant_signature_path || ! $application->applicant_thumbprint_path) {
+            throw new DomainException('Applicant consent, signature, thumbprint, and versioned loan terms are required.');
+        }
+        if ($application->guarantors->count() < 2 || $application->guarantors->contains(fn ($g) => ! $g->signature_path || ! $g->thumbprint_path || ! $g->joint_photo_path || ! $g->declaration_accepted_at)) {
+            throw new DomainException('Two complete guarantor declarations with signatures, thumbprints, and joint photographs are required.');
+        }
+        if (abs((float) $application->member->nominees->sum('percentage') - 100) > 0.009) {
+            throw new DomainException('Nominee allocations must total exactly 100%.');
+        }
+        foreach (self::REQUIRED_DOCUMENTS as $type) {
+            if (! $application->documents->contains('document_type', $type)) {
+                throw new DomainException("The {$type} checklist document is required.");
+            }
+        }
+    }
+
+    public function assertReadyForApproval(LoanApplication $application): void
+    {
+        $this->assertReadyForSubmission($application);
+        if ($application->documents->where('is_required', true)->contains(fn ($document) => $document->verification_status !== 'verified')) {
+            throw new DomainException('Every required checklist document must be verified before approval.');
+        }
+    }
+
+    private function ensureDraft(LoanApplication $application): void
+    {
+        if ($application->status !== ApplicationStatus::DRAFT) {
+            throw new DomainException('Compliance evidence can only be changed while the application is a draft.');
+        }
+    }
+}

@@ -20,7 +20,7 @@ class LoanController extends Controller
 
     public function show(Loan $loan)
     {
-        return view('admin.loans.show', ['loan' => $loan->load(['member', 'product', 'group', 'application', 'installments', 'payments.allocations', 'disbursement'])]);
+        return view('admin.loans.show', ['loan' => $loan->load(['member', 'product', 'group', 'application', 'installments', 'payments.allocations', 'disbursement', 'settlement', 'defaultNotices', 'clearance'])]);
     }
 
     public function disburse(Request $request, Loan $loan, DisbursementService $service)
