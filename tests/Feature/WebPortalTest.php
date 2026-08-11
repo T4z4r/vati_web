@@ -56,8 +56,9 @@ class WebPortalTest extends TestCase
     public function test_admin_portal_core_pages_render(): void
     {
         $this->actingAs($this->admin);
-        foreach (['/admin', '/admin/organization', '/admin/users', '/admin/groups', '/admin/members', '/admin/loan-products', '/admin/loan-applications', '/admin/loans', '/admin/reports'] as $uri) {
-            $this->get($uri)->assertOk();
+        foreach (['/admin', '/admin/organization', '/admin/users', '/admin/users/create', '/admin/groups', '/admin/groups/create', '/admin/members', '/admin/members/create', '/admin/loan-products', '/admin/loan-products/create', '/admin/loan-applications', '/admin/loan-applications/create', '/admin/loans', '/admin/reports'] as $uri) {
+            $response = $this->get($uri);
+            $this->assertSame(200, $response->getStatusCode(), "{$uri} should render successfully.");
         }
     }
 

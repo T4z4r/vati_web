@@ -33,16 +33,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::resource('users', UserController::class)->except(['edit', 'update', 'destroy']);
     });
 
-    Route::resource('groups', GroupController::class)->only(['index', 'show'])->middleware('permission:view-groups');
     Route::resource('groups', GroupController::class)->only(['create', 'store'])->middleware('permission:create-groups');
-    Route::resource('members', MemberController::class)->only(['index', 'show'])->middleware('permission:view-members');
+    Route::resource('groups', GroupController::class)->only(['index', 'show'])->middleware('permission:view-groups');
     Route::resource('members', MemberController::class)->only(['create', 'store'])->middleware('permission:create-members');
+    Route::resource('members', MemberController::class)->only(['index', 'show'])->middleware('permission:view-members');
     Route::put('members/{member}/kyc', [MemberController::class, 'updateKyc'])->name('members.kyc.update')->middleware('permission:edit-members');
-    Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('permission:view-loan-products');
     Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update'])->middleware('permission:manage-loan-products');
+    Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('permission:view-loan-products');
 
-    Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');
     Route::resource('loan-applications', LoanApplicationController::class)->only(['create', 'store', 'edit', 'update'])->middleware('permission:create-loan-applications');
+    Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationController::class, 'submit'])->name('loan-applications.submit')->middleware('permission:create-loan-applications');
     Route::post('loan-applications/{loanApplication}/witnesses', [LoanApplicationController::class, 'witness'])->name('loan-applications.witnesses.store')->middleware('permission:manage-group-witnesses');
     Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationController::class, 'approve'])->name('loan-applications.approve')->middleware('permission:approve-loan-applications');
