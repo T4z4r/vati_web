@@ -9,6 +9,7 @@ use App\Models\GroupMembership;
 use App\Models\LoanApplication;
 use App\Models\LoanGroupWitness;
 use App\Models\LoanProduct;
+use App\Models\LoanTerm;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Region;
@@ -35,6 +36,8 @@ class VatiWorkflowTest extends TestCase
 
     private LoanProduct $product;
 
+    private LoanTerm $term;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -54,6 +57,7 @@ class VatiWorkflowTest extends TestCase
             'transaction_fee_percentage' => 1, 'membership_fee' => 10000,
             'vat_percentage' => 18, 'required_group_witnesses' => 2,
         ]);
+        $this->term = LoanTerm::create(['version' => 'TEST-1', 'title' => 'Test terms', 'body' => 'Test declaration', 'effective_from' => today(), 'is_active' => true]);
     }
 
     public function test_member_registration_and_duplicate_phone_validation(): void
@@ -95,6 +99,8 @@ class VatiWorkflowTest extends TestCase
         foreach ([$this->member(), $this->member()] as $witness) {
             LoanGroupWitness::create(['loan_application_id' => $application->id, 'group_id' => $this->group->id, 'member_id' => $witness->id, 'confirmed_at' => now(), 'recorded_by' => $this->admin->id]);
         }
+
+        $this->makeCompliant($application);
 
         $application = app(LoanApprovalService::class)->decide($application, $this->admin, 'approved');
         $loan = $application->loan;
@@ -243,7 +249,7 @@ class VatiWorkflowTest extends TestCase
 
     private function application(Member $member): LoanApplication
     {
-        return LoanApplication::create([
+        $application = LoanApplication::create([
             'application_number' => 'VATI-LAF-'.now()->year.'-'.str_pad((string) (LoanApplication::count() + 1), 6, '0', STR_PAD_LEFT),
             'member_id' => $member->id,
             'loan_product_id' => $this->product->id,
@@ -254,5 +260,33 @@ class VatiWorkflowTest extends TestCase
             'status' => ApplicationStatus::SUBMITTED,
             'created_by' => $this->admin->id,
         ]);
+
+        $this->makeCompliant($application);
+
+        return $application;
+    }
+
+    private function makeCompliant(LoanApplication $application): void
+    {
+        $application->update([
+            'loan_term_id' => $this->term->id,
+            'consent_declaration' => $this->term->body,
+            'consented_at' => now()->subDays(4),
+            'cancellation_deadline' => now()->subDay(),
+            'applicant_signature_path' => 'tests/applicant-signature.png',
+            'applicant_thumbprint_path' => 'tests/applicant-thumbprint.png',
+        ]);
+        foreach (['family', 'non_family'] as $index => $type) {
+            $application->guarantors()->create([
+                'guarantor_type' => $type, 'name' => "Guarantor {$index}", 'relationship' => 'Relative',
+                'phone' => "25570000000{$index}", 'signature_path' => 'tests/signature.png',
+                'thumbprint_path' => 'tests/thumbprint.png', 'joint_photo_path' => 'tests/photo.png',
+                'declaration_text' => 'Accepted', 'declaration_accepted_at' => now(),
+            ]);
+        }
+        $application->member->nominees()->create(['name' => 'Nominee', 'relationship' => 'Child', 'percentage' => 100, 'attested_at' => now()]);
+        foreach (['member_identity', 'guarantor_identity'] as $type) {
+            $application->documents()->create(['document_type' => $type, 'file_path' => "tests/{$type}.pdf", 'is_required' => true, 'verification_status' => 'verified', 'uploaded_by' => $this->admin->id, 'verified_by' => $this->admin->id, 'verified_at' => now()]);
+        }
     }
 }

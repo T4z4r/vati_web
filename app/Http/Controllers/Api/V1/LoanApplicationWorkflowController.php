@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\ApplicationStatus;
 use App\Http\Resources\LoanApplicationResource;
 use App\Models\LoanApplication;
-use App\Services\LoanApprovalService;
 use App\Services\ApplicationComplianceService;
+use App\Services\LoanApprovalService;
 use Illuminate\Http\Request;
 
 class LoanApplicationWorkflowController extends ApiController

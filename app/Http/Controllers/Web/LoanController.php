@@ -32,7 +32,7 @@ class LoanController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-return back()->with('success', 'Loan disbursed and repayment schedule generated.');
+        return back()->with('success', 'Loan disbursed and repayment schedule generated.');
     }
 
     public function settle(Request $request, Loan $loan, SettlementService $service)
@@ -44,7 +44,7 @@ return back()->with('success', 'Loan disbursed and repayment schedule generated.
             return back()->with('error', $e->getMessage());
         }
 
-return back()->with('success', 'Loan settled successfully.');
+        return back()->with('success', 'Loan settled successfully.');
     }
 
     private function branchId(Request $request): ?int

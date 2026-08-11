@@ -17,6 +17,7 @@ Laravel 12 REST backend for VATI Microfinance Limited. MySQL is the production d
 - Schema support for guarantors, documents, family/assets/nominees, refinancing, group meetings/collections, payment provider callbacks, offline sync/device registration, cashbooks, and audit logs
 - Responsive Laravel Blade administration portal using the VATI green/gold visual system
 - Browser workflows for organization setup, staff accounts, groups, member/KYC registration, loan products, applications, witnesses, approvals, disbursement, repayments, reversals, security accounts, settlements, and portfolio reports
+- Loan-compliance workflows for versioned terms and consent snapshots, applicant and guarantor signatures/thumbprints/photos, verified document checklists, exact 100% nominee allocations, three-day cancellations, duplicate-passbook charges, fourteen-day default notices, and branch-manager loan clearances
 
 Payment-provider credentials and production-specific fee/interest rules are intentionally not hardcoded. Confirm the exact VATI rules before production use.
 
@@ -72,6 +73,8 @@ POST /api/v1/loan-applications/{application}/group-witnesses
 ```
 
 The number of confirmed witnesses required before approval is configured with `loan_products.required_group_witnesses`.
+
+Loan applications cannot be submitted until the active terms are accepted and the required applicant, guarantor, nominee, and document evidence is captured. Required checklist documents must be verified before approval, and an approved loan cannot be disbursed until its three-day cooling-off deadline has passed.
 
 ## Verification
 

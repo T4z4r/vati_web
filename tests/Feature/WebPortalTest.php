@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\GroupMembership;
+use App\Models\LoanApplication;
 use App\Models\LoanProduct;
+use App\Models\LoanTerm;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Region;
@@ -26,6 +28,8 @@ class WebPortalTest extends TestCase
 
     private LoanProduct $product;
 
+    private LoanTerm $term;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,6 +41,7 @@ class WebPortalTest extends TestCase
         $this->admin->assignRole('super_admin');
         $this->group = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G01', 'group_name' => 'Kinondoni Group']);
         $this->product = LoanProduct::create(['name' => 'Weekly Loan', 'code' => 'WEEKLY', 'minimum_amount' => 100000, 'maximum_amount' => 5000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'annual_interest_rate' => 24, 'interest_method' => 'flat', 'repayment_frequency' => 'weekly', 'security_percentage' => 10, 'processing_fee_percentage' => 2, 'transaction_fee_percentage' => 1, 'membership_fee' => 10000, 'vat_percentage' => 18, 'required_group_witnesses' => 2]);
+        $this->term = LoanTerm::create(['version' => 'TEST-1', 'title' => 'Test terms', 'body' => 'Test declaration', 'effective_from' => today(), 'is_active' => true]);
     }
 
     public function test_guest_can_sign_in_and_open_dashboard(): void
@@ -88,6 +93,7 @@ class WebPortalTest extends TestCase
 
         $this->post('/admin/loan-applications', ['member_id' => $borrower->id, 'loan_product_id' => $this->product->id, 'application_type' => 'main', 'requested_amount' => 1000000, 'duration_months' => 6])->assertRedirect();
         $application = $borrower->loanApplications()->firstOrFail();
+        $this->makeCompliant($application);
         $this->post(route('admin.loan-applications.submit', $application))->assertRedirect();
         $this->post(route('admin.loan-applications.witnesses.store', $application), ['member_id' => $firstWitness->id])->assertRedirect();
         $this->post(route('admin.loan-applications.witnesses.store', $application), ['member_id' => $secondWitness->id])->assertRedirect();
@@ -110,5 +116,17 @@ class WebPortalTest extends TestCase
         GroupMembership::create(['member_id' => $member->id, 'group_id' => $this->group->id, 'joined_at' => today(), 'status' => 'active']);
 
         return $member;
+    }
+
+    private function makeCompliant(LoanApplication $application): void
+    {
+        $application->update(['loan_term_id' => $this->term->id, 'consent_declaration' => $this->term->body, 'consented_at' => now()->subDays(4), 'cancellation_deadline' => now()->subDay(), 'applicant_signature_path' => 'tests/signature.png', 'applicant_thumbprint_path' => 'tests/thumbprint.png']);
+        foreach (['family', 'non_family'] as $index => $type) {
+            $application->guarantors()->create(['guarantor_type' => $type, 'name' => "Guarantor {$index}", 'relationship' => 'Relative', 'phone' => "25570000000{$index}", 'signature_path' => 'tests/signature.png', 'thumbprint_path' => 'tests/thumbprint.png', 'joint_photo_path' => 'tests/photo.png', 'declaration_text' => 'Accepted', 'declaration_accepted_at' => now()]);
+        }
+        $application->member->nominees()->create(['name' => 'Nominee', 'relationship' => 'Child', 'percentage' => 100, 'attested_at' => now()]);
+        foreach (['member_identity', 'guarantor_identity'] as $type) {
+            $application->documents()->create(['document_type' => $type, 'file_path' => "tests/{$type}.pdf", 'is_required' => true, 'verification_status' => 'verified', 'uploaded_by' => $this->admin->id, 'verified_by' => $this->admin->id, 'verified_at' => now()]);
+        }
     }
 }

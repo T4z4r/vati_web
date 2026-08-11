@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
-use App\Services\LoanApprovalService;
 use App\Services\ApplicationComplianceService;
+use App\Services\LoanApprovalService;
 use App\Services\NumberGeneratorService;
 use DomainException;
 use Illuminate\Http\Request;
@@ -116,7 +116,7 @@ class LoanApplicationController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-return back()->with('success', 'Application approved and loan account created.');
+        return back()->with('success', 'Application approved and loan account created.');
     }
 
     public function reject(Request $request, LoanApplication $loanApplication, LoanApprovalService $service)
@@ -128,7 +128,7 @@ return back()->with('success', 'Application approved and loan account created.')
             return back()->with('error', $e->getMessage());
         }
 
-return back()->with('success', 'Application rejected.');
+        return back()->with('success', 'Application rejected.');
     }
 
     private function branchId(Request $request): ?int
