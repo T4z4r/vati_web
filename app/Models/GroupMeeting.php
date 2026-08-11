@@ -17,4 +17,9 @@ class GroupMeeting extends Model
     {
         return $this->belongsTo(MemberGroup::class, 'group_id');
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(GroupAttendance::class, 'group_meeting_id');
+    }
 }

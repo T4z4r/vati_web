@@ -18,7 +18,11 @@ class LoanApplicationResource extends JsonResource
             'branch' => $this->whenLoaded('branch'),
             'application_type' => $this->application_type,
             'requested_amount' => $this->requested_amount,
+            'recommended_amount' => $this->recommended_amount,
             'duration_months' => $this->duration_months,
+            'recommended_duration_months' => $this->recommended_duration_months,
+            'risk_level' => $this->risk_level,
+            'assigned_credit_officer_id' => $this->assigned_credit_officer_id,
             'existing_loan_balance' => $this->existing_loan_balance,
             'refinancing_amount' => $this->refinancing_amount,
             'increment_amount' => $this->increment_amount,
@@ -44,6 +48,7 @@ class LoanApplicationResource extends JsonResource
             ]),
             'loan' => $this->whenLoaded('loan'),
             'submitted_at' => $this->submitted_at,
+            'credit_review_attempt' => $this->credit_review_attempt,
         ];
     }
 }

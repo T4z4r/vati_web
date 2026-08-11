@@ -14,6 +14,8 @@ use Illuminate\Http\UploadedFile;
 
 class LoanAdministrationService
 {
+    public function __construct(private NotificationService $notifications) {}
+
     public function replacePassbook(Member $member, User $user, array $data): PassbookReplacement
     {
         if (empty($data['payment_reference'])) {
@@ -52,6 +54,14 @@ class LoanAdministrationService
             'issued_by' => $user->id,
         ]);
         activity()->causedBy($user)->performedOn($loan)->withProperties(['expires_at' => $notice->expires_at])->log('Fourteen-day default notice issued');
+        $this->notifications->send(
+            $this->notifications->applicationOriginators($loan->application),
+            'default_notice_issued',
+            'Fourteen-day default notice issued',
+            "A default notice for loan {$loan->loan_number} expires on {$notice->expires_at->toDateString()}.",
+            'loan',
+            $loan->id
+        );
 
         return $notice;
     }

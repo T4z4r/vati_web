@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
-    public function __construct(private NumberGeneratorService $numbers) {}
+    public function __construct(private NumberGeneratorService $numbers, private NotificationService $notifications) {}
 
     public function post(Loan $loan, User $user, float $amount, array $data): Payment
     {
@@ -93,6 +93,14 @@ class PaymentService
             $loan->save();
 
             activity()->causedBy($user)->performedOn($loan)->withProperties(['amount' => $amount, 'payment_number' => $payment->payment_number])->log('Loan repayment posted');
+            $this->notifications->send(
+                $this->notifications->applicationOriginators($loan->application),
+                'payment_posted',
+                'Payment posted',
+                "Payment {$payment->payment_number} was posted for loan {$loan->loan_number}.",
+                'payment',
+                $payment->id
+            );
 
             return $payment->load('allocations');
         });
@@ -125,6 +133,14 @@ class PaymentService
             $loan->save();
             $payment->update(['status' => 'reversed', 'reversed_by' => $user->id, 'reversed_at' => now(), 'reversal_reason' => $reason]);
             activity()->causedBy($user)->performedOn($payment)->withProperties(['reason' => $reason])->log('Loan repayment reversed');
+            $this->notifications->send(
+                $this->notifications->applicationOriginators($loan->application),
+                'payment_reversed',
+                'Payment reversed',
+                "Payment {$payment->payment_number} was reversed for loan {$loan->loan_number}.",
+                'payment',
+                $payment->id
+            );
 
             return $payment->refresh();
         });

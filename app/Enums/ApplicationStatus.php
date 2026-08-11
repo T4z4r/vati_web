@@ -10,6 +10,7 @@ enum ApplicationStatus: string
     case ABM_REVIEW = 'abm_review';
     case BM_REVIEW = 'bm_review';
     case CREDIT_REVIEW = 'credit_review';
+    case RECOMMENDED = 'recommended';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
     case RETURNED = 'returned';

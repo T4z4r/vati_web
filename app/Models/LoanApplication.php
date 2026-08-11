@@ -20,6 +20,7 @@ class LoanApplication extends Model
             'submitted_at' => 'datetime',
             'consented_at' => 'datetime',
             'cancellation_deadline' => 'datetime',
+            'recommended_amount' => 'decimal:2',
         ];
     }
 
@@ -86,5 +87,20 @@ class LoanApplication extends Model
     public function utilizations()
     {
         return $this->hasMany(LoanUtilization::class);
+    }
+
+    public function creditReviews()
+    {
+        return $this->hasMany(CreditReview::class);
+    }
+
+    public function latestCreditReview()
+    {
+        return $this->hasOne(CreditReview::class)->latestOfMany();
+    }
+
+    public function assignedCreditOfficer()
+    {
+        return $this->belongsTo(User::class, 'assigned_credit_officer_id');
     }
 }

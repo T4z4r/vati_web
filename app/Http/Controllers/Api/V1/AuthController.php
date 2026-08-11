@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends ApiController
@@ -31,5 +33,32 @@ class AuthController extends ApiController
         $request->user()->currentAccessToken()?->delete();
 
         return response()->json(['success' => true, 'message' => 'Logged out successfully.']);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate(['email' => ['required', 'email']]);
+        Password::sendResetLink(['email' => $data['email']]);
+
+        // A neutral response prevents account enumeration.
+        return response()->json(['success' => true, 'message' => 'If an account exists for that email address, a password reset link has been sent.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'token' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:10', 'confirmed'],
+        ]);
+        $status = Password::reset($data, function (User $user, string $password) {
+            $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60)])->save();
+            $user->tokens()->delete();
+        });
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages(['email' => [__($status)]]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Password reset successfully. Please sign in with your new password.']);
     }
 }

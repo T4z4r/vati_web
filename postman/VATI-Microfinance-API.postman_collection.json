@@ -108,9 +108,128 @@
             "key": "payment_id",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "credit_officer_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "loan_document_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "notification_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "password_reset_token",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
+        {
+            "name": "Flutter Mobile API",
+            "description": "Credit-review, aggregate detail, role dashboard, portfolio, notifications, document evidence, PDF export, member photo, and password-recovery endpoints. Monetary fields in analytics/detail responses are decimal strings. Branch scoping and role permissions are enforced server-side.",
+            "item": [
+                {
+                    "name": "Assign Credit Officer",
+                    "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"credit_officer_id\": {{credit_officer_id}}\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/assign-credit-officer", "description": "Assigns an active credit officer from the application branch."},
+                    "response": []
+                },
+                {
+                    "name": "Submit Credit Recommendation",
+                    "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["if (pm.response.code === 200) { pm.test('Recommendation remains non-terminal', () => pm.expect(pm.response.json().data.status).to.eql('recommended')); }"]}}],
+                    "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"decision\": \"recommend\",\n  \"recommended_amount\": 500000,\n  \"recommended_duration_months\": 6,\n  \"overall_risk\": \"low\",\n  \"remarks\": \"Verified and affordable\",\n  \"member_verified\": true,\n  \"group_membership_verified\": true,\n  \"documents_verified\": true\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/credit-review", "description": "Credit-stage recommendation only. It never creates a loan; an authorized administrator performs the final decision. Duplicate submissions return HTTP 409."},
+                    "response": []
+                },
+                {
+                    "name": "Return Recommended Application",
+                    "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"remarks\": \"Please correct the affordability evidence\"\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/return"},
+                    "response": []
+                },
+                {
+                    "name": "Complete Application Detail",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}", "description": "Returns one Flutter-ready aggregate: applicant, group metrics, affordability, documents, credit review, deterministic risk signals, and audit history."},
+                    "response": []
+                },
+                {
+                    "name": "Role Dashboard",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/dashboard?branch_id={{branch_id}}", "description": "Response blocks are role-aware. Credit officers receive queues/targets; administrators receive approval and portfolio metrics."},
+                    "response": []
+                },
+                {
+                    "name": "Portfolio Summary",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/portfolio/summary?branch_id={{branch_id}}&from=2026-08-01&to=2026-08-31"},
+                    "response": []
+                },
+                {
+                    "name": "Portfolio by Branch",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/portfolio/branches?per_page=20"},
+                    "response": []
+                },
+                {
+                    "name": "List Notifications",
+                    "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["const body = pm.response.json();", "if (pm.response.code === 200 && body.data.length) { pm.collectionVariables.set('notification_id', body.data[0].id); }"]}}],
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/notifications?read=0&per_page=20"},
+                    "response": []
+                },
+                {
+                    "name": "Mark Notification Read",
+                    "request": {"method": "POST", "header": [], "url": "{{base_url}}/api/v1/notifications/{{notification_id}}/read"},
+                    "response": []
+                },
+                {
+                    "name": "Mark All Notifications Read",
+                    "request": {"method": "POST", "header": [], "url": "{{base_url}}/api/v1/notifications/read-all"},
+                    "response": []
+                },
+                {
+                    "name": "List Application Documents",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents"},
+                    "response": []
+                },
+                {
+                    "name": "Upload Application Document",
+                    "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('loan_document_id', pm.response.json().data.id); }"]}}],
+                    "request": {"method": "POST", "header": [], "body": {"mode": "formdata", "formdata": [{"key": "document_type", "value": "member_identity", "type": "text"}, {"key": "file", "type": "file", "src": []}, {"key": "remarks", "value": "Original identity evidence", "type": "text"}]}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents"},
+                    "response": []
+                },
+                {
+                    "name": "Verify Application Document",
+                    "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"decision\": \"verified\",\n  \"remarks\": \"Readable and valid\"\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents/{{loan_document_id}}/verify"},
+                    "response": []
+                },
+                {
+                    "name": "Download Application Document",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents/{{loan_document_id}}/download"},
+                    "response": []
+                },
+                {
+                    "name": "Download Application PDF",
+                    "request": {"method": "GET", "header": [], "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/export"},
+                    "response": []
+                },
+                {
+                    "name": "Upload Member Photo",
+                    "request": {"method": "POST", "header": [], "body": {"mode": "formdata", "formdata": [{"key": "photo", "type": "file", "src": []}]}, "url": "{{base_url}}/api/v1/members/{{member_id}}/photo"},
+                    "response": []
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {"auth": {"type": "noauth"}, "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\"\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/auth/forgot-password", "description": "Always returns a neutral success response to prevent account enumeration."},
+                    "response": []
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {"auth": {"type": "noauth"}, "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"token\": \"{{password_reset_token}}\",\n  \"password\": \"NewSecurePassword123!\",\n  \"password_confirmation\": \"NewSecurePassword123!\"\n}", "options": {"raw": {"language": "json"}}}, "url": "{{base_url}}/api/v1/auth/reset-password", "description": "Consumes a single-use reset token and revokes the user's existing API tokens."},
+                    "response": []
+                }
+            ]
+        },
         {
             "name": "Authentication",
             "item": [

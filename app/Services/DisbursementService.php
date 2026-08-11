@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class DisbursementService
 {
-    public function __construct(private RepaymentScheduleService $schedule) {}
+    public function __construct(private RepaymentScheduleService $schedule, private NotificationService $notifications) {}
 
     public function disburse(Loan $loan, User $user, array $data): LoanDisbursement
     {
@@ -52,6 +52,14 @@ class DisbursementService
             $loan->application->update(['status' => ApplicationStatus::DISBURSED]);
             $this->schedule->generate($loan->fresh('product'), $firstPayment);
             activity()->causedBy($user)->performedOn($loan)->withProperties(['amount' => $loan->principal_amount])->log('Loan disbursed');
+            $this->notifications->send(
+                $this->notifications->applicationOriginators($loan->application),
+                'loan_disbursed',
+                'Loan disbursed',
+                "Loan {$loan->loan_number} has been disbursed.",
+                'loan',
+                $loan->id
+            );
 
             return $disbursement;
         });

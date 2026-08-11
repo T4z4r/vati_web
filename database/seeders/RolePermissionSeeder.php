@@ -23,6 +23,7 @@ class RolePermissionSeeder extends Seeder
             'settle-loans', 'view-reports', 'export-reports', 'view-audit-logs',
             'manage-loan-compliance', 'verify-loan-documents', 'replace-passbooks',
             'issue-default-notices', 'authorize-loan-clearances',
+            'view-portfolio',
         ];
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -41,7 +42,7 @@ class RolePermissionSeeder extends Seeder
         Role::findByName('loan_officer')->syncPermissions(['view-dashboard', 'view-members', 'create-members', 'edit-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'manage-group-witnesses', 'view-loan-products', 'view-loan-applications', 'create-loan-applications', 'manage-loan-compliance', 'replace-passbooks', 'issue-default-notices', 'view-loans', 'view-payments', 'collect-payments', 'view-security']);
         Role::findByName('cashier')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'view-security', 'manage-security']);
         Role::findByName('finance_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security', 'settle-loans', 'view-reports', 'export-reports']);
-        Role::findByName('credit_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'view-loan-products', 'view-loan-applications', 'review-loan-applications', 'approve-loan-applications', 'reject-loan-applications', 'verify-loan-documents', 'view-loans']);
+        Role::findByName('credit_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'view-loan-products', 'view-loan-applications', 'review-loan-applications', 'verify-loan-documents', 'view-loans', 'view-portfolio']);
         Role::findByName('auditor')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-loan-products', 'view-loan-applications', 'view-loans', 'view-payments', 'view-security', 'view-reports', 'export-reports', 'view-audit-logs']);
     }
 }

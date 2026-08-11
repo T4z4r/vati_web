@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\WorkflowConflictException;
 use App\Http\Middleware\EnsureBranchAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (WorkflowConflictException $exception, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => $exception->getMessage()], 409);
+            }
+        });
         $exceptions->render(function (DomainException $exception, $request) {
             if ($request->is('api/*')) {
                 return response()->json([

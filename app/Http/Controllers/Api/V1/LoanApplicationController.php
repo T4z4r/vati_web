@@ -6,6 +6,7 @@ use App\Http\Requests\StoreLoanApplicationRequest;
 use App\Http\Resources\LoanApplicationResource;
 use App\Models\LoanApplication;
 use App\Models\Member;
+use App\Services\ApplicationDetailService;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -46,14 +47,14 @@ class LoanApplicationController extends ApiController
         return response()->json(['success' => true, 'message' => 'Loan application created.', 'data' => new LoanApplicationResource($application->load('member', 'product', 'assessment'))], 201);
     }
 
-    public function show(LoanApplication $loanApplication)
+    public function show(LoanApplication $loanApplication, ApplicationDetailService $detail)
     {
-        return response()->json(['success' => true, 'data' => new LoanApplicationResource($loanApplication->load('member.nominees', 'product', 'assessment', 'approvals.user', 'loan', 'term', 'guarantors', 'documents', 'cancellation'))]);
+        return response()->json(['success' => true, 'data' => $detail->build($loanApplication)]);
     }
 
     public function update(StoreLoanApplicationRequest $request, LoanApplication $loanApplication)
     {
-        abort_unless($loanApplication->status->value === 'draft', 409, 'Only draft applications can be updated.');
+        abort_unless(in_array($loanApplication->status->value, ['draft', 'returned'], true), 409, 'Only draft or returned applications can be updated.');
         $loanApplication->update(Arr::except($request->validated(), ['assessment', 'member_id']));
 
         return response()->json(['success' => true, 'data' => new LoanApplicationResource($loanApplication->refresh())]);

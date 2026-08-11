@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ApplicationComplianceController;
+use App\Http\Controllers\Api\V1\ApplicationDocumentController;
+use App\Http\Controllers\Api\V1\ApplicationExportController;
 use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\CreditReviewController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\GroupPortfolioController;
@@ -19,8 +22,11 @@ use App\Http\Controllers\Api\V1\LoanSettlementController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\MemberKycController;
 use App\Http\Controllers\Api\V1\MemberPassbookController;
+use App\Http\Controllers\Api\V1\MemberPhotoController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\PortfolioController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\SecurityAccountController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -28,11 +34,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+    Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
     Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('profile', [AuthController::class, 'profile']);
         Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:view-dashboard');
+        Route::get('portfolio/summary', [PortfolioController::class, 'summary'])->middleware('permission:view-portfolio|view-reports');
+        Route::get('portfolio/branches', [PortfolioController::class, 'branches'])->middleware('permission:view-portfolio|view-reports');
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+        Route::post('notifications/{notification}/read', [NotificationController::class, 'read']);
 
         Route::post('onboarding/groups', [OnboardingController::class, 'group'])->middleware('permission:create-groups');
         Route::post('onboarding/members', [OnboardingController::class, 'member'])->middleware('permission:create-members');
@@ -57,6 +70,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('members', MemberController::class)->only('update')->middleware('permission:edit-members');
         Route::apiResource('members', MemberController::class)->only('destroy')->middleware('permission:delete-members');
         Route::put('members/{member}/kyc', [MemberKycController::class, 'update'])->middleware('permission:edit-members');
+        Route::post('members/{member}/photo', [MemberPhotoController::class, 'store'])->middleware('permission:edit-members');
         Route::get('members/{member}/passbook', [MemberPassbookController::class, 'show'])->middleware('permission:view-members');
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show'])->middleware('permission:view-security');
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store'])->middleware('permission:manage-security');
@@ -69,11 +83,19 @@ Route::prefix('v1')->group(function () {
         Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationWorkflowController::class, 'submit'])->middleware('permission:create-loan-applications');
         Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationWorkflowController::class, 'approve'])->middleware('permission:approve-loan-applications');
         Route::post('loan-applications/{loanApplication}/reject', [LoanApplicationWorkflowController::class, 'reject'])->middleware('permission:reject-loan-applications');
+        Route::post('loan-applications/{loanApplication}/assign-credit-officer', [CreditReviewController::class, 'assign'])->middleware('permission:approve-loan-applications');
+        Route::post('loan-applications/{loanApplication}/credit-review', [CreditReviewController::class, 'store'])->middleware('permission:review-loan-applications');
+        Route::post('loan-applications/{loanApplication}/return', [CreditReviewController::class, 'returnApplication'])->middleware('permission:approve-loan-applications');
         Route::put('loan-applications/{loanApplication}/compliance/applicant', [ApplicationComplianceController::class, 'applicant'])->middleware('permission:manage-loan-compliance');
         Route::post('loan-applications/{loanApplication}/compliance/guarantors', [ApplicationComplianceController::class, 'guarantor'])->middleware('permission:manage-loan-compliance');
         Route::put('loan-applications/{loanApplication}/compliance/nominees', [ApplicationComplianceController::class, 'nominees'])->middleware('permission:manage-loan-compliance');
         Route::post('loan-applications/{loanApplication}/compliance/documents', [ApplicationComplianceController::class, 'document'])->middleware('permission:manage-loan-compliance');
         Route::post('loan-applications/{loanApplication}/compliance/documents/{loanDocument}/verify', [ApplicationComplianceController::class, 'verifyDocument'])->middleware('permission:verify-loan-documents');
+        Route::get('loan-applications/{loanApplication}/documents', [ApplicationDocumentController::class, 'index'])->middleware('permission:view-loan-applications');
+        Route::post('loan-applications/{loanApplication}/documents', [ApplicationDocumentController::class, 'store'])->middleware('permission:manage-loan-compliance');
+        Route::post('loan-applications/{loanApplication}/documents/{loanDocument}/verify', [ApplicationDocumentController::class, 'verify'])->middleware('permission:verify-loan-documents');
+        Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ApplicationDocumentController::class, 'download'])->middleware('permission:view-loan-applications')->name('api.loan-applications.documents.download');
+        Route::get('loan-applications/{loanApplication}/export', [ApplicationExportController::class, 'download'])->middleware('permission:view-loan-applications');
         Route::post('loan-applications/{loanApplication}/cancel', [ApplicationComplianceController::class, 'cancel'])->middleware('permission:create-loan-applications');
         Route::get('loan-applications/{loanApplication}/group-witnesses', [LoanGroupWitnessController::class, 'index'])->middleware('permission:view-group-witnesses');
         Route::post('loan-applications/{loanApplication}/group-witnesses', [LoanGroupWitnessController::class, 'store'])->middleware('permission:manage-group-witnesses');

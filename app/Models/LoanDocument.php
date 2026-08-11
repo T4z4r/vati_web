@@ -17,4 +17,14 @@ class LoanDocument extends Model
     {
         return $this->belongsTo(LoanApplication::class, 'loan_application_id');
     }
+
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
 }

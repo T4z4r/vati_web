@@ -66,7 +66,7 @@ class ApplicationComplianceService
         });
     }
 
-    public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = true): LoanDocument
+    public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = true, ?string $remarks = null): LoanDocument
     {
         $this->ensureDraft($application);
 
@@ -74,6 +74,10 @@ class ApplicationComplianceService
             'document_type' => $type,
             'is_required' => $required,
             'file_path' => $file->store('loan-compliance/documents'),
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'size_bytes' => $file->getSize(),
+            'remarks' => $remarks,
             'verification_status' => 'pending',
             'uploaded_by' => $user->id,
         ]);
@@ -120,8 +124,8 @@ class ApplicationComplianceService
 
     private function ensureDraft(LoanApplication $application): void
     {
-        if ($application->status !== ApplicationStatus::DRAFT) {
-            throw new DomainException('Compliance evidence can only be changed while the application is a draft.');
+        if (! in_array($application->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED], true)) {
+            throw new DomainException('Compliance evidence can only be changed while the application is a draft or returned for correction.');
         }
     }
 }

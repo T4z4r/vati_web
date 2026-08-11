@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class LoanApprovalService
 {
-    public function __construct(private LoanCalculatorService $calculator, private NumberGeneratorService $numbers, private ApplicationComplianceService $compliance) {}
+    public function __construct(private LoanCalculatorService $calculator, private NumberGeneratorService $numbers, private ApplicationComplianceService $compliance, private NotificationService $notifications) {}
 
     public function decide(LoanApplication $application, User $user, string $decision, ?string $remarks = null): LoanApplication
     {
@@ -20,7 +20,7 @@ class LoanApprovalService
             $application = LoanApplication::query()->lockForUpdate()->findOrFail($application->id);
             $from = $application->status->value;
 
-            if (! in_array($from, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review'], true)) {
+            if (! in_array($from, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended'], true)) {
                 throw new DomainException('This application cannot be decided in its current state.');
             }
 
@@ -49,10 +49,12 @@ class LoanApprovalService
             $application->update(['status' => $to]);
 
             if ($to === ApplicationStatus::APPROVED && ! $application->loan()->exists()) {
-                $figures = $this->calculator->calculate($application->product, (float) $application->requested_amount, $application->duration_months);
+                $approvedAmount = (float) ($application->recommended_amount ?: $application->requested_amount);
+                $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
+                $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
                 $installments = $application->product->repayment_frequency === 'weekly'
-                    ? max(1, (int) round($application->duration_months * 52 / 12))
-                    : $application->duration_months;
+                    ? max(1, (int) round($approvedDuration * 52 / 12))
+                    : $approvedDuration;
                 Loan::create([
                     'loan_number' => $this->numbers->loan(),
                     'loan_application_id' => $application->id,
@@ -72,6 +74,14 @@ class LoanApprovalService
             }
 
             activity()->causedBy($user)->performedOn($application)->withProperties(['from' => $from, 'to' => $to->value])->log("Loan application {$decision}");
+            $this->notifications->send(
+                $this->notifications->applicationOriginators($application),
+                'loan_application_'.$decision,
+                'Loan application '.ucfirst($decision),
+                "Application {$application->application_number} was {$decision}.",
+                'loan_application',
+                $application->id
+            );
 
             return $application->refresh()->load('loan');
         });
