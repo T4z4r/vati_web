@@ -26,11 +26,13 @@ class LoanApplicationController extends ApiController
             $data = $request->validated();
             $assessment = Arr::pull($data, 'assessment');
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
+            $user = $request->user();
+            abort_if(! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id, 403, 'You cannot create an application for another branch.');
             abort_unless($member->status === 'active', 422, 'Only active members can apply for a loan.');
             abort_unless($member->group && $member->group->status, 422, 'Member must belong to an active group.');
             abort_unless($member->activeGroupMembership?->group_id === $member->group_id, 422, 'Member does not have a matching active group membership.');
             abort_unless($member->group->branch_id === $member->branch_id, 422, 'Member group and branch do not match.');
-            $application = LoanApplication::create([...$data, 'group_id' => $member->group_id, 'branch_id' => $member->branch_id, 'application_number' => $numbers->application(), 'created_by' => $request->user()->id]);
+            $application = LoanApplication::create([...$data, 'group_id' => $member->group_id, 'branch_id' => $member->branch_id, 'application_number' => $numbers->application(), 'status' => 'draft', 'created_by' => $request->user()->id]);
             if ($assessment) {
                 $income = ($assessment['core_business_income'] ?? 0) + ($assessment['other_income'] ?? 0);
                 $expenses = ($assessment['business_expenses'] ?? 0) + ($assessment['household_expenses'] ?? 0);

@@ -143,6 +143,10 @@ class VatiWorkflowTest extends TestCase
         $otherGroup = MemberGroup::create(['branch_id' => $otherBranch->id, 'group_code' => 'TEM-G01', 'group_name' => 'Temeke Group']);
         $this->postJson('/api/v1/members', ['branch_id' => $this->branch->id, 'group_id' => $otherGroup->id, 'first_name' => 'Wrong', 'last_name' => 'Branch', 'phone' => '255700000002'])
             ->assertUnprocessable()->assertJsonValidationErrors('group_id');
+
+        $inactive = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-INACTIVE', 'group_name' => 'Inactive Group', 'status' => false]);
+        $this->postJson('/api/v1/members', ['branch_id' => $this->branch->id, 'group_id' => $inactive->id, 'first_name' => 'Inactive', 'last_name' => 'Group', 'phone' => '255700000003'])
+            ->assertUnprocessable()->assertJsonValidationErrors('group_id');
     }
 
     public function test_application_derives_and_preserves_the_members_group_and_branch(): void
@@ -172,6 +176,9 @@ class VatiWorkflowTest extends TestCase
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $borrower->id])->assertUnprocessable();
         $first = $this->member();
         $second = $this->member();
+        $otherGroup = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G03', 'group_name' => 'Unrelated Group']);
+        $outsider = $this->member($this->branch, $otherGroup);
+        $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $outsider->id])->assertUnprocessable();
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $first->id])->assertCreated();
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $first->id])->assertUnprocessable()->assertJsonValidationErrors('member_id');
 
@@ -200,6 +207,19 @@ class VatiWorkflowTest extends TestCase
         $this->getJson("/api/v1/groups/{$this->group->id}/applications")->assertOk();
         $this->getJson("/api/v1/groups/{$this->group->id}/collections")->assertOk();
         $this->getJson("/api/v1/groups/{$this->group->id}/meetings")->assertOk();
+    }
+
+    public function test_branch_user_cannot_create_an_application_for_another_branch_member(): void
+    {
+        $otherArea = Area::create(['region_id' => $this->branch->area->region_id, 'name' => 'Ubungo', 'code' => 'UBG']);
+        $otherBranch = Branch::create(['area_id' => $otherArea->id, 'branch_code' => 'DSM-004', 'branch_name' => 'Ubungo']);
+        $otherGroup = MemberGroup::create(['branch_id' => $otherBranch->id, 'group_code' => 'UBG-G01', 'group_name' => 'Ubungo Group']);
+        $member = $this->member($otherBranch, $otherGroup);
+        $user = User::factory()->create(['branch_id' => $this->branch->id]);
+        $user->assignRole('loan_officer');
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/loan-applications', ['member_id' => $member->id, 'loan_product_id' => $this->product->id, 'requested_amount' => 1000000, 'duration_months' => 6])->assertForbidden();
     }
 
     private function member(?Branch $branch = null, ?MemberGroup $group = null): Member

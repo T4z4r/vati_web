@@ -17,7 +17,7 @@ class LoanApplicationResource extends JsonResource
             'group' => $this->whenLoaded('group'),
             'requested_amount' => $this->requested_amount,
             'duration_months' => $this->duration_months,
-            'status' => $this->status->value,
+            'status' => $this->status?->value,
             'assessment' => $this->whenLoaded('assessment'),
             'approvals' => $this->whenLoaded('approvals'),
             'group_witnesses' => $this->whenLoaded('groupWitnesses'),

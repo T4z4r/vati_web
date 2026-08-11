@@ -6,8 +6,10 @@ Laravel 12 REST backend for VATI Microfinance Limited. MySQL is the production d
 
 - Sanctum token authentication, Spatie roles/permissions, and activity audit logs
 - Region, area, branch, staff/role, group, member, and KYC management
+- Mandatory group lending with immutable membership history and one active membership per member
 - Configurable loan products and authoritative server-side loan calculations
 - Loan applications, assessment capture, submission, approval/rejection, and formal loan creation
+- Server-derived application branch/group snapshots and configurable group-witness approval requirements
 - Transactional disbursement and weekly/monthly repayment schedule generation
 - Idempotent payments with interest/principal allocation and reversal-based correction
 - Member security accounts and immutable security transactions
@@ -49,6 +51,23 @@ php artisan serve
 ```
 
 The API base URL is `/api/v1`. Log in at `POST /api/v1/auth/login` and send the returned token as `Authorization: Bearer <token>`.
+
+Member registration requires both `branch_id` and an active `group_id` belonging to that branch. Loan-application clients submit `member_id`, product, amount, and duration; the backend derives `branch_id` and `group_id` from the member’s active membership.
+
+Group-lending endpoints include:
+
+```text
+GET  /api/v1/groups/{group}/dashboard
+GET  /api/v1/groups/{group}/loans
+GET  /api/v1/groups/{group}/applications
+GET  /api/v1/groups/{group}/collections
+GET  /api/v1/groups/{group}/meetings
+GET  /api/v1/groups/{group}/members
+GET  /api/v1/loan-applications/{application}/group-witnesses
+POST /api/v1/loan-applications/{application}/group-witnesses
+```
+
+The number of confirmed witnesses required before approval is configured with `loan_products.required_group_witnesses`.
 
 ## Verification
 

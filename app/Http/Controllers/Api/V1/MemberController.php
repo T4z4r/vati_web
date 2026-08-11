@@ -53,7 +53,10 @@ class MemberController extends ApiController
         $groupId = Arr::pull($data, 'group_id');
         $member->update($data);
         if ($groupId) {
-            $memberships->assign($member, MemberGroup::findOrFail($groupId));
+            $group = MemberGroup::findOrFail($groupId);
+            $user = $request->user();
+            abort_if(! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $group->branch_id !== $user->branch_id, 403, 'You cannot transfer a member to another branch.');
+            $memberships->assign($member, $group);
         }
 
         return response()->json(['success' => true, 'data' => new MemberResource($member->refresh())]);
