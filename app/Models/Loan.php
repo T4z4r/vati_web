@@ -33,7 +33,10 @@ class Loan extends Model
         return $this->belongsTo(Member::class);
     }
 
-    public function group() { return $this->belongsTo(MemberGroup::class); }
+    public function group()
+    {
+        return $this->belongsTo(MemberGroup::class);
+    }
 
     public function product()
     {

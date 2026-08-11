@@ -40,17 +40,31 @@ class GroupPortfolioController extends ApiController
         ]]);
     }
 
-    public function loans(Request $request, MemberGroup $group) { return LoanResource::collection($group->loans()->with(['member', 'product'])->latest()->paginate($this->perPage($request))); }
+    public function loans(Request $request, MemberGroup $group)
+    {
+        return LoanResource::collection($group->loans()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
+    }
 
-    public function applications(Request $request, MemberGroup $group) { return LoanApplicationResource::collection($group->loanApplications()->with(['member', 'product'])->latest()->paginate($this->perPage($request))); }
+    public function applications(Request $request, MemberGroup $group)
+    {
+        return LoanApplicationResource::collection($group->loanApplications()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
+    }
 
-    public function collections(Request $request, MemberGroup $group) { return $group->collections()->with('meeting')->latest('collection_date')->paginate($this->perPage($request)); }
+    public function collections(Request $request, MemberGroup $group)
+    {
+        return $group->collections()->with('meeting')->latest('collection_date')->paginate($this->perPage($request));
+    }
 
-    public function meetings(Request $request, MemberGroup $group) { return $group->meetings()->latest('meeting_date')->paginate($this->perPage($request)); }
+    public function meetings(Request $request, MemberGroup $group)
+    {
+        return $group->meetings()->latest('meeting_date')->paginate($this->perPage($request));
+    }
 
     private function par(MemberGroup $group, float $portfolio, int $days): float
     {
-        if ($portfolio <= 0) return 0;
+        if ($portfolio <= 0) {
+            return 0;
+        }
         $atRisk = (float) Loan::where('group_id', $group->id)->whereIn('status', ['active', 'overdue'])
             ->whereHas('installments', fn ($query) => $query->whereDate('due_date', '<=', today()->subDays($days))->whereNotIn('status', ['paid', 'waived']))
             ->sum('principal_balance');

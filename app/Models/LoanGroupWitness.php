@@ -13,11 +13,23 @@ class LoanGroupWitness extends Model
         return ['confirmed_at' => 'datetime'];
     }
 
-    public function application() { return $this->belongsTo(LoanApplication::class, 'loan_application_id'); }
+    public function application()
+    {
+        return $this->belongsTo(LoanApplication::class, 'loan_application_id');
+    }
 
-    public function group() { return $this->belongsTo(MemberGroup::class); }
+    public function group()
+    {
+        return $this->belongsTo(MemberGroup::class);
+    }
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
+    }
 
-    public function recordedBy() { return $this->belongsTo(User::class, 'recorded_by'); }
+    public function recordedBy()
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
+    }
 }

@@ -13,7 +13,13 @@ class GroupMembership extends Model
         return ['joined_at' => 'date', 'left_at' => 'date'];
     }
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
+    }
 
-    public function group() { return $this->belongsTo(MemberGroup::class); }
+    public function group()
+    {
+        return $this->belongsTo(MemberGroup::class);
+    }
 }

@@ -28,13 +28,28 @@ class MemberGroup extends Model
         return $this->hasMany(Member::class, 'group_id');
     }
 
-    public function memberships() { return $this->hasMany(GroupMembership::class, 'group_id'); }
+    public function memberships()
+    {
+        return $this->hasMany(GroupMembership::class, 'group_id');
+    }
 
-    public function meetings() { return $this->hasMany(GroupMeeting::class, 'group_id'); }
+    public function meetings()
+    {
+        return $this->hasMany(GroupMeeting::class, 'group_id');
+    }
 
-    public function collections() { return $this->hasMany(GroupCollection::class, 'group_id'); }
+    public function collections()
+    {
+        return $this->hasMany(GroupCollection::class, 'group_id');
+    }
 
-    public function loanApplications() { return $this->hasMany(LoanApplication::class, 'group_id'); }
+    public function loanApplications()
+    {
+        return $this->hasMany(LoanApplication::class, 'group_id');
+    }
 
-    public function loans() { return $this->hasMany(Loan::class, 'group_id'); }
+    public function loans()
+    {
+        return $this->hasMany(Loan::class, 'group_id');
+    }
 }

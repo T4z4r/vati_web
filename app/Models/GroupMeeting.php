@@ -8,7 +8,13 @@ class GroupMeeting extends Model
 {
     protected $guarded = [];
 
-    protected function casts(): array { return ['meeting_date' => 'date']; }
+    protected function casts(): array
+    {
+        return ['meeting_date' => 'date'];
+    }
 
-    public function group() { return $this->belongsTo(MemberGroup::class, 'group_id'); }
+    public function group()
+    {
+        return $this->belongsTo(MemberGroup::class, 'group_id');
+    }
 }

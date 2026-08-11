@@ -27,9 +27,15 @@ class Member extends Model
         return $this->belongsTo(MemberGroup::class, 'group_id');
     }
 
-    public function groupMemberships() { return $this->hasMany(GroupMembership::class); }
+    public function groupMemberships()
+    {
+        return $this->hasMany(GroupMembership::class);
+    }
 
-    public function activeGroupMembership() { return $this->hasOne(GroupMembership::class)->where('status', 'active')->whereNull('left_at'); }
+    public function activeGroupMembership()
+    {
+        return $this->hasOne(GroupMembership::class)->where('status', 'active')->whereNull('left_at');
+    }
 
     public function kyc()
     {

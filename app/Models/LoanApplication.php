@@ -28,7 +28,10 @@ class LoanApplication extends Model
         return $this->belongsTo(LoanProduct::class, 'loan_product_id');
     }
 
-    public function group() { return $this->belongsTo(MemberGroup::class); }
+    public function group()
+    {
+        return $this->belongsTo(MemberGroup::class);
+    }
 
     public function branch()
     {
@@ -50,5 +53,8 @@ class LoanApplication extends Model
         return $this->hasOne(Loan::class);
     }
 
-    public function groupWitnesses() { return $this->hasMany(LoanGroupWitness::class); }
+    public function groupWitnesses()
+    {
+        return $this->hasMany(LoanGroupWitness::class);
+    }
 }
