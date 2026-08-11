@@ -62,6 +62,16 @@ class WebPortalTest extends TestCase
         }
     }
 
+    public function test_admin_forms_load_select2_and_placeholder_enhancements(): void
+    {
+        $this->actingAs($this->admin)
+            ->get('/admin/loan-applications/create')
+            ->assertOk()
+            ->assertSee('select2@4.1.0-rc.0', false)
+            ->assertSee('select:not([data-select2="false"])', false)
+            ->assertSee('field.placeholder = label', false);
+    }
+
     public function test_web_member_and_application_creation_workflow(): void
     {
         $this->actingAs($this->admin);

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}"><title>@yield('title', 'Dashboard') · VATI</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
 </head>
 <body class="admin-shell">
@@ -39,6 +40,38 @@
         @yield('content')
     </main>
 </div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>document.querySelectorAll('[data-confirm]').forEach(el=>el.addEventListener('click',e=>{if(!confirm(el.dataset.confirm))e.preventDefault()}));</script>
 @stack('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const labelText = field => {
+        const label = field.closest('label');
+        if (!label) return '';
+        return [...label.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim())?.textContent.trim().replace(/[:*]+$/, '') || '';
+    };
+
+    document.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="date"]):not([type="time"]):not([type="datetime-local"]), textarea').forEach(field => {
+        if (!field.placeholder) {
+            const label = labelText(field);
+            field.placeholder = label ? `Enter ${label.toLowerCase()}` : 'Enter value';
+        }
+    });
+
+    if (window.jQuery?.fn?.select2) {
+        window.jQuery('select:not([data-select2="false"])').each(function () {
+            const select = window.jQuery(this);
+            const first = this.options[0];
+            const placeholder = this.dataset.placeholder || (first?.value === '' ? first.text.trim() : `Select ${labelText(this).toLowerCase() || 'an option'}`);
+            select.select2({
+                width: select.closest('.filters').length ? 'resolve' : '100%',
+                placeholder,
+                allowClear: !this.required && first?.value === '',
+                minimumResultsForSearch: 6,
+            });
+        });
+    }
+});
+</script>
 </body></html>
