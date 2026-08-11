@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Region;
+use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class RegionController extends ApiController
 {
@@ -13,9 +13,9 @@ class RegionController extends ApiController
         return Region::with('areas')->paginate($this->perPage($request));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NumberGeneratorService $numbers)
     {
-        return response()->json(['success' => true, 'data' => Region::create($this->data($request))], 201);
+        return response()->json(['success' => true, 'data' => Region::create([...$this->data($request), 'code' => $numbers->region()])], 201);
     }
 
     public function show(Region $region)
@@ -39,6 +39,6 @@ class RegionController extends ApiController
 
     private function data(Request $request, ?Region $region = null): array
     {
-        return $request->validate(['name' => ['required', 'string', 'max:150'], 'code' => ['nullable', 'string', 'max:30', Rule::unique('regions')->ignore($region)], 'status' => ['sometimes', 'boolean']]);
+        return $request->validate(['name' => ['required', 'string', 'max:150'], 'status' => ['sometimes', 'boolean']]);
     }
 }

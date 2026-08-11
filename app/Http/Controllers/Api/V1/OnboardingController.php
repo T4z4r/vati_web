@@ -16,7 +16,6 @@ class OnboardingController extends ApiController
     {
         $data = $request->validate([
             'branch_id' => ['required', 'exists:branches,id'],
-            'group_code' => ['required', 'string', 'max:30', 'unique:member_groups,group_code'],
             'group_name' => ['required', 'string', 'max:150'],
             'meeting_day' => ['required', Rule::in(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])],
             'meeting_time' => ['nullable', 'date_format:H:i'],

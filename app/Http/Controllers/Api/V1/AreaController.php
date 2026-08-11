@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Area;
+use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class AreaController extends ApiController
 {
@@ -13,9 +13,9 @@ class AreaController extends ApiController
         return Area::with('region')->when($request->region_id, fn ($q, $v) => $q->where('region_id', $v))->paginate($this->perPage($request));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NumberGeneratorService $numbers)
     {
-        return response()->json(['success' => true, 'data' => Area::create($this->data($request))], 201);
+        return response()->json(['success' => true, 'data' => Area::create([...$this->data($request), 'code' => $numbers->area()])], 201);
     }
 
     public function show(Area $area)
@@ -39,6 +39,6 @@ class AreaController extends ApiController
 
     private function data(Request $request, ?Area $area = null): array
     {
-        return $request->validate(['region_id' => ['required', 'exists:regions,id'], 'name' => ['required', 'string', 'max:150'], 'code' => ['nullable', 'string', 'max:30', Rule::unique('areas')->ignore($area)], 'status' => ['sometimes', 'boolean']]);
+        return $request->validate(['region_id' => ['required', 'exists:regions,id'], 'name' => ['required', 'string', 'max:150'], 'status' => ['sometimes', 'boolean']]);
     }
 }

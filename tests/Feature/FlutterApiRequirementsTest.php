@@ -128,6 +128,28 @@ class FlutterApiRequirementsTest extends TestCase
         $this->assertSame(0, $user->tokens()->count());
     }
 
+    public function test_organization_group_and_product_codes_are_generated_and_immutable(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $region = $this->postJson('/api/v1/regions', ['name' => 'Mwanza', 'code' => 'MANUAL'])
+            ->assertCreated()->assertJsonPath('data.code', 'VATI-REG-'.now()->year.'-000002');
+        $regionId = $region->json('data.id');
+        $this->putJson("/api/v1/regions/{$regionId}", ['name' => 'Mwanza Updated', 'code' => 'CHANGED'])
+            ->assertOk()->assertJsonPath('data.code', 'VATI-REG-'.now()->year.'-000002');
+
+        $areaId = $this->postJson('/api/v1/areas', ['region_id' => $regionId, 'name' => 'Ilemela'])
+            ->assertCreated()->assertJsonPath('data.code', 'VATI-AREA-'.now()->year.'-000002')->json('data.id');
+        $branchId = $this->postJson('/api/v1/branches', ['area_id' => $areaId, 'branch_name' => 'Ilemela Branch'])
+            ->assertCreated()->assertJsonPath('data.branch_code', 'VATI-BR-'.now()->year.'-000002')->json('data.id');
+        $this->postJson('/api/v1/groups', ['branch_id' => $branchId, 'group_name' => 'Upendo Group'])
+            ->assertCreated()->assertJsonPath('data.group_code', 'VATI-GRP-'.now()->year.'-000002');
+        $this->postJson('/api/v1/loan-products', [
+            'name' => 'Automatic Product', 'minimum_amount' => 1000, 'maximum_amount' => 500000,
+            'minimum_duration_months' => 1, 'maximum_duration_months' => 12,
+            'annual_interest_rate' => 20, 'interest_method' => 'flat', 'repayment_frequency' => 'weekly',
+        ])->assertCreated()->assertJsonPath('data.code', 'VATI-LP-'.now()->year.'-000002');
+    }
+
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication
     {
         return LoanApplication::create([

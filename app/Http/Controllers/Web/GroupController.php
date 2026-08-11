@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\MemberGroup;
 use App\Models\User;
+use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -26,10 +27,10 @@ class GroupController extends Controller
         return view('admin.groups.create', ['branches' => Branch::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->whereKey($id))->get(), 'officers' => User::role('loan_officer')->where('status', true)->orderBy('name')->get()]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NumberGeneratorService $numbers)
     {
-        $data = $request->validate(['branch_id' => ['required', 'exists:branches,id'], 'group_code' => ['required', 'max:30', 'unique:member_groups,group_code'], 'group_name' => ['required', 'max:150'], 'meeting_day' => ['nullable', Rule::in(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])], 'meeting_time' => ['nullable'], 'location' => ['nullable', 'max:255'], 'ward' => ['nullable', 'max:100'], 'district' => ['nullable', 'max:100'], 'region' => ['nullable', 'max:100'], 'loan_officer_id' => ['nullable', 'exists:users,id']]);
-        $group = MemberGroup::create($data);
+        $data = $request->validate(['branch_id' => ['required', 'exists:branches,id'], 'group_name' => ['required', 'max:150'], 'meeting_day' => ['nullable', Rule::in(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])], 'meeting_time' => ['nullable'], 'location' => ['nullable', 'max:255'], 'ward' => ['nullable', 'max:100'], 'district' => ['nullable', 'max:100'], 'region' => ['nullable', 'max:100'], 'loan_officer_id' => ['nullable', 'exists:users,id']]);
+        $group = MemberGroup::create([...$data, 'group_code' => $numbers->group()]);
 
         return redirect()->route('admin.groups.show', $group)->with('success', 'Group created successfully.');
     }

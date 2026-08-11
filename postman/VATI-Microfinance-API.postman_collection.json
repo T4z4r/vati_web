@@ -322,10 +322,10 @@
                             }
                         ],
                         "url": "{{base_url}}/api/v1/onboarding/groups",
-                        "description": "Creates an active lending group. Required: `branch_id`, unique `group_code`, `group_name`, `meeting_day`, and `location`. `loan_officer_id`, when supplied, must identify an active user assigned to the same branch. Requires the `create-groups` permission. Returns HTTP 201.",
+                        "description": "Creates an active lending group. The group code is generated automatically. Required: `branch_id`, `group_name`, `meeting_day`, and `location`. `loan_officer_id`, when supplied, must identify an active user assigned to the same branch. Requires the `create-groups` permission. Returns HTTP 201.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"group_code\": \"VATI-G-{{$timestamp}}\",\n  \"group_name\": \"Ubungo Market Group\",\n  \"meeting_day\": \"Tuesday\",\n  \"meeting_time\": \"09:30\",\n  \"region\": \"Dar es Salaam\",\n  \"district\": \"Ubungo\",\n  \"ward\": \"Ubungo\",\n  \"location\": \"Ubungo Market\"\n}",
+                            "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"group_name\": \"Ubungo Market Group\",\n  \"meeting_day\": \"Tuesday\",\n  \"meeting_time\": \"09:30\",\n  \"region\": \"Dar es Salaam\",\n  \"district\": \"Ubungo\",\n  \"ward\": \"Ubungo\",\n  \"location\": \"Ubungo Market\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -466,7 +466,7 @@
                         "url": "{{base_url}}/api/v1/regions",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"code\": \"DSM\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -511,7 +511,7 @@
                         "url": "{{base_url}}/api/v1/regions/{{region_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"code\": \"DSM\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Dar es Salaam\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -544,7 +544,7 @@
                         "url": "{{base_url}}/api/v1/areas",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"code\": \"KIN\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -589,7 +589,7 @@
                         "url": "{{base_url}}/api/v1/areas/{{area_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"code\": \"KIN\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"region_id\": \"{{region_id}}\",\n  \"name\": \"Kinondoni\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -622,7 +622,7 @@
                         "url": "{{base_url}}/api/v1/branches",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_code\": \"KIN-001\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -667,7 +667,7 @@
                         "url": "{{base_url}}/api/v1/branches/{{branch_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_code\": \"KIN-001\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"area_id\": \"{{area_id}}\",\n  \"branch_name\": \"Kinondoni Branch\",\n  \"phone\": \"+255712345678\",\n  \"email\": \"kinondoni@vati.co.tz\",\n  \"address\": \"Kinondoni, Dar es Salaam\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -797,7 +797,7 @@
                         "url": "{{base_url}}/api/v1/groups",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_code\": \"GRP-POSTMAN-001\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -842,7 +842,7 @@
                         "url": "{{base_url}}/api/v1/groups/{{group_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_code\": \"GRP-POSTMAN-001\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1113,7 +1113,7 @@
                         "url": "{{base_url}}/api/v1/loan-products",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"code\": \"VATI-GROUP-POSTMAN\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1158,7 +1158,7 @@
                         "url": "{{base_url}}/api/v1/loan-products/{{loan_product_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"code\": \"VATI-GROUP-POSTMAN\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
