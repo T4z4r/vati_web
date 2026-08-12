@@ -15,6 +15,7 @@ class Policy extends Model
     {
         return [
             'is_active' => 'boolean',
+            'rules' => 'json',
         ];
     }
 
