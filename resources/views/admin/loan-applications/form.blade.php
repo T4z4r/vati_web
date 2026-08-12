@@ -99,13 +99,19 @@
             </div>
 
             <div class="card" style="margin-top:24px">
-                <div class="card-head"><h2>Loan computation summary</h2></div>
+                <div class="card-head">
+                    <h2>Loan computation summary</h2>
+                </div>
                 <div class="card-body detail-grid">
-                    <div class="detail"><small>Estimated total repayment</small><strong id="summary-estimate">TZS 0.00</strong></div>
+                    <div class="detail"><small>Estimated total repayment</small><strong id="summary-estimate">TZS
+                            0.00</strong></div>
                     <div class="detail"><small>Estimated charges</small><strong id="summary-charges">TZS 0.00</strong></div>
-                    <div class="detail"><small>Estimated amount receivable</small><strong id="summary-receivable">TZS 0.00</strong></div>
-                    <div class="detail"><small>Processing fee</small><strong id="summary-processing-fee">TZS 0.00</strong></div>
-                    <div class="detail"><small>Transaction fee</small><strong id="summary-transaction-fee">TZS 0.00</strong></div>
+                    <div class="detail"><small>Estimated amount receivable</small><strong id="summary-receivable">TZS
+                            0.00</strong></div>
+                    <div class="detail"><small>Processing fee</small><strong id="summary-processing-fee">TZS 0.00</strong>
+                    </div>
+                    <div class="detail"><small>Transaction fee</small><strong id="summary-transaction-fee">TZS 0.00</strong>
+                    </div>
                     <div class="detail"><small>Security held</small><strong id="summary-security">TZS 0.00</strong></div>
                 </div>
             </div>
@@ -123,7 +129,8 @@
                 <label>Household expenses<input type="number" min="0" name="assessment[household_expenses]"
                         value="{{ old('assessment.household_expenses', $assessment?->household_expenses ?? 0) }}"
                         required></label>
-                <label>Existing external debt<input type="number" min="0" name="assessment[existing_external_debt]"
+                <label>Existing external debt<input type="number" min="0"
+                        name="assessment[existing_external_debt]"
                         value="{{ old('assessment.existing_external_debt', $assessment?->existing_external_debt ?? 0) }}"></label>
                 <label class="full">Assessment comment
                     <textarea name="assessment[assessment_comment]">{{ old('assessment.assessment_comment', $assessment?->assessment_comment) }}</textarea>
@@ -216,8 +223,10 @@
                 document.getElementById('summary-estimate').textContent = formatMoney(totalRepayment);
                 document.getElementById('summary-charges').textContent = formatMoney(totalCharges);
                 document.getElementById('summary-receivable').textContent = formatMoney(receivableAmount);
-                document.getElementById('summary-processing-fee').textContent = formatMoney(processingFee + processingFeeVat);
-                document.getElementById('summary-transaction-fee').textContent = formatMoney(transactionFee + transactionFeeVat);
+                document.getElementById('summary-processing-fee').textContent = formatMoney(processingFee +
+                    processingFeeVat);
+                document.getElementById('summary-transaction-fee').textContent = formatMoney(transactionFee +
+                    transactionFeeVat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
             } else {
                 estimate.value = '';
