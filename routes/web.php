@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\LoanApplicationController;
 use App\Http\Controllers\Web\LoanController;
 use App\Http\Controllers\Web\LoanProductController;
 use App\Http\Controllers\Web\MemberController;
+use App\Http\Controllers\Web\MemberDocumentController;
 use App\Http\Controllers\Web\OrganizationController;
 use App\Http\Controllers\Web\PaymentController;
 use App\Http\Controllers\Web\ReportController;
@@ -42,6 +43,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::resource('members', MemberController::class)->only(['destroy'])->middleware('permission:delete-members');
     Route::resource('members', MemberController::class)->only(['index', 'show'])->middleware('permission:view-members');
     Route::put('members/{member}/kyc', [MemberController::class, 'updateKyc'])->name('members.kyc.update')->middleware('permission:edit-members');
+    Route::post('members/{member}/documents', [MemberDocumentController::class, 'store'])->name('members.documents.store')->middleware('permission:edit-members');
+    Route::delete('members/{member}/documents/{document}', [MemberDocumentController::class, 'destroy'])->name('members.documents.destroy')->middleware('permission:delete-members');
+    Route::get('members/{member}/documents/{document}/download', [MemberDocumentController::class, 'download'])->name('members.documents.download')->middleware('permission:view-members');
     Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-loan-products');
     Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('permission:view-loan-products');
 

@@ -66,4 +66,9 @@ class Member extends Model
     {
         return $this->hasMany(PassbookReplacement::class);
     }
+
+    public function documents()
+    {
+        return $this->hasMany(MemberDocument::class)->orderBy('created_at', 'desc');
+    }
 }
