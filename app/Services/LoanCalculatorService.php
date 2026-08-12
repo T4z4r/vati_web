@@ -22,16 +22,22 @@ class LoanCalculatorService
         $transactionFee = $principal * ((float) $product->transaction_fee_percentage / 100);
         $securityAmount = $principal * ((float) $product->security_percentage / 100);
         $vatRate = (float) $product->vat_percentage / 100;
+        $processingFeeVat = $processingFee * $vatRate;
+        $transactionFeeVat = $transactionFee * $vatRate;
+        $membershipFee = (float) $product->membership_fee;
+        $totalCharges = $processingFee + $processingFeeVat + $transactionFee + $transactionFeeVat + $membershipFee;
 
         return [
             'principal' => round($principal, 2),
             'interest' => round($interest, 2),
             'processing_fee' => round($processingFee, 2),
-            'processing_fee_vat' => round($processingFee * $vatRate, 2),
+            'processing_fee_vat' => round($processingFeeVat, 2),
             'transaction_fee' => round($transactionFee, 2),
-            'transaction_fee_vat' => round($transactionFee * $vatRate, 2),
-            'membership_fee' => round((float) $product->membership_fee, 2),
+            'transaction_fee_vat' => round($transactionFeeVat, 2),
+            'membership_fee' => round($membershipFee, 2),
             'security_amount' => round($securityAmount, 2),
+            'charges' => round($totalCharges, 2),
+            'amount_receivable' => round($principal - ($totalCharges + $securityAmount), 2),
             'total_repayment' => round($principal + $interest, 2),
         ];
     }

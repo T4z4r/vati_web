@@ -40,7 +40,18 @@
                 <select id="product" name="loan_product_id" required>
                     <option value="">Select product</option>
                     @foreach($products as $product)
-                        <option value="{{ $product->id }}" data-min="{{ $product->minimum_amount }}" data-max="{{ $product->maximum_amount }}" data-rate="{{ $product->annual_interest_rate }}" data-minmonths="{{ $product->minimum_duration_months }}" data-maxmonths="{{ $product->maximum_duration_months }}" @selected((int) old('loan_product_id', $application->loan_product_id) === $product->id)>{{ $product->name }}</option>
+                        <option value="{{ $product->id }}"
+                            data-min="{{ $product->minimum_amount }}"
+                            data-max="{{ $product->maximum_amount }}"
+                            data-rate="{{ $product->annual_interest_rate }}"
+                            data-minmonths="{{ $product->minimum_duration_months }}"
+                            data-maxmonths="{{ $product->maximum_duration_months }}"
+                            data-processing-fee="{{ $product->processing_fee_percentage }}"
+                            data-transaction-fee="{{ $product->transaction_fee_percentage }}"
+                            data-security-percentage="{{ $product->security_percentage }}"
+                            data-membership-fee="{{ $product->membership_fee }}"
+                            data-vat="{{ $product->vat_percentage }}"
+                            @selected((int) old('loan_product_id', $application->loan_product_id) === $product->id)>{{ $product->name }}</option>
                     @endforeach
                 </select>
             </label>
@@ -54,6 +65,8 @@
             <label>Requested amount (TZS)<input id="amount" type="number" min="1" name="requested_amount" value="{{ old('requested_amount', $application->requested_amount) }}" required></label>
             <label>Duration (months)<input id="months" type="number" min="1" name="duration_months" value="{{ old('duration_months', $application->duration_months) }}" required></label>
             <label>Estimated total repayment<input id="estimate" readonly placeholder="Choose product and terms"></label>
+            <label>Estimated charges<input id="charges" readonly placeholder="Choose product and terms"></label>
+            <label>Estimated amount receivable<input id="receivable" readonly placeholder="Choose product and terms"></label>
             <label>Existing loan balance<input type="number" min="0" name="existing_loan_balance" value="{{ old('existing_loan_balance', $application->existing_loan_balance ?? 0) }}"></label>
             <label>Refinancing amount<input type="number" min="0" name="refinancing_amount" value="{{ old('refinancing_amount', $application->refinancing_amount ?? 0) }}"></label>
             <label>Top-up increment<input type="number" min="0" name="increment_amount" value="{{ old('increment_amount', $application->increment_amount ?? 0) }}"></label>
@@ -103,7 +116,12 @@ const product = document.getElementById('product');
 const amount = document.getElementById('amount');
 const months = document.getElementById('months');
 const estimate = document.getElementById('estimate');
+const charges = document.getElementById('charges');
+const receivable = document.getElementById('receivable');
 const allocations = [...document.querySelectorAll('.allocation')];
+function formatMoney(value) {
+    return 'TZS ' + Number(value).toLocaleString(undefined, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+}
 function calculate() {
     const option = product.selectedOptions[0];
     const principal = Number(amount.value);
@@ -113,8 +131,25 @@ function calculate() {
         amount.max = option.dataset.max;
         months.min = option.dataset.minmonths;
         months.max = option.dataset.maxmonths;
-        estimate.value = 'TZS ' + Math.round(principal + principal * (Number(option.dataset.rate) / 100) * (duration / 12)).toLocaleString();
-    } else estimate.value = '';
+        const rate = Number(option.dataset.rate) / 100;
+        const interest = principal * rate * (duration / 12);
+        const processingFee = principal * (Number(option.dataset.processingFee) / 100);
+        const transactionFee = principal * (Number(option.dataset.transactionFee) / 100);
+        const securityAmount = principal * (Number(option.dataset.securityPercentage) / 100);
+        const membershipFee = Number(option.dataset.membershipFee) || 0;
+        const vatRate = Number(option.dataset.vat) / 100;
+        const processingFeeVat = processingFee * vatRate;
+        const transactionFeeVat = transactionFee * vatRate;
+        const totalCharges = processingFee + processingFeeVat + transactionFee + transactionFeeVat + membershipFee;
+        const receivableAmount = principal - (totalCharges + securityAmount);
+        estimate.value = formatMoney(principal + interest);
+        charges.value = formatMoney(totalCharges);
+        receivable.value = formatMoney(receivableAmount);
+    } else {
+        estimate.value = '';
+        charges.value = '';
+        receivable.value = '';
+    }
     const allocated = allocations.reduce((sum, input) => sum + Number(input.value || 0), 0);
     document.getElementById('allocated-total').textContent = 'TZS ' + allocated.toLocaleString();
 }
