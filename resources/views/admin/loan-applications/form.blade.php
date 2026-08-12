@@ -98,6 +98,18 @@
                 </label>
             </div>
 
+            <div class="card" style="margin-top:24px">
+                <div class="card-head"><h2>Loan computation summary</h2></div>
+                <div class="card-body detail-grid">
+                    <div class="detail"><small>Estimated total repayment</small><strong id="summary-estimate">TZS 0.00</strong></div>
+                    <div class="detail"><small>Estimated charges</small><strong id="summary-charges">TZS 0.00</strong></div>
+                    <div class="detail"><small>Estimated amount receivable</small><strong id="summary-receivable">TZS 0.00</strong></div>
+                    <div class="detail"><small>Processing fee</small><strong id="summary-processing-fee">TZS 0.00</strong></div>
+                    <div class="detail"><small>Transaction fee</small><strong id="summary-transaction-fee">TZS 0.00</strong></div>
+                    <div class="detail"><small>Security held</small><strong id="summary-security">TZS 0.00</strong></div>
+                </div>
+            </div>
+
             <h3 class="section-title" style="margin-top:25px">Income & expenditure assessment</h3>
             <div class="form-grid">
                 <label>Core business income<input type="number" min="0" name="assessment[core_business_income]"
@@ -195,13 +207,28 @@
                 const transactionFeeVat = transactionFee * vatRate;
                 const totalCharges = processingFee + processingFeeVat + transactionFee + transactionFeeVat + membershipFee;
                 const receivableAmount = principal - (totalCharges + securityAmount);
-                estimate.value = formatMoney(principal + interest);
+                const totalRepayment = principal + interest;
+
+                estimate.value = formatMoney(totalRepayment);
                 charges.value = formatMoney(totalCharges);
                 receivable.value = formatMoney(receivableAmount);
+
+                document.getElementById('summary-estimate').textContent = formatMoney(totalRepayment);
+                document.getElementById('summary-charges').textContent = formatMoney(totalCharges);
+                document.getElementById('summary-receivable').textContent = formatMoney(receivableAmount);
+                document.getElementById('summary-processing-fee').textContent = formatMoney(processingFee + processingFeeVat);
+                document.getElementById('summary-transaction-fee').textContent = formatMoney(transactionFee + transactionFeeVat);
+                document.getElementById('summary-security').textContent = formatMoney(securityAmount);
             } else {
                 estimate.value = '';
                 charges.value = '';
                 receivable.value = '';
+                document.getElementById('summary-estimate').textContent = 'TZS 0.00';
+                document.getElementById('summary-charges').textContent = 'TZS 0.00';
+                document.getElementById('summary-receivable').textContent = 'TZS 0.00';
+                document.getElementById('summary-processing-fee').textContent = 'TZS 0.00';
+                document.getElementById('summary-transaction-fee').textContent = 'TZS 0.00';
+                document.getElementById('summary-security').textContent = 'TZS 0.00';
             }
             const allocated = allocations.reduce((sum, input) => sum + Number(input.value || 0), 0);
             document.getElementById('allocated-total').textContent = 'TZS ' + allocated.toLocaleString();
