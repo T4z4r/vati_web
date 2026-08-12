@@ -19,7 +19,7 @@ class LoanApplicationController extends Controller
 {
     public function index(Request $request)
     {
-        $applications = LoanApplication::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))))->latest()->paginate(20)->withQueryString();
+        $applications = LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))))->latest()->paginate(20)->withQueryString();
 
         return view('admin.loan-applications.index', compact('applications'));
     }
@@ -126,6 +126,21 @@ class LoanApplicationController extends Controller
         }
 
         return back()->with('success', 'Application rejected.');
+    }
+
+    public function destroy(LoanApplication $loanApplication)
+    {
+        if ($loanApplication->loan()->exists()) {
+            return back()->with('error', 'This application already has a loan account and cannot be deleted.');
+        }
+
+        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::REJECTED, ApplicationStatus::CANCELLED], true)) {
+            return back()->with('error', 'Only draft, rejected, or cancelled applications can be deleted.');
+        }
+
+        $loanApplication->delete();
+
+        return redirect()->route('admin.loan-applications.index')->with('success', 'Loan application deleted.');
     }
 
     private function branchId(Request $request): ?int

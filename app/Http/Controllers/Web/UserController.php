@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -19,7 +21,7 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('admin.users.create', ['branches' => Branch::where('status', true)->orderBy('branch_name')->get(), 'roles' => Role::orderBy('name')->get()]);
+        return view('admin.users.create', $this->formData(new User));
     }
 
     public function store(Request $request)
@@ -36,5 +38,57 @@ class UserController extends Controller
     public function show(User $user)
     {
         return view('admin.users.show', ['user' => $user->load('branch', 'roles', 'permissions')]);
+    }
+
+    public function edit(User $user)
+    {
+        return view('admin.users.create', $this->formData($user->load('roles')));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'max:150'],
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user)],
+            'password' => ['nullable', 'min:10'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
+            'role' => ['required', 'exists:roles,name'],
+            'status' => ['nullable', 'boolean'],
+        ]);
+
+        $role = $data['role'];
+        unset($data['role']);
+
+        $data['status'] = $request->boolean('status');
+        if (! filled($data['password'] ?? null)) {
+            unset($data['password']);
+        } else {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($data);
+        $user->syncRoles($role);
+
+        return redirect()->route('admin.users.show', $user)->with('success', 'Staff account updated.');
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        if ($request->user()->is($user)) {
+            return back()->with('error', 'You cannot delete your own signed-in account.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'Staff account deleted.');
+    }
+
+    private function formData(User $user): array
+    {
+        return [
+            'user' => $user,
+            'branches' => Branch::where('status', true)->orderBy('branch_name')->get(),
+            'roles' => Role::orderBy('name')->get(),
+        ];
     }
 }

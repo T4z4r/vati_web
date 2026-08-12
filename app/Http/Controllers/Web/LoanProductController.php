@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Loan;
 use App\Models\LoanProduct;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
@@ -42,6 +43,17 @@ class LoanProductController extends Controller
         $loanProduct->update($this->data($request, $loanProduct));
 
         return redirect()->route('admin.loan-products.show', $loanProduct)->with('success', 'Loan product updated.');
+    }
+
+    public function destroy(LoanProduct $loanProduct)
+    {
+        if ($loanProduct->applications()->exists() || Loan::where('loan_product_id', $loanProduct->id)->exists()) {
+            return back()->with('error', 'This product has lending history and cannot be deleted.');
+        }
+
+        $loanProduct->delete();
+
+        return redirect()->route('admin.loan-products.index')->with('success', 'Loan product deleted.');
     }
 
     private function data(Request $request, ?LoanProduct $product = null): array
