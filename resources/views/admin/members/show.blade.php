@@ -1,24 +1,167 @@
 @extends('layouts.admin')
-@section('title',$member->membership_number)
+@section('title', $member->membership_number)
 @section('content')
-<div class="page-head"><div><p class="eyebrow">{{ $member->membership_number }}</p><h1>{{ $member->first_name }} {{ $member->middle_name }} {{ $member->last_name }}</h1><p>{{ $member->group->group_name }} · {{ $member->branch->branch_name }}</p></div><div class="head-actions"><span class="badge {{ $member->status }}">{{ $member->status }}</span><a class="btn btn-primary" href="{{ route('admin.loan-applications.create',['member_id'=>$member->id]) }}">New loan application</a>@can('edit-members')<a class="btn btn-secondary" href="{{ route('admin.members.edit',$member) }}">Edit</a>@endcan @can('delete-members')<form method="POST" action="{{ route('admin.members.destroy',$member) }}">@csrf @method('DELETE')<button class="btn btn-danger" data-confirm="Delete this member? Members with loan history cannot be deleted.">Delete</button></form>@endcan</div></div>
-<div class="grid-2"><div><div class="card"><div class="card-head"><h2>Member profile</h2></div><div class="card-body detail-grid"><div class="detail"><small>Phone</small><strong>{{ $member->phone }}</strong></div><div class="detail"><small>National ID</small><strong>{{ $member->national_id ?: '—' }}</strong></div><div class="detail"><small>Date of birth</small><strong>{{ $member->date_of_birth?->format('d M Y') ?? '—' }}</strong></div><div class="detail"><small>Gender</small><strong>{{ $member->gender ?: '—' }}</strong></div><div class="detail"><small>Occupation</small><strong>{{ $member->occupation ?: '—' }}</strong></div><div class="detail"><small>Joined group</small><strong>{{ $member->activeGroupMembership?->joined_at?->format('d M Y') ?? '—' }}</strong></div></div></div><br>
-<div class="card"><div class="card-head"><h2>Loan history</h2></div><div class="table-wrap"><table><thead><tr><th>Loan</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead><tbody>@forelse($loans as $loan)<tr><td><a class="table-link" href="{{ route('admin.loans.show',$loan) }}">{{ $loan->loan_number }}</a></td><td>{{ $loan->product->name }}</td><td class="money">TZS {{ number_format($loan->total_balance) }}</td><td><span class="badge {{ $loan->status->value }}">{{ $loan->status->value }}</span></td></tr>@empty<tr><td colspan="4" class="empty">No loans yet.</td></tr>@endforelse</tbody></table></div></div></div>
-<div><div class="card"><div class="card-head"><h2>KYC & business information</h2><span class="badge {{ $member->kyc?'active':'pending' }}">{{ $member->kyc?'Captured':'Incomplete' }}</span></div><form class="card-body" method="POST" action="{{ route('admin.members.kyc.update',$member) }}">@csrf @method('PUT')<div class="form-grid"><label>M-Pesa phone<input name="mpesa_phone" value="{{ $member->kyc?->mpesa_phone }}"></label><label>House number<input name="house_number" value="{{ $member->kyc?->house_number }}"></label><label>Business name<input name="business_name" value="{{ $member->kyc?->business_name }}"></label><label>Business type<input name="business_type" value="{{ $member->kyc?->business_type }}"></label><label>Monthly income<input type="number" name="household_monthly_income" value="{{ $member->kyc?->household_monthly_income }}"></label><label>Monthly expenses<input type="number" name="household_monthly_expenses" value="{{ $member->kyc?->household_monthly_expenses }}"></label><label>Dependants<input type="number" name="number_of_dependants" value="{{ $member->kyc?->number_of_dependants }}"></label><label>House ownership<input name="house_ownership_status" value="{{ $member->kyc?->house_ownership_status }}"></label><label class="full">Business address<textarea name="business_address">{{ $member->kyc?->business_address }}</textarea></label></div><div class="form-actions"><button class="btn btn-primary">Save KYC</button></div></form></div><br>
-<div class="card"><div class="card-head"><h2>Security account</h2><strong class="money">TZS {{ number_format($member->securityAccount?->balance ?? 0) }}</strong></div><form class="card-body" method="POST" action="{{ route('admin.security.store',$member) }}">@csrf<div class="form-grid"><label>Transaction<select name="transaction_type"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option><option value="refund">Refund</option><option value="adjustment">Adjustment</option></select></label><label>Amount<input type="number" name="amount" min="1" required></label><label class="full">Remarks<input name="remarks"></label></div><div class="form-actions"><button class="btn btn-gold">Post transaction</button></div></form></div></div></div>
-<br>
-@can('replace-passbooks')
-<div class="card">
-    <div class="card-head"><h2>Duplicate passbook</h2><span>TZS 1,000 required charge</span></div>
-    <form class="card-body" method="POST" action="{{ route('admin.members.passbook-replacements.store', $member) }}">
-        @csrf
-        <div class="form-grid">
-            <label>Reason<select name="reason"><option value="lost">Lost</option><option value="damaged">Damaged</option></select></label>
-            <label>Payment reference<input name="payment_reference" required></label>
-            <label class="full">Remarks<input name="remarks"></label>
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">{{ $member->membership_number }}</p>
+            <h1>{{ $member->first_name }} {{ $member->middle_name }} {{ $member->last_name }}</h1>
+            <p>{{ $member->group->group_name }} · {{ $member->branch->branch_name }}</p>
         </div>
-        <div class="form-actions"><button class="btn btn-gold">Record payment and issue duplicate</button></div>
-    </form>
-</div>
-@endcan
+        <div class="head-actions"><span class="badge {{ $member->status }}">{{ $member->status }}</span><a
+                class="btn btn-primary" href="{{ route('admin.loan-applications.create', ['member_id' => $member->id]) }}">New
+                loan application</a>
+            @can('edit-members')
+                <a class="btn btn-secondary" href="{{ route('admin.members.edit', $member) }}">Edit</a>
+                @endcan @can('delete-members')
+                <form method="POST" action="{{ route('admin.members.destroy', $member) }}">@csrf @method('DELETE')<button
+                        class="btn btn-danger"
+                        data-confirm="Delete this member? Members with loan history cannot be deleted.">Delete</button></form>
+            @endcan
+        </div>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="card">
+                <div class="card-head">
+                    <h2>Member profile</h2>
+                </div>
+                <div class="card-body detail-grid">
+                    <div class="detail"><small>Phone</small><strong>{{ $member->phone }}</strong></div>
+                    <div class="detail"><small>Alternate
+                            phone</small><strong>{{ $member->alternate_phone ?: '—' }}</strong></div>
+                    <div class="detail"><small>National ID</small><strong>{{ $member->national_id ?: '—' }}</strong></div>
+                    <div class="detail"><small>Voter ID</small><strong>{{ $member->voter_id ?: '—' }}</strong></div>
+                    <div class="detail"><small>Guardian name</small><strong>{{ $member->guardian_name ?: '—' }}</strong>
+                    </div>
+                    <div class="detail"><small>Date of
+                            birth</small><strong>{{ $member->date_of_birth?->format('d M Y') ?? '—' }}</strong></div>
+                    <div class="detail"><small>Gender</small><strong>{{ $member->gender ?: '—' }}</strong></div>
+                    <div class="detail"><small>Marital status</small><strong>{{ $member->marital_status ?: '—' }}</strong>
+                    </div>
+                    <div class="detail"><small>Occupation</small><strong>{{ $member->occupation ?: '—' }}</strong></div>
+                    <div class="detail"><small>Nationality</small><strong>{{ $member->nationality ?: '—' }}</strong></div>
+                    <div class="detail"><small>Joined
+                            group</small><strong>{{ $member->activeGroupMembership?->joined_at?->format('d M Y') ?? '—' }}</strong>
+                    </div>
+                    <div class="detail"><small>Admission
+                            date</small><strong>{{ $member->admission_date?->format('d M Y') ?? '—' }}</strong></div>
+                    <div class="detail"><small>Passbook
+                            issued</small><strong>{{ $member->passbook_issue_date?->format('d M Y') ?? '—' }}</strong>
+                    </div>
+                </div>
+            </div><br>
+            <div class="card">
+                <div class="card-head">
+                    <h2>Address information</h2>
+                </div>
+                <div class="card-body detail-grid">
+                    <div class="detail"><small>Physical
+                            address</small><strong>{{ $member->physical_address ?: '—' }}</strong></div>
+                    <div class="detail"><small>Region</small><strong>{{ $member->region ?: '—' }}</strong></div>
+                    <div class="detail"><small>District</small><strong>{{ $member->district ?: '—' }}</strong></div>
+                    <div class="detail"><small>Ward</small><strong>{{ $member->ward ?: '—' }}</strong></div>
+                    <div class="detail"><small>Street</small><strong>{{ $member->street ?: '—' }}</strong></div>
+                </div>
+            </div><br>
+            <div class="card">
+                <div class="card-head">
+                    <h2>Loan history</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Loan</th>
+                                <th>Product</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($loans as $loan)
+                                <tr>
+                                    <td><a class="table-link"
+                                            href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a></td>
+                                    <td>{{ $loan->product->name }}</td>
+                                    <td class="money">TZS {{ number_format($loan->total_balance) }}</td>
+                                    <td><span class="badge {{ $loan->status->value }}">{{ $loan->status->value }}</span>
+                                    </td>
+                            </tr>@empty<tr>
+                                    <td colspan="4" class="empty">No loans yet.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="card">
+                <div class="card-head">
+                    <h2>KYC & business information</h2><span
+                        class="badge {{ $member->kyc ? 'active' : 'pending' }}">{{ $member->kyc ? 'Captured' : 'Incomplete' }}</span>
+                </div>
+                <form class="card-body" method="POST" action="{{ route('admin.members.kyc.update', $member) }}">@csrf
+                    @method('PUT')<div class="form-grid"><label>M-Pesa phone<input name="mpesa_phone"
+                                value="{{ $member->kyc?->mpesa_phone }}"></label><label>House number<input
+                                name="house_number" value="{{ $member->kyc?->house_number }}"></label><label>Business
+                            name<input name="business_name"
+                                value="{{ $member->kyc?->business_name }}"></label><label>Business type<input
+                                name="business_type" value="{{ $member->kyc?->business_type }}"></label><label
+                            class="full">Business address
+                            <textarea name="business_address">{{ $member->kyc?->business_address }}</textarea>
+                        </label><label>Bank account number<input name="bank_account_number"
+                                value="{{ $member->kyc?->bank_account_number }}"></label><label>Bank account name<input
+                                name="bank_account_name" value="{{ $member->kyc?->bank_account_name }}"></label><label>Bank
+                            name<input name="bank_name" value="{{ $member->kyc?->bank_name }}"></label><label>Monthly
+                            income<input type="number" name="household_monthly_income"
+                                value="{{ $member->kyc?->household_monthly_income }}"></label><label>Monthly expenses<input
+                                type="number" name="household_monthly_expenses"
+                                value="{{ $member->kyc?->household_monthly_expenses }}"></label><label>Dependants<input
+                                type="number" name="number_of_dependants"
+                                value="{{ $member->kyc?->number_of_dependants }}"></label><label>House ownership<input
+                                name="house_ownership_status" value="{{ $member->kyc?->house_ownership_status }}"></label>
+                    </div>
+                    <div class="form-actions"><button class="btn btn-primary">Save KYC</button></div>
+                </form>
+            </div><br>
+            <div class="card">
+                <div class="card-head">
+                    <h2>Security account</h2><strong class="money">TZS
+                        {{ number_format($member->securityAccount?->balance ?? 0) }}</strong>
+                </div>
+                <form class="card-body" method="POST" action="{{ route('admin.security.store', $member) }}">@csrf<div
+                        class="form-grid"><label>Transaction<select name="transaction_type">
+                                <option value="deposit">Deposit</option>
+                                <option value="withdrawal">Withdrawal</option>
+                                <option value="refund">Refund</option>
+                                <option value="adjustment">Adjustment</option>
+                            </select></label><label>Amount<input type="number" name="amount" min="1"
+                                required></label><label class="full">Remarks<input name="remarks"></label></div>
+                    <div class="form-actions"><button class="btn btn-gold">Post transaction</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <br>
+    @can('replace-passbooks')
+        <div class="card">
+            <div class="card-head">
+                <h2>Duplicate passbook</h2><span>TZS 1,000 required charge</span>
+            </div>
+            <form class="card-body" method="POST"
+                action="{{ route('admin.members.passbook-replacements.store', $member) }}">
+                @csrf
+                <div class="form-grid">
+                    <label>Reason<select name="reason">
+                            <option value="lost">Lost</option>
+                            <option value="damaged">Damaged</option>
+                        </select></label>
+                    <label>Payment reference<input name="payment_reference" required></label>
+                    <label class="full">Remarks<input name="remarks"></label>
+                </div>
+                <div class="form-actions"><button class="btn btn-gold">Record payment and issue duplicate</button></div>
+            </form>
+        </div>
+    @endcan
 @endsection
