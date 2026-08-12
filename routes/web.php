@@ -66,6 +66,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show')->middleware('permission:view-loans');
     Route::post('loans/{loan}/disburse', [LoanController::class, 'disburse'])->name('loans.disburse')->middleware('permission:disburse-loans');
     Route::post('loans/{loan}/settle', [LoanController::class, 'settle'])->name('loans.settle')->middleware('permission:settle-loans');
+    Route::post('loans/{loan}/cycles', [LoanController::class, 'storeCycle'])->name('loans.cycles.store')->middleware('permission:edit-loans');
+    Route::post('loans/{loan}/installments', [LoanController::class, 'recordInstallment'])->name('loans.installments.store')->middleware('permission:collect-payments');
+    Route::post('loans/{loan}/security-transactions', [LoanController::class, 'recordSecurityTransaction'])->name('loans.security-transactions.store')->middleware('permission:manage-security');
     Route::post('loans/{loan}/payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('permission:collect-payments');
     Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse'])->name('payments.reverse')->middleware('permission:reverse-payments');
     Route::post('members/{member}/security', [SecurityController::class, 'store'])->name('security.store')->middleware('permission:manage-security');
