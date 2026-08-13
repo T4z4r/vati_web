@@ -63,6 +63,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
 
     Route::resource('loan-applications', LoanApplicationController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:create-loan-applications');
     Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');
+    Route::get('loan-applications/{loanApplication}/export', [LoanApplicationController::class, 'export'])
+        ->name('loan-applications.export')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationController::class, 'submit'])->name('loan-applications.submit')->middleware('permission:create-loan-applications');
     Route::post('loan-applications/{loanApplication}/witnesses', [LoanApplicationController::class, 'witness'])->name('loan-applications.witnesses.store')->middleware('permission:manage-group-witnesses');
     Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationController::class, 'approve'])->name('loan-applications.approve')->middleware('permission:approve-loan-applications');

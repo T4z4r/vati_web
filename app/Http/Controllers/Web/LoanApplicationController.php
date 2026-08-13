@@ -9,9 +9,11 @@ use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Services\ApplicationComplianceService;
-use App\Services\LoanCalculatorService;
+use App\Services\ApplicationDetailService;
 use App\Services\LoanApprovalService;
+use App\Services\LoanCalculatorService;
 use App\Services\OnboardingService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +84,15 @@ class LoanApplicationController extends Controller
             'figures' => $figures,
             'installmentCount' => $installmentCount,
         ]);
+    }
+
+    public function export(LoanApplication $loanApplication, ApplicationDetailService $details)
+    {
+        $data = $details->build($loanApplication);
+
+        return Pdf::loadView('pdf.loan-application', compact('data'))
+            ->setPaper('a4')
+            ->download('VATI-loan-application-'.$loanApplication->application_number.'.pdf');
     }
 
     public function submit(LoanApplication $loanApplication, ApplicationComplianceService $compliance)

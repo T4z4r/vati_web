@@ -165,6 +165,7 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number)
+            ->assertSee('Download application PDF')
             ->assertSee(basename($member->photo_path), false)
             ->assertSee('data-member-photo', false)
             ->assertSeeInOrder([
@@ -181,6 +182,10 @@ class WebPortalTest extends TestCase
                 'Group witnesses',
                 'Recommendations and verification',
             ]);
+        $this->get(route('admin.loan-applications.export', $application))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload('VATI-loan-application-'.$application->application_number.'.pdf');
         $updated = $this->applicationPayload($member);
         $updated['requested_amount'] = 1200000;
         $updated['utilizations'] = [['purpose' => 'Working capital', 'allocation_amount' => 1200000, 'current_asset_value' => 0]];
