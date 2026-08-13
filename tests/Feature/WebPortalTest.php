@@ -283,6 +283,24 @@ class WebPortalTest extends TestCase
         $this->post(route('admin.payments.store', $loan), ['loan_installment_id' => $firstInstallment->id, 'amount' => $partialAmount, 'payment_method' => 'cash'])->assertRedirect();
         $this->assertDatabaseHas('payments', ['loan_id' => $loan->id, 'amount' => $partialAmount, 'status' => 'posted']);
         $this->assertSame('partially_paid', $firstInstallment->refresh()->status);
+        $realizedRepaymentIncome = (float) $loan->payments()
+            ->where('status', 'posted')
+            ->with('allocations')
+            ->get()
+            ->flatMap->allocations
+            ->sum(fn ($allocation) => (float) $allocation->interest_amount + (float) $allocation->penalty_amount);
+        $this->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(__('Management financial summary'))
+            ->assertSee(__('Total loan portfolio'))
+            ->assertSee(__('Total posted payments'))
+            ->assertSee(__('Repayment profit / loss'))
+            ->assertSee(__('Total loan disbursement'))
+            ->assertSee(__('Total loan applications'))
+            ->assertSee(number_format((float) $loan->principal_amount, 2))
+            ->assertSee(number_format($partialAmount, 2))
+            ->assertSee(number_format($realizedRepaymentIncome, 2))
+            ->assertSee(number_format(1000000, 2));
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Payment history')->assertSee('partially paid');
         $this->get(route('admin.members.show', $borrower))
             ->assertOk()

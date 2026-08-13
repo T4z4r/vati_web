@@ -57,5 +57,18 @@
     "Signing in...": "Inaingia...",
     "Staff Accounts": "Akaunti za Wafanyakazi",
     "Roles & Permissions": "Majukumu na Ruhusa",
-    "Assign system permissions to staff roles from this dedicated page.": "Weka ruhusa za mfumo kwa majukumu ya wafanyakazi kwenye ukurasa huu maalum."
+    "Assign system permissions to staff roles from this dedicated page.": "Weka ruhusa za mfumo kwa majukumu ya wafanyakazi kwenye ukurasa huu maalum.",
+    "Management financial summary": "Muhtasari wa kifedha wa usimamizi",
+    "Total loan portfolio": "Jumla ya hazina ya mikopo",
+    "Outstanding principal and interest": "Mtaji na riba iliyobaki",
+    "Total posted payments": "Jumla ya marejesho yaliyopokelewa",
+    "payments received": "marejesho yaliyopokelewa",
+    "Repayment profit / loss": "Faida / hasara ya marejesho",
+    "Interest and penalties received": "Riba na adhabu zilizopokelewa",
+    "Waived interest": "Riba iliyosamehewa",
+    "Total loan disbursement": "Jumla ya mikopo iliyotolewa",
+    "Principal released to members": "Mtaji uliotolewa kwa wanachama",
+    "Total loan applications": "Jumla ya maombi ya mkopo",
+    "Requested for disbursement": "Kiasi kilichoombwa kwa ajili ya kutolewa",
+    "Daily operations": "Shughuli za kila siku"
 }

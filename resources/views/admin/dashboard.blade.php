@@ -18,6 +18,26 @@
             <button class="btn btn-secondary">{{ __('Apply filter') }}</button>
         </form>
     </div>
+    <h2 class="section-title">{{ __('Management financial summary') }}</h2>
+    <section class="stats">
+        <div class="stat gold">
+            <small>{{ __('Total loan portfolio') }}</small><strong>TZS {{ number_format($portfolio, 2) }}</strong><em>{{ __('Outstanding principal and interest') }}</em>
+        </div>
+        <div class="stat">
+            <small>{{ __('Total posted payments') }}</small><strong>TZS {{ number_format($totalPayments, 2) }}</strong><em>{{ number_format($totalPaymentCount) }} {{ __('payments received') }}</em>
+        </div>
+        <div class="stat {{ $repaymentProfitLoss >= 0 ? 'gold' : '' }}">
+            <small>{{ __('Repayment profit / loss') }}</small><strong>{{ $repaymentProfitLoss < 0 ? '-' : '' }}TZS {{ number_format(abs($repaymentProfitLoss), 2) }}</strong><em>{{ __('Interest and penalties received') }}: TZS {{ number_format($repaymentIncome, 2) }} · {{ __('Waived interest') }}: TZS {{ number_format($repaymentLoss, 2) }}</em>
+        </div>
+        <div class="stat">
+            <small>{{ __('Total loan disbursement') }}</small><strong>TZS {{ number_format($totalDisbursements, 2) }}</strong><em>{{ __('Principal released to members') }}</em>
+        </div>
+        <div class="stat">
+            <small>{{ __('Total loan applications') }}</small><strong>{{ number_format($totalApplications) }}</strong><em>{{ __('Requested for disbursement') }}: TZS {{ number_format($requestedForDisbursement, 2) }}</em>
+        </div>
+    </section>
+
+    <h2 class="section-title">{{ __('Daily operations') }}</h2>
     <section class="stats">
         <div class="stat">
             <small>{{ __('Active members') }}</small><strong>{{ number_format($activeMembers) }}</strong><em>{{ __('Current member base') }}</em>
@@ -25,8 +45,6 @@
         <div class="stat">
             <small>{{ __('Active loans') }}</small><strong>{{ number_format($activeLoanCount) }}</strong><em>{{ __('Performing portfolio') }}</em>
         </div>
-        <div class="stat gold"><small>{{ __('Outstanding portfolio') }}</small><strong>TZS
-                {{ number_format($portfolio) }}</strong><em>{{ __('Principal + interest') }}</em></div>
         <div class="stat">
             <small>{{ __('Collection rate') }}</small><strong>{{ number_format($collectionRate, 1) }}%</strong>
             <div class="progress"><span style="width:{{ min(100, $collectionRate) }}%"></span></div>
