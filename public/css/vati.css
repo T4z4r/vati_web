@@ -563,56 +563,50 @@ body.sidebar-collapsed .main-area {
 .card-body {
     padding: 20px;
 }
-.modal-open {
-    overflow: hidden;
-}
-.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
-    display: grid;
-    place-items: center;
-    padding: 22px;
-    background: rgba(8, 28, 17, 0.48);
-}
-.modal-backdrop[hidden] {
-    display: none;
-}
-.modal-panel {
-    width: min(100%, 520px);
-    max-height: min(720px, calc(100vh - 44px));
-    overflow: auto;
-    background: var(--surface);
+.modal-content {
     border: 1px solid var(--line);
     border-radius: 8px;
     box-shadow: 0 26px 70px rgba(7, 35, 19, 0.24);
 }
-.modal-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 20px 20px 14px;
-    border-bottom: 1px solid var(--line);
+.modal-header,
+.modal-footer {
+    border-color: var(--line);
 }
-.modal-head h2 {
-    margin: 0;
+.modal-title {
     font-size: 21px;
     letter-spacing: -0.02em;
 }
 .modal-body {
     display: grid;
     gap: 16px;
-    padding: 20px;
 }
 .modal-body p {
     margin: 0;
 }
-.modal-actions {
+.approval-checklist {
+    display: grid;
+    gap: 8px;
+}
+.approval-check {
     display: flex;
-    justify-content: flex-end;
-    gap: 9px;
-    padding: 0 20px 20px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.approval-check.passed {
+    background: #e5f5eb;
+    color: #21743d;
+}
+.approval-check.blocked {
+    background: #fff4d8;
+    color: #8b6815;
+}
+.approval-check .ph {
+    margin-top: 1px;
+    font-size: 17px;
 }
 .dash-tabs {
     display: inline-flex;
