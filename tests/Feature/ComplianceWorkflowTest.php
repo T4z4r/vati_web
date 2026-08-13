@@ -60,21 +60,11 @@ class ComplianceWorkflowTest extends TestCase
         Sanctum::actingAs($this->admin);
     }
 
-    public function test_submission_allows_missing_applicant_evidence_but_approval_still_requires_it(): void
+    public function test_submission_allows_missing_applicant_and_guarantor_evidence_but_approval_still_requires_it(): void
     {
         $application = $this->application();
 
         $this->postJson("/api/v1/loan-applications/{$application->id}/submit")->assertUnprocessable();
-
-        foreach (['family', 'non_family'] as $index => $type) {
-            $this->post("/api/v1/loan-applications/{$application->id}/compliance/guarantors", [
-                'guarantor_type' => $type, 'name' => "Guarantor {$index}", 'relationship' => 'Relative',
-                'phone' => "25572000000{$index}", 'accept_declaration' => '1',
-                'signature' => UploadedFile::fake()->image("signature-{$index}.png"),
-                'thumbprint' => UploadedFile::fake()->image("thumbprint-{$index}.png"),
-                'joint_photo' => UploadedFile::fake()->image("photo-{$index}.jpg"),
-            ])->assertCreated();
-        }
 
         $this->putJson("/api/v1/loan-applications/{$application->id}/compliance/nominees", ['nominees' => [
             ['name' => 'Child One', 'relationship' => 'Child', 'percentage' => 60],
@@ -92,10 +82,10 @@ class ComplianceWorkflowTest extends TestCase
         $this->assertNull($application->applicant_signature_path);
         $this->assertNull($application->applicant_thumbprint_path);
         $this->assertSame(100.0, (float) $this->member->nominees()->sum('percentage'));
-        $this->assertSame(2, $application->guarantors()->count());
+        $this->assertSame(0, $application->guarantors()->count());
 
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Applicant consent, signature, thumbprint, and versioned loan terms are required before approval.');
+        $this->expectExceptionMessage('Two complete guarantor declarations with signatures, thumbprints, and joint photographs are required before approval.');
         app(ApplicationComplianceService::class)->assertReadyForApproval($application);
     }
 
