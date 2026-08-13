@@ -20,34 +20,32 @@
     </div>
 
     <div class="dash-tabs" role="tablist" aria-label="{{ __('Dashboard sections') }}">
-        <button type="button" class="dash-tab active" data-tab="overview" role="tab" aria-selected="true"><span
-                class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>{{ __('Overview') }}</button>
-        <button type="button" class="dash-tab" data-tab="charts" role="tab" aria-selected="false"><span
-                class="material-symbols-outlined" aria-hidden="true">monitoring</span>{{ __('Charts') }}</button>
+        <button type="button" class="dash-tab active" data-tab="overview" role="tab" aria-selected="true"><span class="ph ph-squares-four" aria-hidden="true"></span>{{ __('Overview') }}</button>
+        <button type="button" class="dash-tab" data-tab="charts" role="tab" aria-selected="false"><span class="ph ph-chart-line-up" aria-hidden="true"></span>{{ __('Charts') }}</button>
     </div>
 
     <div class="dash-panel" data-panel="overview">
         @if ($managementSummary)
             <div class="management-panel">
-                <h2 class="section-title"><span class="material-symbols-outlined"
-                        aria-hidden="true">workspace_premium</span>{{ __('Management financial summary') }}<span
-                        class="management-badge"><span class="material-symbols-outlined" aria-hidden="true"
-                            style="font-size:11px">verified</span>{{ __('Management') }}</span></h2>
+                <h2 class="section-title"><span class="ph ph-medal"
+                        aria-hidden="true"></span>{{ __('Management financial summary') }}<span
+                        class="management-badge"><span class="ph ph-check-circle" aria-hidden="true"
+                            style="font-size:11px"></span>{{ __('Management') }}</span></h2>
                 <section class="stats">
                     <div class="stat gold">
-                        <span class="material-symbols-outlined stat-icon" aria-hidden="true">account_balance</span>
+                        <span class="ph ph-bank stat-icon" aria-hidden="true"></span>
                         <small>{{ __('Total loan portfolio') }}</small><strong>TZS
                             {{ number_format($managementSummary['portfolio'], 2) }}</strong><em>{{ __('Outstanding principal and interest') }}</em>
                     </div>
                     <div class="stat">
-                        <span class="material-symbols-outlined stat-icon" aria-hidden="true">paid</span>
+                        <span class="ph ph-money stat-icon" aria-hidden="true"></span>
                         <small>{{ __('Total posted payments') }}</small><strong>TZS
                             {{ number_format($managementSummary['totalPayments'], 2) }}</strong><em>{{ number_format($managementSummary['totalPaymentCount']) }}
                             {{ __('payments received') }}</em>
                     </div>
                     <div class="stat {{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'gold' : 'danger' }}">
-                        <span class="material-symbols-outlined stat-icon"
-                            aria-hidden="true">{{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'trending_up' : 'trending_down' }}</span>
+                        <span class="ph {{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'ph-trend-up' : 'ph-trend-down' }} stat-icon"
+                            aria-hidden="true"></span>
                         <small>{{ __('Repayment profit / loss') }}</small><strong>{{ $managementSummary['repaymentProfitLoss'] < 0 ? '-' : '' }}TZS
                             {{ number_format(abs($managementSummary['repaymentProfitLoss']), 2) }}</strong><em>{{ __('Interest and penalties received') }}:
                             TZS {{ number_format($managementSummary['repaymentIncome'], 2) }} ·
@@ -55,12 +53,12 @@
                             TZS {{ number_format($managementSummary['repaymentLoss'], 2) }}</em>
                     </div>
                     <div class="stat">
-                        <span class="material-symbols-outlined stat-icon" aria-hidden="true">outbound</span>
+                        <span class="ph ph-arrow-up-right stat-icon" aria-hidden="true"></span>
                         <small>{{ __('Total loan disbursement') }}</small><strong>TZS
                             {{ number_format($managementSummary['totalDisbursements'], 2) }}</strong><em>{{ __('Principal released to members') }}</em>
                     </div>
                     <div class="stat">
-                        <span class="material-symbols-outlined stat-icon" aria-hidden="true">assignment</span>
+                        <span class="ph ph-clipboard-text stat-icon" aria-hidden="true"></span>
                         <small>{{ __('Total loan applications') }}</small><strong>{{ number_format($managementSummary['totalApplications']) }}</strong><em>{{ __('Requested for disbursement') }}:
                             TZS {{ number_format($managementSummary['requestedForDisbursement'], 2) }}</em>
                     </div>
@@ -71,30 +69,30 @@
         <h2 class="section-title">{{ __('Daily operations') }}</h2>
         <section class="stats">
             <div class="stat">
-                <span class="material-symbols-outlined stat-icon" aria-hidden="true">groups</span>
+                <span class="ph ph-users stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Active members') }}</small><strong>{{ number_format($activeMembers) }}</strong><em>{{ __('Current member base') }}</em>
             </div>
             <div class="stat">
-                <span class="material-symbols-outlined stat-icon" aria-hidden="true">account_balance_wallet</span>
+                <span class="ph ph-wallet stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Active loans') }}</small><strong>{{ number_format($activeLoanCount) }}</strong><em>{{ __('Performing portfolio') }}</em>
             </div>
             <div class="stat">
-                <span class="material-symbols-outlined stat-icon" aria-hidden="true">target</span>
+                <span class="ph ph-crosshair stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Collection rate') }}</small><strong>{{ number_format($collectionRate, 1) }}%</strong>
                 <div class="progress"><span style="width:{{ min(100, $collectionRate) }}%"></span></div>
             </div>
-            <div class="stat"><span class="material-symbols-outlined stat-icon"
-                    aria-hidden="true">schedule</span><small>{{ __('Expected today') }}</small><strong>TZS
+            <div class="stat"><span class="ph ph-clock stat-icon"
+                    aria-hidden="true"></span><small>{{ __('Expected today') }}</small><strong>TZS
                     {{ number_format($expected) }}</strong><em>{{ __('Scheduled collections') }}</em></div>
-            <div class="stat"><span class="material-symbols-outlined stat-icon"
-                    aria-hidden="true">payments</span><small>{{ __('Collected today') }}</small><strong>TZS
+            <div class="stat"><span class="ph ph-currency-circle-dollar stat-icon"
+                    aria-hidden="true"></span><small>{{ __('Collected today') }}</small><strong>TZS
                     {{ number_format($collected) }}</strong><em>{{ __('Posted payments') }}</em></div>
             <div class="stat danger">
-                <span class="material-symbols-outlined stat-icon" aria-hidden="true">warning</span>
+                <span class="ph ph-warning stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Overdue loans') }}</small><strong>{{ number_format($overdueLoans) }}</strong><em>{{ __('Requires follow-up') }}</em>
             </div>
             <div class="stat gold">
-                <span class="material-symbols-outlined stat-icon" aria-hidden="true">description</span>
+                <span class="ph ph-file-text stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Open applications') }}</small><strong>{{ number_format($pendingApplications) }}</strong><em>{{ __('In the approval pipeline') }}</em>
             </div>
         </section>
@@ -102,8 +100,7 @@
             <div class="card">
                 <div class="card-head">
                     <h2>{{ __('Recent collections') }}</h2><a class="table-link"
-                        href="{{ route('admin.loans.index') }}">{{ __('View loans') }} <span
-                            class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
+                        href="{{ route('admin.loans.index') }}">{{ __('View loans') }} <span class="ph ph-arrow-right" aria-hidden="true"></span></a>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -137,16 +134,14 @@
                     <h2>{{ __('Quick actions') }}</h2>
                 </div>
                 <div class="card-body">
-                    <div class="form-grid"><a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span
-                                class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                    <div class="form-grid"><a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="ph ph-user-plus" aria-hidden="true"></span>
                             {{ __('Register member') }}</a><a class="btn btn-gold"
-                            href="{{ route('admin.loan-applications.create') }}"><span class="material-symbols-outlined"
-                                aria-hidden="true">note_add</span> {{ __('New application') }}</a><a
-                            class="btn btn-secondary" href="{{ route('admin.groups.create') }}"><span
-                                class="material-symbols-outlined" aria-hidden="true">group_add</span>
+                            href="{{ route('admin.loan-applications.create') }}"><span class="ph ph-note-pencil"
+                                aria-hidden="true"></span> {{ __('New application') }}</a><a
+                            class="btn btn-secondary" href="{{ route('admin.groups.create') }}"><span class="ph ph-users-four" aria-hidden="true"></span>
                             {{ __('Create group') }}</a><a class="btn btn-secondary"
-                            href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined"
-                                aria-hidden="true">bar_chart</span> {{ __('View reports') }}</a>
+                            href="{{ route('admin.reports.index') }}"><span class="ph ph-chart-bar"
+                                aria-hidden="true"></span> {{ __('View reports') }}</a>
                     </div>
                 </div>
             </div>

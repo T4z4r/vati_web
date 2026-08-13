@@ -7,7 +7,7 @@
             <h1>{{ __('Loan products') }}</h1>
             <p>{{ __('Rates and fees are authoritative server-side rules.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.loan-products.create') }}"><span class="material-symbols-outlined" aria-hidden="true">add_card</span> {{ __('New product') }}</a>
+        <a class="btn btn-primary" href="{{ route('admin.loan-products.create') }}"><span class="ph ph-credit-card" aria-hidden="true"></span> {{ __('New product') }}</a>
     </div>
     <div class="card">
         <div class="table-wrap">

@@ -251,7 +251,7 @@ img.brand-mark {
     text-align: center;
     color: #a8c4b3;
 }
-.material-symbols-outlined {
+.ph {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -259,14 +259,7 @@ img.brand-mark {
     line-height: 1;
     font-weight: normal;
     font-style: normal;
-    letter-spacing: normal;
-    text-transform: none;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-feature-settings: "liga";
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "liga";
 }
 .sidebar .nav-icon {
     flex: 0 0 22px;
@@ -461,18 +454,18 @@ body.sidebar-collapsed .main-area {
     color: var(--green);
     background: var(--green-soft);
 }
-.icon-btn .material-symbols-outlined,
-.menu-btn .material-symbols-outlined {
+.icon-btn .ph,
+.menu-btn .ph {
     font-size: 22px;
 }
-.alert .material-symbols-outlined {
+.alert .ph {
     flex: 0 0 auto;
     margin-right: 6px;
     font-size: 19px;
     vertical-align: middle;
 }
-.btn .material-symbols-outlined,
-.table-link .material-symbols-outlined {
+.btn .ph,
+.table-link .ph {
     font-size: 18px;
     vertical-align: middle;
 }
@@ -597,7 +590,7 @@ body.sidebar-collapsed .main-area {
         background 0.18s ease,
         color 0.18s ease;
 }
-.dash-tab .material-symbols-outlined {
+.dash-tab .ph {
     font-size: 17px;
 }
 .dash-tab:hover {
@@ -646,7 +639,7 @@ body.sidebar-collapsed .main-area {
     align-items: center;
     gap: 9px;
 }
-.chart-card .card-head h2 .material-symbols-outlined {
+.chart-card .card-head h2 .ph {
     font-size: 18px;
     color: var(--green);
 }
@@ -666,7 +659,7 @@ body.sidebar-collapsed .main-area {
     color: var(--muted);
     text-align: center;
 }
-.chart-empty .material-symbols-outlined {
+.chart-empty .ph {
     font-size: 30px;
     color: #c3cdc7;
 }
@@ -753,7 +746,7 @@ body.sidebar-collapsed .main-area {
     align-items: center;
     gap: 9px;
 }
-.management-panel .section-title .material-symbols-outlined {
+.management-panel .section-title .ph {
     font-size: 16px;
     color: var(--gold);
 }
@@ -1001,7 +994,7 @@ textarea {
     color: var(--green);
     margin: 6px 0 15px;
 }
-.section-title .material-symbols-outlined {
+.section-title .ph {
     margin-right: 5px;
     font-size: 19px;
     vertical-align: -4px;

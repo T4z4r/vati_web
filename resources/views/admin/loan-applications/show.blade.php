@@ -29,7 +29,7 @@
         @if($application->cancellation_deadline && !$application->cancellation && !$application->loan?->disbursement)
             <form method="POST" action="{{ route('admin.loan-applications.cancel', $application) }}">@csrf<input type="hidden" name="reason" value="Mwombaji ametumia haki ya kughairi"><button class="btn btn-danger" data-confirm="Ughairi ombi hili?">Ghairi ombi</button></form>
         @endif
-        @if($application->loan)<a class="btn btn-primary" href="{{ route('admin.loans.show', $application->loan) }}">Fungua mkopo <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>@endif
+        @if($application->loan)<a class="btn btn-primary" href="{{ route('admin.loans.show', $application->loan) }}">Fungua mkopo <span class="ph ph-arrow-right" aria-hidden="true"></span></a>@endif
     </div>
 </div>
 

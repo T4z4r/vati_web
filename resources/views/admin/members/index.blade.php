@@ -7,7 +7,7 @@
             <h1>{{ __('Members') }}</h1>
             <p>{{ __('Search and manage registered VATI members.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="material-symbols-outlined" aria-hidden="true">person_add</span> {{ __('Register member') }}</a>
+        <a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="ph ph-user-plus" aria-hidden="true"></span> {{ __('Register member') }}</a>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">

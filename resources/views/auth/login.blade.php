@@ -8,7 +8,7 @@
     <meta name="color-scheme" content="light">
     <title>Sign in | VATI Microfinance</title>
     <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
-    <link rel="stylesheet" href="{{ asset('css/icons.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/phosphor.css') }}">
     <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
     <style>
         :root {
@@ -502,7 +502,7 @@
             cursor: pointer;
         }
 
-        .password-toggle .material-symbols-outlined {
+        .password-toggle .ph {
             font-size: 20px;
         }
 
@@ -592,7 +592,7 @@
             background: #f8fbf9;
         }
 
-        .secure-note>.material-symbols-outlined {
+        .secure-note>.ph {
             flex: 0 0 27px;
             color: var(--forest-700);
             font-size: 27px;
@@ -858,7 +858,7 @@
                 <div class="field @error('email') invalid @enderror">
                     <div class="label-row"><label for="email">{{ __('Email address') }}</label></div>
                     <div class="control">
-                        <span class="material-symbols-outlined control-icon" aria-hidden="true">mail</span>
+                        <span class="ph ph-envelope-simple control-icon" aria-hidden="true"></span>
                         <input id="email" type="email" name="email" value="{{ old('email') }}"
                             placeholder="name@vati.co.tz" autocomplete="username" inputmode="email" required autofocus>
                     </div>
@@ -875,13 +875,12 @@
                     <div class="label-row"><label for="password">{{ __('Password') }}</label><span id="caps-warning"
                             aria-live="polite">{{ __('Caps Lock is on') }}</span></div>
                     <div class="control">
-                        <span class="material-symbols-outlined control-icon" aria-hidden="true">lock</span>
+                        <span class="ph ph-lock-key control-icon" aria-hidden="true"></span>
                         <input id="password" type="password" name="password"
                             placeholder="{{ __('Enter your password') }}" autocomplete="current-password" required>
                         <button class="password-toggle" type="button" id="password-toggle"
-                            aria-label="{{ __('Show password') }}" aria-pressed="false"><span
-                                class="material-symbols-outlined toggle-icon"
-                                aria-hidden="true">visibility</span></button>
+                            aria-label="{{ __('Show password') }}" aria-pressed="false"><span class="ph ph-eye toggle-icon"
+                                aria-hidden="true"></span></button>
                     </div>
                     <small class="field-help">
                         @error('password')
@@ -897,12 +896,11 @@
                 </div>
 
                 <button class="submit-button" type="submit" id="login-button">
-                    <span class="button-label">{{ __('Sign in to portal') }}</span><span
-                        class="material-symbols-outlined submit-arrow" aria-hidden="true">arrow_forward</span>
+                    <span class="button-label">{{ __('Sign in to portal') }}</span><span class="ph ph-arrow-right submit-arrow" aria-hidden="true"></span>
                 </button>
 
                 <div class="secure-note">
-                    <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
+                    <span class="ph ph-shield-check" aria-hidden="true"></span>
                     <span><strong>{{ __('Protected staff access') }}</strong><small>{{ __('Your session and account activity are secured and recorded.') }}</small></span>
                 </div>
 
@@ -928,7 +926,8 @@
                 toggle.setAttribute('aria-pressed', String(willShow));
                 toggle.setAttribute('aria-label', willShow ? @json(__('Hide password')) :
                     @json(__('Show password')));
-                toggle.querySelector('.toggle-icon').textContent = willShow ? 'visibility_off' : 'visibility';
+                toggle.querySelector('.toggle-icon').classList.toggle('ph-eye-slash', willShow);
+                toggle.querySelector('.toggle-icon').classList.toggle('ph-eye', !willShow);
                 password.focus();
             });
 

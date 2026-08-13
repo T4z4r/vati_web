@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') · VATI</title>
     <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
-    <link rel="stylesheet" href="{{ asset('css/icons.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/phosphor.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
     <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
@@ -22,54 +22,54 @@
         <nav>
             <p class="nav-label">{{ __('Overview') }}</p>
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                href="{{ route('admin.dashboard') }}"><span class="material-symbols-outlined nav-icon"
-                    aria-hidden="true">dashboard</span> {{ __('Dashboard') }}</a>
+                href="{{ route('admin.dashboard') }}"><span class="ph ph-squares-four nav-icon"
+                    aria-hidden="true"></span> {{ __('Dashboard') }}</a>
             <p class="nav-label">{{ __('Operations') }}</p>
             @can('view-members')
                 <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
-                    href="{{ route('admin.members.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">groups</span> {{ __('Members') }}</a>
+                    href="{{ route('admin.members.index') }}"><span class="ph ph-users nav-icon"
+                        aria-hidden="true"></span> {{ __('Members') }}</a>
             @endcan
             @can('view-groups')
                 <a class="{{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
-                    href="{{ route('admin.groups.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">group_work</span> {{ __('Groups') }}</a>
+                    href="{{ route('admin.groups.index') }}"><span class="ph ph-users-four nav-icon"
+                        aria-hidden="true"></span> {{ __('Groups') }}</a>
             @endcan
             @can('view-loan-applications')
                 <a class="{{ request()->routeIs('admin.loan-applications.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-applications.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">description</span>
+                    href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-file-text nav-icon"
+                        aria-hidden="true"></span>
                     {{ __('Applications') }}</a>
             @endcan
             @can('view-loans')
                 <a class="{{ request()->routeIs('admin.loans.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loans.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">payments</span>
+                    href="{{ route('admin.loans.index') }}"><span class="ph ph-currency-circle-dollar nav-icon"
+                        aria-hidden="true"></span>
                     {{ __('Loans & Collections') }}</a>
             @endcan
             <p class="nav-label">{{ __('Management') }}</p>
             @can('view-loan-products')
                 <a class="{{ request()->routeIs('admin.loan-products.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-products.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">account_balance_wallet</span>
+                    href="{{ route('admin.loan-products.index') }}"><span class="ph ph-wallet nav-icon"
+                        aria-hidden="true"></span>
                     {{ __('Loan Products') }}</a>
             @endcan
             @can('view-reports')
                 <a class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
-                    href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">monitoring</span> {{ __('Reports') }}</a>
+                    href="{{ route('admin.reports.index') }}"><span class="ph ph-chart-line-up nav-icon"
+                        aria-hidden="true"></span> {{ __('Reports') }}</a>
             @endcan
             @role('super_admin|head_office_admin')
                 <a class="{{ request()->routeIs('admin.organization.*') ? 'active' : '' }}"
-                    href="{{ route('admin.organization.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">account_tree</span>
+                    href="{{ route('admin.organization.index') }}"><span class="ph ph-tree-structure nav-icon"
+                        aria-hidden="true"></span>
                     {{ __('Organization') }}</a>
                 <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">manage_accounts</span> {{ __('Staff Accounts') }}</a>
+                    href="{{ route('admin.users.index') }}"><span class="ph ph-user-gear nav-icon"
+                        aria-hidden="true"></span> {{ __('Staff Accounts') }}</a>
                 <a class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
-                    href="{{ route('admin.roles.permissions.index') }}"><span class="material-symbols-outlined nav-icon"
-                        aria-hidden="true">admin_panel_settings</span> {{ __('Roles & Permissions') }}</a>
+                    href="{{ route('admin.roles.permissions.index') }}"><span class="ph ph-shield-check nav-icon"
+                        aria-hidden="true"></span> {{ __('Roles & Permissions') }}</a>
             @endrole
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>
@@ -79,8 +79,8 @@
     <div class="main-area">
         <header class="topbar">
             <button class="menu-btn" id="sidebarToggle" type="button" aria-label="{{ __('Toggle sidebar') }}"
-                aria-expanded="true" title="{{ __('Collapse sidebar') }}"><span class="material-symbols-outlined"
-                    aria-hidden="true">menu</span></button>
+                aria-expanded="true" title="{{ __('Collapse sidebar') }}"><span class="ph ph-list"
+                    aria-hidden="true"></span></button>
             <div class="crumb"><small>{{ __('VATI OPERATIONS') }}</small><strong>@yield('title', __('Dashboard'))</strong></div>
             <div class="top-actions">
                 <div class="lang-switch" role="group" aria-label="Language">
@@ -96,14 +96,13 @@
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="icon-btn"
                         title="{{ __('Sign out') }}"
-                        data-confirm="{{ __('Are you sure you want to sign out?') }}"><span
-                            class="material-symbols-outlined" aria-hidden="true">logout</span></button></form>
+                        data-confirm="{{ __('Are you sure you want to sign out?') }}"><span class="ph ph-sign-out" aria-hidden="true"></span></button></form>
             </div>
         </header>
         <main class="content">
             @if (session('success'))
-                <div class="alert alert-success"><span class="material-symbols-outlined"
-                        aria-hidden="true">check_circle</span> {{ session('success') }}</div>
+                <div class="alert alert-success"><span class="ph ph-check-circle"
+                        aria-hidden="true"></span> {{ session('success') }}</div>
             @endif
             @if (session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>

@@ -29,7 +29,7 @@
             <p>Weka masharti, uwezo wa kulipa na mpango wa matumizi ya fedha.</p>
         </div>
         <a class="btn btn-secondary"
-            href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span>
             Rudi</a>
     </div>
 
