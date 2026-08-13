@@ -79,6 +79,14 @@ class WebPortalTest extends TestCase
             ->assertDontSee(__('Repayment profit / loss'))
             ->assertDontSee(__('Total loan disbursement'))
             ->assertDontSee(__('Total loan applications'));
+
+        $branchManager = User::factory()->create(['branch_id' => $this->branch->id]);
+        $branchManager->assignRole('branch_manager');
+
+        $this->actingAs($branchManager)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(__('Management financial summary'));
     }
 
     public function test_admin_forms_load_select2_and_placeholder_enhancements(): void
