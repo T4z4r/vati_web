@@ -205,7 +205,10 @@ p {
     display: flex;
     flex-direction: column;
     z-index: 30;
-    transition: width 0.25s ease, padding 0.25s ease, transform 0.25s ease;
+    transition:
+        width 0.25s ease,
+        padding 0.25s ease,
+        transform 0.25s ease;
 }
 .sidebar > .brand {
     padding: 0 10px 25px;
@@ -272,7 +275,9 @@ p {
     margin-left: 250px;
     min-height: 100vh;
     width: calc(100% - 250px);
-    transition: margin-left 0.25s ease, width 0.25s ease;
+    transition:
+        margin-left 0.25s ease,
+        width 0.25s ease;
 }
 body.sidebar-collapsed .sidebar,
 .sidebar.collapsed {
