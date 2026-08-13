@@ -22,6 +22,11 @@ class Member extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function group()
     {
         return $this->belongsTo(MemberGroup::class, 'group_id');

@@ -124,6 +124,17 @@ class WebPortalTest extends TestCase
         $this->post(route('admin.payments.store', $loan), ['amount' => 100000, 'payment_method' => 'cash'])->assertRedirect();
         $this->assertDatabaseHas('payments', ['loan_id' => $loan->id, 'amount' => 100000, 'status' => 'posted']);
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Payment history');
+        $this->get(route('admin.members.show', $borrower))
+            ->assertOk()
+            ->assertSee($loan->loan_number)
+            ->assertSeeInOrder([
+                'Complete loan history',
+                'Loan information',
+                'Loan security',
+                'Installment collection',
+                'Payments received',
+                'Guarantors',
+            ]);
     }
 
     private function member(string $name, string $phone): Member

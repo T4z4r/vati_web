@@ -49,7 +49,40 @@ class MemberController extends Controller
 
     public function show(Member $member)
     {
-        return view('admin.members.show', ['member' => $member->load(['branch', 'group', 'kyc', 'activeGroupMembership', 'securityAccount.transactions', 'passbookReplacements']), 'applications' => $member->loanApplications()->with('product')->latest()->get(), 'loans' => $member->loans()->with('product')->latest()->get()]);
+        $member->load([
+            'branch.manager',
+            'group',
+            'createdBy',
+            'kyc',
+            'activeGroupMembership',
+            'securityAccount.transactions',
+            'passbookReplacements',
+            'documents',
+            'nominees',
+        ]);
+
+        $applications = $member->loanApplications()
+            ->with(['product', 'loan', 'guarantors'])
+            ->latest()
+            ->get();
+
+        $loans = $member->loans()
+            ->with([
+                'product',
+                'application.guarantors',
+                'cycles',
+                'installments',
+                'installmentRecords.collector',
+                'payments',
+                'securityTransactions.collectedBy',
+                'securityTransactions.approvedBy',
+                'settlement',
+                'clearance',
+            ])
+            ->latest()
+            ->get();
+
+        return view('admin.members.show', compact('member', 'applications', 'loans'));
     }
 
     public function edit(Request $request, Member $member)

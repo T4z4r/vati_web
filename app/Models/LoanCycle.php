@@ -15,6 +15,7 @@ class LoanCycle extends Model
     {
         return [
             'disbursement_date' => 'date',
+            'first_payment_date' => 'date',
             'is_main_cycle' => 'boolean',
             'is_refinancing_cycle' => 'boolean',
             'principal_amount' => 'decimal:2',
