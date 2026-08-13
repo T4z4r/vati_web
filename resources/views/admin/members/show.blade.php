@@ -32,13 +32,23 @@
 </div>
 
 <div class="card" style="background:linear-gradient(135deg,#16452a,#267044);color:#fff;margin-bottom:20px">
-    <div class="card-body detail-grid">
+    <div class="card-body" style="display:flex;align-items:center;gap:22px">
+        @if($member->photo_path)
+            <img src="{{ asset('storage/'.$member->photo_path) }}" alt="{{ $fullName }} photograph"
+                style="width:132px;height:132px;border-radius:16px;object-fit:cover;border:3px solid rgba(255,255,255,.75);flex:0 0 auto">
+        @else
+            <div style="width:132px;height:132px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;flex:0 0 auto">
+                {{ strtoupper(substr($member->first_name, 0, 1).substr($member->last_name, 0, 1)) }}
+            </div>
+        @endif
+        <div class="detail-grid" style="flex:1">
         <div><small style="opacity:.75">Membership / SL number</small><strong style="display:block;font-size:18px;margin-top:5px">{{ $member->membership_number }}</strong></div>
         <div><small style="opacity:.75">Branch / Jina la Tawi</small><strong style="display:block;margin-top:5px">{{ $display($member->branch?->branch_name) }}</strong></div>
         <div><small style="opacity:.75">Group / Jina la Kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->group_name) }}</strong></div>
         <div><small style="opacity:.75">Meeting day / Siku ya Kukutana</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->meeting_day) }}</strong></div>
         <div><small style="opacity:.75">Group location / Mahali Kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->location) }}</strong></div>
         <div><small style="opacity:.75">Member contact / Namba ya Simu</small><strong style="display:block;margin-top:5px">{{ $display($member->phone) }}</strong></div>
+        </div>
     </div>
 </div>
 

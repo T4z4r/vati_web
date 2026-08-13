@@ -14,6 +14,8 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class WebPortalTest extends TestCase
@@ -74,19 +76,34 @@ class WebPortalTest extends TestCase
 
     public function test_web_member_and_application_creation_workflow(): void
     {
+        Storage::fake('public');
         $this->actingAs($this->admin);
-        $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d')])->assertRedirect();
+        $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d'), 'photo' => UploadedFile::fake()->image('asha.jpg', 300, 300)])->assertRedirect();
         $member = Member::firstOrFail();
-        $member->update(['photo_path' => 'members/photos/asha-musa.jpg']);
+        $originalPhotoPath = $member->photo_path;
+        Storage::disk('public')->assertExists($originalPhotoPath);
         $this->assertDatabaseHas('group_memberships', ['member_id' => $member->id, 'group_id' => $this->group->id, 'status' => 'active']);
-        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa']);
+        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath));
+        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph');
+        $this->put(route('admin.members.update', $member), [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Asha',
+            'last_name' => 'Musa',
+            'phone' => '255712000001',
+            'status' => 'active',
+            'photo' => UploadedFile::fake()->image('asha-updated.png', 400, 400),
+        ])->assertRedirect(route('admin.members.show', $member));
+        $member->refresh();
+        Storage::disk('public')->assertMissing($originalPhotoPath);
+        Storage::disk('public')->assertExists($member->photo_path);
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group');
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
             ->assertOk()
             ->assertSee('Applicant profile (auto-populated)')
             ->assertSee('Applicant photograph')
-            ->assertSee('asha-musa.jpg', false)
+            ->assertSee(basename($member->photo_path), false)
             ->assertSee('Projected repayment schedule')
             ->assertSee('schedule-body', false)
             ->assertSee('data-frequency="weekly"', false)

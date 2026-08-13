@@ -12,7 +12,7 @@
             href="{{ $editing ? route('admin.members.show', $member) : route('admin.members.index') }}">Back</a>
     </div>
 
-    <form class="card" method="POST"
+    <form class="card" method="POST" enctype="multipart/form-data"
         action="{{ $editing ? route('admin.members.update', $member) : route('admin.members.store') }}">
         @csrf
         @if ($editing)
@@ -52,6 +52,18 @@
                         <input name="last_name" placeholder="Last name" value="{{ old('last_name', $member->last_name) }}"
                             required>
                     </div>
+                </label>
+                <label>Member photograph
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+                        <img id="member-photo-preview"
+                            src="{{ $member->photo_path ? asset('storage/'.$member->photo_path) : '' }}"
+                            alt="{{ $editing ? 'Current member photograph' : 'Member photograph preview' }}"
+                            style="{{ $member->photo_path ? '' : 'display:none;' }}width:112px;height:112px;border-radius:14px;object-fit:cover;border:1px solid var(--border)">
+                        <div id="member-photo-placeholder" class="avatar"
+                            style="{{ $member->photo_path ? 'display:none;' : '' }}width:112px;height:112px;border-radius:14px;font-size:28px">Photo</div>
+                    </div>
+                    <input id="member-photo-input" type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+                    <small class="muted">JPG, PNG or WebP; maximum 5 MB; at least 200 × 200 pixels.{{ $editing && $member->photo_path ? ' Leave blank to keep the current photograph.' : '' }}</small>
                 </label>
             </div>
 
@@ -209,6 +221,17 @@
             const b = document.getElementById('branch'),
                 g = document.getElementById('group'),
                 opts = [...g.options];
+            const photoInput = document.getElementById('member-photo-input');
+            const photoPreview = document.getElementById('member-photo-preview');
+            const photoPlaceholder = document.getElementById('member-photo-placeholder');
+
+            photoInput.addEventListener('change', () => {
+                const file = photoInput.files[0];
+                if (!file) return;
+                photoPreview.src = URL.createObjectURL(file);
+                photoPreview.style.display = '';
+                photoPlaceholder.style.display = 'none';
+            });
 
             function filter() {
                 opts.forEach(o => {

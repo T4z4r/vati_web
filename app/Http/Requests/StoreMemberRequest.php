@@ -20,6 +20,7 @@ class StoreMemberRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20', 'unique:members,phone'],
             'national_id' => ['nullable', 'string', 'max:50', 'unique:members,national_id'],
