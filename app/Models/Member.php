@@ -67,6 +67,16 @@ class Member extends Model
         return $this->hasMany(MemberNominee::class);
     }
 
+    public function familyMembers()
+    {
+        return $this->hasMany(MemberFamilyMember::class);
+    }
+
+    public function assets()
+    {
+        return $this->hasMany(MemberAsset::class);
+    }
+
     public function passbookReplacements()
     {
         return $this->hasMany(PassbookReplacement::class);

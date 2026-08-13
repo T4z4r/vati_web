@@ -9,6 +9,7 @@ use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Services\ApplicationComplianceService;
+use App\Services\LoanCalculatorService;
 use App\Services\LoanApprovalService;
 use App\Services\OnboardingService;
 use DomainException;
@@ -59,13 +60,28 @@ class LoanApplicationController extends Controller
         return redirect()->route('admin.loan-applications.show', $loanApplication)->with('success', 'Draft loan application updated.');
     }
 
-    public function show(LoanApplication $loanApplication)
+    public function show(LoanApplication $loanApplication, LoanCalculatorService $calculator)
     {
-        $loanApplication->load(['member.kyc', 'member.nominees', 'product', 'group', 'assessment', 'approvals.user', 'groupWitnesses.member', 'loan', 'term', 'guarantors', 'documents', 'cancellation']);
+        $loanApplication->load([
+            'member.kyc', 'member.nominees', 'member.familyMembers', 'member.assets.assetType',
+            'member.branch.area.region', 'member.group.loanOfficer', 'member.activeGroupMembership',
+            'product', 'group.loanOfficer', 'branch.area.region', 'assessment', 'utilizations',
+            'approvals.user', 'groupWitnesses.member', 'loan.disbursement', 'term', 'guarantors',
+            'documents.uploader', 'documents.verifier', 'cancellation', 'assignedCreditOfficer', 'latestCreditReview.reviewer',
+        ]);
         $used = $loanApplication->groupWitnesses->pluck('member_id')->push($loanApplication->member_id);
         $eligible = $loanApplication->group->members()->where('status', 'active')->whereNotIn('id', $used)->whereHas('activeGroupMembership', fn ($q) => $q->where('group_id', $loanApplication->group_id))->orderBy('first_name')->get();
+        $figures = $calculator->calculate($loanApplication->product, (float) $loanApplication->requested_amount, (int) $loanApplication->duration_months);
+        $installmentCount = $loanApplication->product->repayment_frequency === 'weekly'
+            ? max(1, (int) round($loanApplication->duration_months * 52 / 12))
+            : $loanApplication->duration_months;
 
-        return view('admin.loan-applications.show', ['application' => $loanApplication, 'eligibleWitnesses' => $eligible]);
+        return view('admin.loan-applications.show', [
+            'application' => $loanApplication,
+            'eligibleWitnesses' => $eligible,
+            'figures' => $figures,
+            'installmentCount' => $installmentCount,
+        ]);
     }
 
     public function submit(LoanApplication $loanApplication, ApplicationComplianceService $compliance)
@@ -152,9 +168,62 @@ class LoanApplicationController extends Controller
 
     private function formData(Request $request, LoanApplication $application, int $selectedMember): array
     {
+        $members = Member::with([
+            'branch.area.region', 'group.loanOfficer', 'kyc', 'activeGroupMembership',
+            'familyMembers', 'assets.assetType', 'nominees',
+            'loans' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue'])->latest(),
+        ])->where('status', 'active')->whereHas('activeGroupMembership')->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('first_name')->get();
+
         return [
             'application' => $application,
-            'members' => Member::with('group')->where('status', 'active')->whereHas('activeGroupMembership')->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('first_name')->get(),
+            'members' => $members,
+            'memberProfiles' => $members->mapWithKeys(fn (Member $member) => [$member->id => [
+                'membership_number' => $member->membership_number,
+                'full_name' => trim("{$member->first_name} {$member->middle_name} {$member->last_name}"),
+                'guardian_name' => $member->guardian_name,
+                'occupation' => $member->occupation,
+                'date_of_birth' => $member->date_of_birth?->toDateString(),
+                'age' => $member->date_of_birth?->age,
+                'gender' => $member->gender,
+                'marital_status' => $member->marital_status,
+                'nationality' => $member->nationality,
+                'phone' => $member->phone,
+                'alternate_phone' => $member->alternate_phone,
+                'national_id' => $member->national_id,
+                'voter_id' => $member->voter_id,
+                'physical_address' => $member->physical_address,
+                'region' => $member->region,
+                'district' => $member->district,
+                'ward' => $member->ward,
+                'street' => $member->street,
+                'branch' => $member->branch?->branch_name,
+                'area' => $member->branch?->area?->name,
+                'organization_region' => $member->branch?->area?->region?->name,
+                'group' => $member->group?->group_name,
+                'meeting_day' => $member->group?->meeting_day,
+                'group_location' => $member->group?->location,
+                'loan_officer' => $member->group?->loanOfficer?->name,
+                'mpesa_phone' => $member->kyc?->mpesa_phone,
+                'bank_account_number' => $member->kyc?->bank_account_number,
+                'bank_account_name' => $member->kyc?->bank_account_name,
+                'bank_name' => $member->kyc?->bank_name,
+                'house_number' => $member->kyc?->house_number,
+                'police_station' => $member->kyc?->police_station,
+                'business_name' => $member->kyc?->business_name,
+                'business_type' => $member->kyc?->business_type,
+                'business_address' => $member->kyc?->business_address,
+                'household_monthly_income' => $member->kyc?->household_monthly_income,
+                'household_monthly_expenses' => $member->kyc?->household_monthly_expenses,
+                'number_of_dependants' => $member->kyc?->number_of_dependants,
+                'head_of_household' => $member->kyc?->head_of_household,
+                'house_ownership_status' => $member->kyc?->house_ownership_status,
+                'house_roof_type' => $member->kyc?->house_roof_type,
+                'house_fence_type' => $member->kyc?->house_fence_type,
+                'current_loan_balance' => $member->loans->sum('total_balance'),
+                'family_members_count' => $member->familyMembers->count(),
+                'assets_count' => $member->assets->count(),
+                'nominees_count' => $member->nominees->count(),
+            ]]),
             'products' => LoanProduct::where('status', true)->orderBy('name')->get(),
             'selectedMember' => $selectedMember,
         ];

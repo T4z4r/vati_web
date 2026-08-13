@@ -42,7 +42,7 @@
                     @if ($editing)
                         <input type="hidden" name="member_id" value="{{ $application->member_id }}">
                     @endif
-                    <select name="{{ $editing ? 'member_display' : 'member_id' }}" required @disabled($editing)>
+                    <select id="member-select" name="{{ $editing ? 'member_display' : 'member_id' }}" required @disabled($editing)>
                         <option value="">Select active member</option>
                         @foreach ($members as $member)
                             <option value="{{ $member->id }}" @selected((int) old('member_id', $selectedMember) === $member->id)>
@@ -84,7 +84,7 @@
                 <label>Estimated charges<input id="charges" readonly placeholder="Choose product and terms"></label>
                 <label>Estimated amount receivable<input id="receivable" readonly
                         placeholder="Choose product and terms"></label>
-                <label>Existing loan balance<input type="number" min="0" name="existing_loan_balance"
+                <label>Existing loan balance<input id="existing-loan-balance" type="number" min="0" name="existing_loan_balance"
                         value="{{ old('existing_loan_balance', $application->existing_loan_balance ?? 0) }}"></label>
                 <label>Refinancing amount<input type="number" min="0" name="refinancing_amount"
                         value="{{ old('refinancing_amount', $application->refinancing_amount ?? 0) }}"></label>
@@ -94,8 +94,56 @@
                     <textarea name="loan_purpose" required>{{ old('loan_purpose', $application->loan_purpose) }}</textarea>
                 </label>
                 <label class="full">Business summary
-                    <textarea name="business_summary" required>{{ old('business_summary', $application->business_summary) }}</textarea>
+                    <textarea id="business-summary" name="business_summary" required>{{ old('business_summary', $application->business_summary) }}</textarea>
                 </label>
+            </div>
+
+            <div id="member-profile" class="card" style="margin-top:24px;display:none">
+                <div class="card-head">
+                    <div><h2>Applicant profile (auto-populated)</h2><small>Read-only information from the selected member record</small></div>
+                    <span id="profile-member-number" class="badge active"></span>
+                </div>
+                <div class="card-body">
+                    <h3 class="section-title">Personal and organization information</h3>
+                    <div class="detail-grid">
+                        <div class="detail"><small>Applicant name</small><strong data-member-field="full_name">—</strong></div>
+                        <div class="detail"><small>Father / husband / guardian</small><strong data-member-field="guardian_name">—</strong></div>
+                        <div class="detail"><small>Occupation</small><strong data-member-field="occupation">—</strong></div>
+                        <div class="detail"><small>Age</small><strong data-member-field="age">—</strong></div>
+                        <div class="detail"><small>Date of birth</small><strong data-member-field="date_of_birth">—</strong></div>
+                        <div class="detail"><small>Gender</small><strong data-member-field="gender">—</strong></div>
+                        <div class="detail"><small>Marital status</small><strong data-member-field="marital_status">—</strong></div>
+                        <div class="detail"><small>Nationality</small><strong data-member-field="nationality">—</strong></div>
+                        <div class="detail"><small>Phone</small><strong data-member-field="phone">—</strong></div>
+                        <div class="detail"><small>National / voter ID</small><strong data-member-field="identification">—</strong></div>
+                        <div class="detail"><small>Branch</small><strong data-member-field="branch">—</strong></div>
+                        <div class="detail"><small>Area / region</small><strong data-member-field="organization_location">—</strong></div>
+                        <div class="detail"><small>Group</small><strong data-member-field="group">—</strong></div>
+                        <div class="detail"><small>Meeting day / location</small><strong data-member-field="group_meeting">—</strong></div>
+                        <div class="detail"><small>Loan officer</small><strong data-member-field="loan_officer">—</strong></div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top:22px">Residence, business and banking</h3>
+                    <div class="detail-grid">
+                        <div class="detail"><small>House number</small><strong data-member-field="house_number">—</strong></div>
+                        <div class="detail"><small>Physical address</small><strong data-member-field="physical_address">—</strong></div>
+                        <div class="detail"><small>Street / ward</small><strong data-member-field="member_location">—</strong></div>
+                        <div class="detail"><small>District / region</small><strong data-member-field="member_region">—</strong></div>
+                        <div class="detail"><small>Nearest police station</small><strong data-member-field="police_station">—</strong></div>
+                        <div class="detail"><small>Business / work location</small><strong data-member-field="business_profile">—</strong></div>
+                        <div class="detail"><small>M-Pesa / receiving number</small><strong data-member-field="mpesa_phone">—</strong></div>
+                        <div class="detail"><small>Bank account</small><strong data-member-field="bank_profile">—</strong></div>
+                        <div class="detail"><small>Housing status</small><strong data-member-field="house_ownership_status">—</strong></div>
+                        <div class="detail"><small>Head of household</small><strong data-member-field="head_of_household">—</strong></div>
+                        <div class="detail"><small>Dependants</small><strong data-member-field="number_of_dependants">—</strong></div>
+                        <div class="detail"><small>House roof / fence</small><strong data-member-field="house_structure">—</strong></div>
+                        <div class="detail"><small>Monthly household income</small><strong data-member-field="household_monthly_income">—</strong></div>
+                        <div class="detail"><small>Monthly household expenses</small><strong data-member-field="household_monthly_expenses">—</strong></div>
+                        <div class="detail"><small>Existing VATI loan balance</small><strong data-member-field="current_loan_balance">—</strong></div>
+                        <div class="detail"><small>Family / assets / nominees</small><strong data-member-field="record_counts">—</strong></div>
+                    </div>
+                    <p class="muted" style="margin:16px 0 0">Update incorrect information from the member profile before creating this application.</p>
+                </div>
             </div>
 
             <div class="card" style="margin-top:24px">
@@ -118,7 +166,7 @@
 
             <h3 class="section-title" style="margin-top:25px">Income & expenditure assessment</h3>
             <div class="form-grid">
-                <label>Core business income<input type="number" min="0" name="assessment[core_business_income]"
+                <label>Core business income<input id="core-business-income" type="number" min="0" name="assessment[core_business_income]"
                         value="{{ old('assessment.core_business_income', $assessment?->core_business_income ?? 0) }}"
                         required></label>
                 <label>Other income<input type="number" min="0" name="assessment[other_income]"
@@ -126,7 +174,7 @@
                 <label>Business expenses<input type="number" min="0" name="assessment[business_expenses]"
                         value="{{ old('assessment.business_expenses', $assessment?->business_expenses ?? 0) }}"
                         required></label>
-                <label>Household expenses<input type="number" min="0" name="assessment[household_expenses]"
+                <label>Household expenses<input id="household-expenses" type="number" min="0" name="assessment[household_expenses]"
                         value="{{ old('assessment.household_expenses', $assessment?->household_expenses ?? 0) }}"
                         required></label>
                 <label>Existing external debt<input type="number" min="0"
@@ -179,6 +227,10 @@
 
 @push('scripts')
     <script>
+        const memberProfiles = @json($memberProfiles);
+        const memberSelect = document.getElementById('member-select');
+        const memberProfile = document.getElementById('member-profile');
+        const canAutofillApplication = @json(!$editing && !session()->hasOldInput());
         const product = document.getElementById('product');
         const amount = document.getElementById('amount');
         const months = document.getElementById('months');
@@ -192,6 +244,45 @@
                 maximumFractionDigits: 2,
                 minimumFractionDigits: 2
             });
+        }
+
+        function text(...values) {
+            return values.filter(value => value !== null && value !== undefined && String(value).trim() !== '').join(' · ') || '—';
+        }
+
+        function showMemberProfile() {
+            const profile = memberProfiles[memberSelect.value];
+            memberProfile.style.display = profile ? '' : 'none';
+            if (!profile) return;
+
+            const values = {
+                ...profile,
+                identification: text(profile.national_id, profile.voter_id),
+                organization_location: text(profile.area, profile.organization_region),
+                group_meeting: text(profile.meeting_day, profile.group_location),
+                member_location: text(profile.street, profile.ward),
+                member_region: text(profile.district, profile.region),
+                business_profile: text(profile.business_name, profile.business_type, profile.business_address),
+                bank_profile: text(profile.bank_account_number, profile.bank_account_name, profile.bank_name),
+                house_structure: text(profile.house_roof_type, profile.house_fence_type),
+                household_monthly_income: formatMoney(profile.household_monthly_income || 0),
+                household_monthly_expenses: formatMoney(profile.household_monthly_expenses || 0),
+                current_loan_balance: formatMoney(profile.current_loan_balance || 0),
+                record_counts: `${profile.family_members_count} family · ${profile.assets_count} assets · ${profile.nominees_count} nominees`,
+            };
+
+            document.querySelectorAll('[data-member-field]').forEach(element => {
+                element.textContent = text(values[element.dataset.memberField]);
+            });
+            document.getElementById('profile-member-number').textContent = profile.membership_number;
+
+            if (canAutofillApplication) {
+                document.getElementById('existing-loan-balance').value = Number(profile.current_loan_balance || 0);
+                document.getElementById('household-expenses').value = Number(profile.household_monthly_expenses || 0);
+                document.getElementById('business-summary').value = text(profile.business_name, profile.business_type, profile.business_address) === '—'
+                    ? ''
+                    : text(profile.business_name, profile.business_type, profile.business_address);
+            }
         }
 
         function calculate() {
@@ -243,6 +334,8 @@
             document.getElementById('allocated-total').textContent = 'TZS ' + allocated.toLocaleString();
         }
         [product, amount, months, ...allocations].forEach(input => input.addEventListener('input', calculate));
+        memberSelect.addEventListener('change', showMemberProfile);
+        showMemberProfile();
         calculate();
     </script>
 @endpush

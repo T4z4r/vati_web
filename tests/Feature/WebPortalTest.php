@@ -81,11 +81,32 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa']);
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group');
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
+        $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
+            ->assertOk()
+            ->assertSee('Applicant profile (auto-populated)')
+            ->assertSee('memberProfiles', false)
+            ->assertSee('Asha Musa');
 
         $this->post('/admin/loan-applications', $this->applicationPayload($member))->assertRedirect();
         $this->assertDatabaseHas('loan_applications', ['member_id' => $member->id, 'group_id' => $this->group->id, 'branch_id' => $this->branch->id, 'status' => 'draft']);
         $application = $member->loanApplications()->firstOrFail();
-        $this->get(route('admin.loan-applications.show', $application))->assertOk()->assertSee($application->application_number);
+        $this->get(route('admin.loan-applications.show', $application))
+            ->assertOk()
+            ->assertSee($application->application_number)
+            ->assertSeeInOrder([
+                'Loan application identification',
+                'Applicant personal profile',
+                'Application terms and loan computation',
+                'Applicant family members',
+                'Family assets',
+                'Income and expenditure assessment',
+                'Use of loan amount',
+                'Nominee information',
+                'Guarantor declarations',
+                'Document checklist',
+                'Group witnesses',
+                'Recommendations and verification',
+            ]);
         $updated = $this->applicationPayload($member);
         $updated['requested_amount'] = 1200000;
         $updated['utilizations'] = [['purpose' => 'Working capital', 'allocation_amount' => 1200000, 'current_asset_value' => 0]];

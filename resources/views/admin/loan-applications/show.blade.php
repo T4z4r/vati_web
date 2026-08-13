@@ -1,7 +1,14 @@
 @extends('layouts.admin')
 @section('title', $application->application_number)
 @section('content')
-@php($status = $application->status->value)
+@php
+    $status = $application->status->value;
+    $member = $application->member;
+    $kyc = $member->kyc;
+    $fullName = trim(collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' '));
+    $money = fn ($value) => 'TZS '.number_format((float) ($value ?? 0), 2);
+    $display = fn ($value, $fallback = 'Not recorded') => filled($value) ? $value : $fallback;
+@endphp
 
 <div class="page-head">
     <div>
@@ -29,6 +36,8 @@
     <div class="stat"><small>Nominee allocation</small><strong>{{ number_format($application->member->nominees->sum('percentage'), 2) }}%</strong></div>
 </div>
 
+@include('admin.loan-applications.partials.pdf-details')
+
 <div class="grid-2">
     <div>
         <div class="card">
@@ -39,6 +48,24 @@
                 <div class="detail"><small>Cooling-off deadline</small><strong>{{ $application->cancellation_deadline?->format('d M Y H:i') ?? 'Not started' }}</strong></div>
                 <div class="detail"><small>Documents verified</small><strong>{{ $application->documents->where('verification_status', 'verified')->count() }} / {{ $application->documents->where('is_required', true)->count() }}</strong></div>
             </div>
+        </div>
+
+        <br><div class="card">
+            <div class="card-head"><h2>Nominee information / Taarifa za wateule</h2><span>{{ number_format($member->nominees->sum('percentage'), 2) }}%</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Name</th><th>Relationship</th><th>Proportion</th><th>Client attestation</th></tr></thead><tbody>
+                @forelse($member->nominees as $nominee)
+                    <tr><td>{{ $nominee->name }}</td><td>{{ $display($nominee->relationship) }}</td><td>{{ number_format((float) $nominee->percentage, 2) }}%</td><td>{{ $nominee->attested_at?->format('d M Y H:i') ?? ($nominee->signature_path ? 'Signed' : 'Not attested') }}</td></tr>
+                @empty<tr><td colspan="4" class="empty">No nominees recorded.</td></tr>@endforelse
+            </tbody></table></div>
+        </div>
+
+        <br><div class="card">
+            <div class="card-head"><h2>Guarantor declarations / Wadhamini</h2><span>{{ $application->guarantors->count() }} captured</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name</th><th>Relationship</th><th>Phone</th><th>National / voter ID</th><th>Residential address</th><th>Evidence</th><th>Accepted</th></tr></thead><tbody>
+                @forelse($application->guarantors as $guarantor)
+                    <tr><td>{{ str($guarantor->guarantor_type)->replace('_', ' ')->title() }}</td><td>{{ $guarantor->name }}</td><td>{{ $display($guarantor->relationship) }}</td><td>{{ $display($guarantor->phone) }}</td><td>{{ $display($guarantor->national_id ?: $guarantor->voter_id) }}</td><td>{{ $display(collect([$guarantor->house_number, $guarantor->street, $guarantor->ward, $guarantor->district, $guarantor->region])->filter()->implode(', ')) }}</td><td>Signature {{ $guarantor->signature_path ? '✓' : '—' }} · Thumbprint {{ $guarantor->thumbprint_path ? '✓' : '—' }} · Joint photo {{ $guarantor->joint_photo_path ? '✓' : '—' }}</td><td>{{ $guarantor->declaration_accepted_at?->format('d M Y H:i') ?? 'Not accepted' }}</td></tr>
+                @empty<tr><td colspan="8" class="empty">No guarantors captured.</td></tr>@endforelse
+            </tbody></table></div>
         </div>
 
         @if($status === 'draft')
@@ -117,11 +144,30 @@
         <br><div class="card">
             <div class="card-head"><h2>Group witnesses</h2><span>{{ $application->groupWitnesses->count() }} confirmed</span></div>
             <div class="card-body">
-                @foreach($application->groupWitnesses as $witness)<div class="detail" style="margin-bottom:8px"><small>{{ $witness->confirmed_at->format('d M Y H:i') }}</small><strong>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</strong></div>@endforeach
+                <div class="table-wrap"><table><thead><tr><th>Member</th><th>Phone</th><th>Confirmed</th><th>Signature</th></tr></thead><tbody>
+                    @forelse($application->groupWitnesses as $witness)
+                        <tr><td>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</td><td>{{ $witness->member->phone }}</td><td>{{ $witness->confirmed_at?->format('d M Y H:i') }}</td><td>{{ $witness->signature_path ? 'Captured' : 'Not captured' }}</td></tr>
+                    @empty<tr><td colspan="4" class="empty">No group witnesses confirmed.</td></tr>@endforelse
+                </tbody></table></div>
                 @if(!in_array($status, ['approved', 'rejected', 'disbursed', 'cancelled']))
                     <form method="POST" action="{{ route('admin.loan-applications.witnesses.store', $application) }}">@csrf<label>Add eligible witness<select name="member_id" required><option value="">Select group member</option>@foreach($eligibleWitnesses as $witness)<option value="{{ $witness->id }}">{{ $witness->membership_number }} · {{ $witness->first_name }} {{ $witness->last_name }}</option>@endforeach</select></label><div class="form-actions"><button class="btn btn-gold">Confirm witness</button></div></form>
                 @endif
             </div>
+        </div>
+
+        <br><div class="card">
+            <div class="card-head"><h2>Recommendations and verification</h2><span>{{ $application->approvals->count() }} decisions</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Officer</th><th>Role</th><th>Decision</th><th>Remarks</th><th>Date</th></tr></thead><tbody>
+                @forelse($application->approvals as $approval)
+                    <tr><td>{{ $display($approval->user?->name) }}</td><td>{{ str($approval->role)->replace('_', ' ')->title() }}</td><td><span class="badge {{ $approval->decision }}">{{ $approval->decision }}</span></td><td>{{ $display($approval->remarks) }}</td><td>{{ $approval->acted_at?->format('d M Y H:i') }}</td></tr>
+                @empty<tr><td colspan="5" class="empty">No recommendations or approvals recorded.</td></tr>@endforelse
+            </tbody></table></div>
+            @if($application->assignedCreditOfficer || $application->latestCreditReview)
+                <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
+                    <div class="detail"><small>Assigned credit officer</small><strong>{{ $display($application->assignedCreditOfficer?->name) }}</strong></div>
+                    <div class="detail"><small>Latest credit review</small><strong>{{ $display($application->latestCreditReview?->decision) }} · {{ $display($application->latestCreditReview?->overall_risk) }}</strong></div>
+                </div>
+            @endif
         </div>
 
         @if(in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review']))
