@@ -225,7 +225,7 @@
 <br>
 <div class="card">
     <div class="card-head"><h2>Loan applications</h2><span>{{ $applications->count() }} applications</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Status</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Status</th><th>Decision</th></tr></thead><tbody>
         @forelse($applications as $application)
             <tr>
                 <td>@can('view-loan-applications')<a class="table-link" href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a>@else{{ $application->application_number }}@endcan</td>
@@ -235,9 +235,31 @@
                 <td>{{ $application->duration_months }} months</td>
                 <td>{{ $display($application->loan_purpose) }}</td>
                 <td><span class="badge {{ $application->status->value }}">{{ str_replace('_', ' ', $application->status->value) }}</span></td>
+                <td>
+                    @if(in_array($application->status->value, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
+                        <div style="display:flex;align-items:start;gap:8px;flex-wrap:wrap;min-width:260px">
+                            @can('approve-loan-applications')
+                                <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">
+                                    @csrf
+                                    <input type="hidden" name="remarks" value="Approved from member profile">
+                                    <button class="btn btn-sm btn-primary" data-confirm="Approve this loan application? Compliance and witness requirements will be checked.">Approve</button>
+                                </form>
+                            @endcan
+                            @can('reject-loan-applications')
+                                <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}" style="display:flex;gap:6px;align-items:end">
+                                    @csrf
+                                    <label style="margin:0;min-width:165px"><small>Rejection reason</small><input name="remarks" minlength="5" required placeholder="Enter reason"></label>
+                                    <button class="btn btn-sm btn-danger" data-confirm="Reject this loan application?">Reject</button>
+                                </form>
+                            @endcan
+                        </div>
+                    @else
+                        <span class="muted">Decision unavailable</span>
+                    @endif
+                </td>
             </tr>
         @empty
-            <tr><td colspan="7" class="empty">No loan applications yet.</td></tr>
+            <tr><td colspan="8" class="empty">No loan applications yet.</td></tr>
         @endforelse
     </tbody></table></div>
 </div>

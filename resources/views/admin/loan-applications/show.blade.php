@@ -170,10 +170,14 @@
             @endif
         </div>
 
-        @if(in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review']))
+        @if(in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
             <br><div class="card"><div class="card-head"><h2>Credit decision</h2></div><div class="card-body">
-                <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">@csrf<label>Approval remarks<textarea name="remarks"></textarea></label><div class="form-actions"><button class="btn btn-primary" data-confirm="Approve this loan application?">Approve application</button></div></form>
-                <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}">@csrf<label>Rejection reason<textarea name="remarks" required></textarea></label><div class="form-actions"><button class="btn btn-danger">Reject application</button></div></form>
+                @can('approve-loan-applications')
+                    <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">@csrf<label>Approval remarks<textarea name="remarks"></textarea></label><div class="form-actions"><button class="btn btn-primary" data-confirm="Approve this loan application?">Approve application</button></div></form>
+                @endcan
+                @can('reject-loan-applications')
+                    <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}">@csrf<label>Rejection reason<textarea name="remarks" minlength="5" required></textarea></label><div class="form-actions"><button class="btn btn-danger" data-confirm="Reject this loan application?">Reject application</button></div></form>
+                @endcan
             </div></div>
         @endif
     </div>

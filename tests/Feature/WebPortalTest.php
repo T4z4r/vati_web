@@ -158,6 +158,12 @@ class WebPortalTest extends TestCase
         $this->post(route('admin.loan-applications.submit', $application))->assertRedirect();
         $this->post(route('admin.loan-applications.witnesses.store', $application), ['member_id' => $firstWitness->id])->assertRedirect();
         $this->post(route('admin.loan-applications.witnesses.store', $application), ['member_id' => $secondWitness->id])->assertRedirect();
+        $this->get(route('admin.members.show', $borrower))
+            ->assertOk()
+            ->assertSee('Approve')
+            ->assertSee('Reject')
+            ->assertSee(route('admin.loan-applications.approve', $application), false)
+            ->assertSee(route('admin.loan-applications.reject', $application), false);
         $this->post(route('admin.loan-applications.approve', $application), ['remarks' => 'Affordability and group confirmation accepted'])->assertRedirect();
 
         $loan = $application->refresh()->loan;
