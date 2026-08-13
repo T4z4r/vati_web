@@ -330,17 +330,37 @@
         </tbody></table></div>
 
         <div class="card-head"><h3>Installment collection / Taarifa za Marejesho</h3></div>
-        <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total due</th><th>Paid</th><th>Interest exemption</th><th>Outstanding</th><th>Remarks / Collector</th><th>Status</th></tr></thead><tbody>
-            @if($loan->installmentRecords->isNotEmpty())
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total due</th><th>Paid</th><th>Interest exemption</th><th>Outstanding</th><th>Remarks / Collector</th><th>Status</th><th>Repayment</th></tr></thead><tbody>
+            @if($loan->installments->isNotEmpty())
+                @foreach($loan->installments->sortBy('installment_number') as $installment)
+                    @php($installmentBalance = max(0, (float) $installment->total_due - (float) $installment->total_paid - (float) $installment->interest_exemption))
+                    <tr>
+                        <td>{{ $installment->installment_number }}</td><td>{{ $installment->due_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_due) }}</td><td class="money">{{ $money($installment->interest_due) }}</td><td class="money">{{ $money($installment->total_due) }}</td><td class="money">{{ $money($installment->total_paid) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installmentBalance) }}</td><td>—</td><td><span class="badge {{ $installment->status }}">{{ str_replace('_', ' ', $installment->status) }}</span></td>
+                        <td>
+                            @if(in_array($loan->status->value, ['active', 'overdue']) && $installmentBalance > 0)
+                                @can('collect-payments')
+                                    <form method="POST" action="{{ route('admin.payments.store', $loan) }}" style="display:flex;align-items:end;gap:6px;min-width:310px">
+                                        @csrf
+                                        <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
+                                        <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
+                                        <label style="margin:0;min-width:100px"><small>Method</small><select name="payment_method" data-select2="false"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank</option></select></label>
+                                        <button class="btn btn-sm btn-primary" data-confirm="Confirm this installment repayment?">Confirm repayment</button>
+                                    </form>
+                                @else
+                                    <span class="muted">No collection permission</span>
+                                @endcan
+                            @else
+                                <span class="muted">Completed</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            @elseif($loan->installmentRecords->isNotEmpty())
                 @foreach($loan->installmentRecords->sortBy('installment_number') as $installment)
-                    <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->payment_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_amount) }}</td><td class="money">{{ $money($installment->interest_amount) }}</td><td class="money">{{ $money($installment->total_amount) }}</td><td class="money">{{ $installment->is_paid ? $money($installment->total_amount) : $money(0) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>{{ $display($installment->remarks ?? $installment->collector?->name) }}</td><td><span class="badge {{ $installment->status_badge }}">{{ $installment->status_badge }}</span></td></tr>
+                    <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->payment_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_amount) }}</td><td class="money">{{ $money($installment->interest_amount) }}</td><td class="money">{{ $money($installment->total_amount) }}</td><td class="money">{{ $installment->is_paid ? $money($installment->total_amount) : $money(0) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>{{ $display($installment->remarks ?? $installment->collector?->name) }}</td><td><span class="badge {{ $installment->status_badge }}">{{ $installment->status_badge }}</span></td><td><a class="btn btn-sm btn-secondary" href="{{ route('admin.loans.show', $loan) }}">Open loan</a></td></tr>
                 @endforeach
             @else
-                @forelse($loan->installments->sortBy('installment_number') as $installment)
-                    <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->due_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_due) }}</td><td class="money">{{ $money($installment->interest_due) }}</td><td class="money">{{ $money($installment->total_due) }}</td><td class="money">{{ $money($installment->total_paid) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>—</td><td><span class="badge {{ $installment->status }}">{{ str_replace('_', ' ', $installment->status) }}</span></td></tr>
-                @empty
-                    <tr><td colspan="10" class="empty">Repayment schedule has not been generated.</td></tr>
-                @endforelse
+                <tr><td colspan="11" class="empty">Repayment schedule has not been generated.</td></tr>
             @endif
         </tbody></table></div>
 

@@ -180,6 +180,8 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.members.show', $borrower))
             ->assertOk()
             ->assertSee($loan->loan_number)
+            ->assertSee('Confirm repayment')
+            ->assertSee('loan_installment_id', false)
             ->assertSeeInOrder([
                 'Complete loan history',
                 'Loan information',
