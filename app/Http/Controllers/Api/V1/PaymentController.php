@@ -15,7 +15,19 @@ class PaymentController extends ApiController
         $data = $request->validate(['amount' => ['required', 'numeric', 'gt:0'], 'loan_installment_id' => ['nullable', 'integer', 'exists:loan_installments,id'], 'payment_method' => ['required', Rule::in(['cash', 'mpesa', 'airtel_money', 'mixx', 'halopesa', 'bank_transfer'])], 'idempotency_key' => ['nullable', 'string', 'max:100'], 'uuid' => ['nullable', 'uuid'], 'reference_number' => ['nullable', 'string', 'max:100'], 'external_reference' => ['nullable', 'string', 'max:100'], 'paid_at' => ['nullable', 'date'], 'device_id' => ['nullable', 'string', 'max:100'], 'client_created_at' => ['nullable', 'date'], 'remarks' => ['nullable', 'string']]);
         $payment = $service->post($loan, $request->user(), (float) $data['amount'], $data);
 
-        return response()->json(['success' => true, 'message' => 'Payment posted successfully.', 'data' => $payment], 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment posted successfully.',
+            'data' => $payment,
+            'loan' => [
+                'id' => $loan->id,
+                'loan_number' => $loan->loan_number,
+                'status' => $loan->refresh()->status->value,
+                'principal_balance' => (string) $loan->principal_balance,
+                'interest_balance' => (string) $loan->interest_balance,
+                'total_balance' => (string) $loan->total_balance,
+            ],
+        ], 201);
     }
 
     public function reverse(Request $request, Payment $payment, PaymentService $service)

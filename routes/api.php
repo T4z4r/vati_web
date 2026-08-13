@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\V1\LoanGroupWitnessController;
 use App\Http\Controllers\Api\V1\LoanProductController;
 use App\Http\Controllers\Api\V1\LoanSettlementController;
 use App\Http\Controllers\Api\V1\MemberController;
+use App\Http\Controllers\Api\V1\MemberDocumentController;
+use App\Http\Controllers\Api\V1\MemberExportController;
 use App\Http\Controllers\Api\V1\MemberKycController;
 use App\Http\Controllers\Api\V1\MemberPassbookController;
 use App\Http\Controllers\Api\V1\MemberPhotoController;
@@ -72,6 +74,11 @@ Route::prefix('v1')->group(function () {
         Route::put('members/{member}/kyc', [MemberKycController::class, 'update'])->middleware('permission:edit-members');
         Route::post('members/{member}/photo', [MemberPhotoController::class, 'store'])->middleware('permission:edit-members');
         Route::get('members/{member}/passbook', [MemberPassbookController::class, 'show'])->middleware('permission:view-members');
+        Route::get('members/{member}/export', [MemberExportController::class, 'download'])->middleware('permission:view-members');
+        Route::get('members/{member}/documents', [MemberDocumentController::class, 'index'])->middleware('permission:view-members');
+        Route::post('members/{member}/documents', [MemberDocumentController::class, 'store'])->middleware('permission:edit-members');
+        Route::get('members/{member}/documents/{memberDocument}/download', [MemberDocumentController::class, 'download'])->name('api.members.documents.download')->middleware('permission:view-members');
+        Route::delete('members/{member}/documents/{memberDocument}', [MemberDocumentController::class, 'destroy'])->middleware('permission:delete-members');
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show'])->middleware('permission:view-security');
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store'])->middleware('permission:manage-security');
 

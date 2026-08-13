@@ -11,6 +11,8 @@ use App\Models\User;
 use DomainException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class OnboardingService
 {
@@ -28,43 +30,114 @@ class OnboardingService
 
     public function member(array $data, User $user): Member
     {
-        return DB::transaction(function () use ($data, $user) {
-            $kyc = Arr::pull($data, 'kyc');
-            $nominees = Arr::pull($data, 'nominees', []);
-            $familyMembers = Arr::pull($data, 'family_members', []);
-            $assets = Arr::pull($data, 'assets', []);
-            $group = MemberGroup::query()->lockForUpdate()->findOrFail($data['group_id']);
-            if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
-                throw new DomainException('Member onboarding requires an active group in the selected branch.');
+        $photo = Arr::pull($data, 'photo');
+        $photoPath = $photo?->store('members/photos', 'public');
+        if ($photoPath) {
+            $data['photo_path'] = $photoPath;
+        }
+
+        try {
+            return DB::transaction(function () use ($data, $user) {
+                $kyc = Arr::pull($data, 'kyc');
+                $nominees = Arr::pull($data, 'nominees', []);
+                $familyMembers = Arr::pull($data, 'family_members', []);
+                $assets = Arr::pull($data, 'assets', []);
+                $group = MemberGroup::query()->lockForUpdate()->findOrFail($data['group_id']);
+                $this->assertMemberBranchAccess($user, (int) $data['branch_id']);
+                if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
+                    throw new DomainException('Member onboarding requires an active group in the selected branch.');
+                }
+
+                $member = Member::create([...$data, 'membership_number' => $this->numbers->member(), 'created_by' => $user->id]);
+                if ($kyc) {
+                    $member->kyc()->create($kyc);
+                }
+                $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                $this->replaceMemberCollections($member, $nominees, $familyMembers, $assets);
+                activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group->id])->log('Member onboarded');
+
+                return $this->loadMember($member);
+            });
+        } catch (Throwable $exception) {
+            if ($photoPath) {
+                Storage::disk('public')->delete($photoPath);
             }
 
-            $member = Member::create([...$data, 'membership_number' => $this->numbers->member(), 'created_by' => $user->id]);
-            if ($kyc) {
-                $member->kyc()->create($kyc);
-            }
-            $this->memberships->assign($member, $group, $member->admission_date ?? today());
-            foreach ($nominees as $nominee) {
-                $member->nominees()->create([...$nominee, 'attested_at' => now()]);
-            }
-            foreach ($familyMembers as $familyMember) {
-                $member->familyMembers()->create($familyMember);
-            }
-            foreach ($assets as $asset) {
-                $name = Arr::pull($asset, 'name');
-                $category = Arr::pull($asset, 'category');
-                $assetType = AssetType::firstOrCreate(['name' => $name], ['category' => $category, 'status' => true]);
-                $member->assets()->create([...$asset, 'asset_type_id' => $assetType->id]);
-            }
-            activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group->id])->log('Member onboarded');
+            throw $exception;
+        }
+    }
 
-            return $member->load('branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'activeGroupMembership', 'nominees', 'familyMembers', 'assets.assetType', 'documents.uploadedBy', 'securityAccount.transactions', 'passbookReplacements');
-        });
+    public function updateMember(Member $member, array $data, User $user): Member
+    {
+        $replaceNominees = array_key_exists('nominees', $data);
+        $replaceFamily = array_key_exists('family_members', $data);
+        $replaceAssets = array_key_exists('assets', $data);
+        $kycProvided = array_key_exists('kyc', $data);
+        $kyc = Arr::pull($data, 'kyc');
+        $nominees = Arr::pull($data, 'nominees', []);
+        $familyMembers = Arr::pull($data, 'family_members', []);
+        $assets = Arr::pull($data, 'assets', []);
+        $photo = Arr::pull($data, 'photo');
+        $newPhotoPath = $photo?->store('members/photos', 'public');
+        $oldPhotoPath = $member->photo_path;
+        if ($newPhotoPath) {
+            $data['photo_path'] = $newPhotoPath;
+        }
+
+        try {
+            $member = DB::transaction(function () use ($member, $data, $user, $kycProvided, $kyc, $replaceNominees, $nominees, $replaceFamily, $familyMembers, $replaceAssets, $assets) {
+                $member = Member::query()->lockForUpdate()->findOrFail($member->id);
+                $branchId = (int) ($data['branch_id'] ?? $member->branch_id);
+                $groupId = (int) ($data['group_id'] ?? $member->group_id);
+                $this->assertMemberBranchAccess($user, $branchId);
+                $group = MemberGroup::query()->lockForUpdate()->findOrFail($groupId);
+                if (! $group->status || (int) $group->branch_id !== $branchId) {
+                    throw new DomainException('The selected group must be active and belong to the selected branch.');
+                }
+
+                $groupChanged = (int) $member->group_id !== $groupId;
+                $member->update([...$data, 'branch_id' => $branchId, 'group_id' => $groupId]);
+                if ($kycProvided) {
+                    $member->kyc()->updateOrCreate(['member_id' => $member->id], $kyc ?? []);
+                }
+                if ($groupChanged) {
+                    $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                }
+                if ($replaceNominees) {
+                    $member->nominees()->delete();
+                    $this->createNominees($member, $nominees);
+                }
+                if ($replaceFamily) {
+                    $member->familyMembers()->delete();
+                    $this->createFamilyMembers($member, $familyMembers);
+                }
+                if ($replaceAssets) {
+                    $member->assets()->delete();
+                    $this->createAssets($member, $assets);
+                }
+                activity()->causedBy($user)->performedOn($member)->log('Member profile updated');
+
+                return $this->loadMember($member->refresh());
+            });
+        } catch (Throwable $exception) {
+            if ($newPhotoPath) {
+                Storage::disk('public')->delete($newPhotoPath);
+            }
+
+            throw $exception;
+        }
+
+        if ($newPhotoPath && $oldPhotoPath && $oldPhotoPath !== $newPhotoPath) {
+            Storage::disk('public')->delete($oldPhotoPath);
+        }
+
+        return $member;
     }
 
     public function loanApplication(array $data, User $user): LoanApplication
     {
         return DB::transaction(function () use ($data, $user) {
-            $assessment = Arr::pull($data, 'assessment');
+            $assessment = Arr::pull($data, 'assessment', []);
             $utilizations = Arr::pull($data, 'utilizations', []);
             $guarantors = Arr::pull($data, 'guarantors', []);
             $witnessMemberIds = Arr::pull($data, 'witness_member_ids', []);
@@ -72,7 +145,7 @@ class OnboardingService
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
 
             if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
-                throw new DomainException('You cannot onboard an application for another branch.');
+                abort(403, 'You cannot onboard an application for another branch.');
             }
             if ($member->status !== 'active' || ! $member->group?->status || $member->activeGroupMembership?->group_id !== $member->group_id) {
                 throw new DomainException('Loan application onboarding requires an active member with a matching active group membership.');
@@ -146,7 +219,7 @@ class OnboardingService
                 throw new DomainException('The applicant cannot be changed on an existing draft. Create a new application instead.');
             }
 
-            $assessment = Arr::pull($data, 'assessment');
+            $assessment = Arr::pull($data, 'assessment', []);
             $utilizations = Arr::pull($data, 'utilizations', []);
             $replaceGuarantors = array_key_exists('guarantors', $data);
             $guarantors = Arr::pull($data, 'guarantors', []);
@@ -155,7 +228,7 @@ class OnboardingService
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
             if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
-                throw new DomainException('You cannot edit an application for another branch.');
+                abort(403, 'You cannot edit an application for another branch.');
             }
             if ($member->status !== 'active' || ! $member->group?->status || $member->activeGroupMembership?->group_id !== $member->group_id) {
                 throw new DomainException('A draft application requires an active member with a matching active group membership.');
@@ -232,6 +305,49 @@ class OnboardingService
         }
 
         return $witnesses;
+    }
+
+    private function assertMemberBranchAccess(User $user, int $branchId): void
+    {
+        if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && (int) $user->branch_id !== $branchId) {
+            abort(403, 'You cannot manage a member in another branch.');
+        }
+    }
+
+    private function replaceMemberCollections(Member $member, array $nominees, array $familyMembers, array $assets): void
+    {
+        $this->createNominees($member, $nominees);
+        $this->createFamilyMembers($member, $familyMembers);
+        $this->createAssets($member, $assets);
+    }
+
+    private function createNominees(Member $member, array $nominees): void
+    {
+        foreach ($nominees as $nominee) {
+            $member->nominees()->create([...$nominee, 'attested_at' => now()]);
+        }
+    }
+
+    private function createFamilyMembers(Member $member, array $familyMembers): void
+    {
+        foreach ($familyMembers as $familyMember) {
+            $member->familyMembers()->create($familyMember);
+        }
+    }
+
+    private function createAssets(Member $member, array $assets): void
+    {
+        foreach ($assets as $asset) {
+            $name = Arr::pull($asset, 'name');
+            $category = Arr::pull($asset, 'category');
+            $assetType = AssetType::firstOrCreate(['name' => $name], ['category' => $category, 'status' => true]);
+            $member->assets()->create([...$asset, 'asset_type_id' => $assetType->id]);
+        }
+    }
+
+    private function loadMember(Member $member): Member
+    {
+        return $member->load('branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'activeGroupMembership', 'nominees', 'familyMembers', 'assets.assetType', 'documents.uploadedBy', 'securityAccount.transactions', 'passbookReplacements');
     }
 
     private function syncGuarantors(LoanApplication $application, array $guarantors): void

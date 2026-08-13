@@ -35,7 +35,8 @@ class PortfolioAnalyticsService
             ->sum('principal_balance');
         $overdue = (float) LoanInstallment::query()->whereIn('loan_id', $loanIds)
             ->whereIn('status', ['overdue', 'partially_paid'])->whereDate('due_date', '<=', $toDate)
-            ->sum('balance');
+            ->selectRaw('COALESCE(SUM(total_due - total_paid - interest_exemption), 0) as total')
+            ->value('total');
 
         return [
             'branch_id' => $branchId,

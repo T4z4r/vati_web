@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ApplicationStatus;
 use App\Models\CreditReview;
+use App\Models\Loan;
 use App\Models\LoanApplication;
+use App\Models\LoanInstallment;
+use App\Models\LoanSettlement;
+use App\Models\Payment;
+use App\Models\PaymentAllocation;
 use App\Services\PortfolioAnalyticsService;
 use Illuminate\Http\Request;
 
@@ -68,6 +73,39 @@ class DashboardController extends ApiController
             ];
         }
 
+        if ($user->can('view-management-dashboard')) {
+            $data['management_financial_summary'] = $this->managementSummary($branchId);
+        }
+
         return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    private function managementSummary(?int $branchId): array
+    {
+        $loans = Loan::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId));
+        $applications = LoanApplication::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId));
+        $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
+        $postedPayments = Payment::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId))->where('status', 'posted');
+        $repaymentIncome = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
+            ->selectRaw('COALESCE(SUM(interest_amount + penalty_amount), 0) as total')->value('total');
+        $repaymentLoss = (float) LoanInstallment::whereIn('loan_id', (clone $loans)->select('id'))->sum('interest_exemption')
+            + (float) LoanSettlement::whereIn('loan_id', (clone $loans)->select('id'))->sum('interest_waived');
+
+        return [
+            'total_loan_portfolio' => $this->money((float) $activeLoans->sum('total_balance')),
+            'total_posted_payments' => $this->money((float) (clone $postedPayments)->sum('amount')),
+            'posted_payment_count' => (clone $postedPayments)->count(),
+            'repayment_income' => $this->money($repaymentIncome),
+            'repayment_loss' => $this->money($repaymentLoss),
+            'repayment_profit_or_loss' => $this->money($repaymentIncome - $repaymentLoss),
+            'total_loan_disbursement' => $this->money((float) (clone $loans)->whereNotNull('disbursement_date')->sum('principal_amount')),
+            'total_loan_applications' => (clone $applications)->count(),
+            'amount_requested_for_disbursement' => $this->money((float) (clone $applications)->whereNotIn('status', ['rejected', 'cancelled'])->sum('requested_amount')),
+        ];
+    }
+
+    private function money(float $value): string
+    {
+        return number_format($value, 2, '.', '');
     }
 }

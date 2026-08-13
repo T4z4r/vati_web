@@ -80,6 +80,11 @@
             "type": "string"
         },
         {
+            "key": "member_document_id",
+            "value": "",
+            "type": "string"
+        },
+        {
             "key": "witness_member_id",
             "value": "",
             "type": "string"
@@ -1082,6 +1087,83 @@
                                 }
                             }
                         }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Member Documents",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload Member Document",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document_type",
+                                    "value": "national_id",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Member identification document",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "if (json.data && json.data.id) pm.collectionVariables.set(\"member_document_id\", json.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Download Member Document",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}/download"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Export Member Registration PDF",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/export"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "[Destructive] Delete Member Document",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}"
                     },
                     "response": []
                 }

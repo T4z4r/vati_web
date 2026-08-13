@@ -63,6 +63,19 @@ class ApplicationDetailService
             'applicant_signature_captured' => filled($application->applicant_signature_path),
             'applicant_thumbprint_captured' => filled($application->applicant_thumbprint_path),
             'submitted_at' => $application->submitted_at?->toIso8601String(),
+            'requirements' => [
+                'submission' => [
+                    'attachments_required' => false,
+                    'applicant_evidence_required' => false,
+                    'guarantor_evidence_required' => false,
+                ],
+                'approval' => [
+                    'attachments_required' => false,
+                    'applicant_evidence_required' => true,
+                    'complete_guarantors_required' => 2,
+                    'confirmed_group_witnesses_required' => $application->product->required_group_witnesses,
+                ],
+            ],
             'loan_officer' => $application->group->loanOfficer ? ['id' => $application->group->loanOfficer->id, 'name' => $application->group->loanOfficer->name] : null,
             'assigned_credit_officer' => $application->assignedCreditOfficer ? ['id' => $application->assignedCreditOfficer->id, 'name' => $application->assignedCreditOfficer->name] : null,
             'branch' => [
@@ -121,6 +134,7 @@ class ApplicationDetailService
                 'business_address' => $guarantor->business_address,
                 'signature_captured' => filled($guarantor->signature_path),
                 'thumbprint_captured' => filled($guarantor->thumbprint_path),
+                'joint_photo_captured' => filled($guarantor->joint_photo_path),
                 'declaration_accepted_at' => $guarantor->declaration_accepted_at?->toIso8601String(),
             ])->values(),
             'approvals' => $application->approvals->map(fn ($approval) => [

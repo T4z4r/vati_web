@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\MemberGroup;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMemberRequest extends FormRequest
 {
@@ -39,17 +40,20 @@ class StoreMemberRequest extends FormRequest
 
     public function rules(): array
     {
+        $member = $this->route('member');
+        $required = $member ? 'sometimes' : 'required';
+
         return [
-            'branch_id' => ['required', 'exists:branches,id'],
-            'group_id' => ['required', 'exists:member_groups,id'],
-            'first_name' => ['required', 'string', 'max:100'],
+            'branch_id' => [$required, 'exists:branches,id'],
+            'group_id' => [$required, 'exists:member_groups,id'],
+            'first_name' => [$required, 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => [$required, 'string', 'max:100'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:20', 'unique:members,phone'],
-            'national_id' => ['nullable', 'string', 'max:50', 'unique:members,national_id'],
-            'voter_id' => ['nullable', 'string', 'max:50', 'unique:members,voter_id'],
+            'phone' => [$required, 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
+            'national_id' => ['nullable', 'string', 'max:50', Rule::unique('members', 'national_id')->ignore($member)],
+            'voter_id' => ['nullable', 'string', 'max:50', Rule::unique('members', 'voter_id')->ignore($member)],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', 'string', 'max:30'],
@@ -63,6 +67,7 @@ class StoreMemberRequest extends FormRequest
             'street' => ['nullable', 'string', 'max:100'],
             'admission_date' => ['nullable', 'date'],
             'passbook_issue_date' => ['nullable', 'date', 'after_or_equal:admission_date'],
+            'status' => [$member ? 'sometimes' : 'nullable', Rule::in(['active', 'inactive', 'suspended', 'closed'])],
             'kyc' => ['nullable', 'array'],
             'kyc.household_monthly_income' => ['nullable', 'numeric', 'min:0'],
             'kyc.household_monthly_expenses' => ['nullable', 'numeric', 'min:0'],
@@ -105,11 +110,13 @@ class StoreMemberRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $group = MemberGroup::find($this->input('group_id'));
+            $member = $this->route('member');
+            $branchId = $this->input('branch_id', $member?->branch_id);
+            $group = MemberGroup::find($this->input('group_id', $member?->group_id));
             if ($group && ! $group->status) {
                 $validator->errors()->add('group_id', 'The selected group is inactive.');
             }
-            if ($group && (int) $group->branch_id !== (int) $this->input('branch_id')) {
+            if ($group && (int) $group->branch_id !== (int) $branchId) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
             }
             $nominees = collect($this->input('nominees', []));

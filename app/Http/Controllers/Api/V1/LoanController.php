@@ -17,11 +17,27 @@ class LoanController extends ApiController
 
     public function show(Loan $loan)
     {
-        return response()->json(['success' => true, 'data' => new LoanResource($loan->load('member', 'product', 'application', 'installments', 'payments.allocations'))]);
+        return response()->json(['success' => true, 'data' => new LoanResource($loan->load([
+            'member.branch.manager', 'member.group.loanOfficer', 'member.kyc', 'product', 'group',
+            'application.guarantors', 'application.groupWitnesses.member', 'cycles', 'installments',
+            'installmentRecords.collector', 'payments.allocations', 'securityTransactions.collectedBy',
+            'securityTransactions.approvedBy', 'disbursement', 'settlement', 'clearance', 'defaultNotices',
+        ]))]);
     }
 
     public function schedule(Loan $loan)
     {
-        return response()->json(['success' => true, 'data' => $loan->installments()->orderBy('installment_number')->get()]);
+        $installments = $loan->installments()->with('allocations.payment')->orderBy('installment_number')->get();
+
+        return response()->json(['success' => true, 'data' => $installments, 'summary' => [
+            'loan_id' => $loan->id,
+            'loan_number' => $loan->loan_number,
+            'status' => $loan->status->value,
+            'total_repayment' => (string) $loan->total_repayment,
+            'total_paid' => number_format($installments->sum('total_paid'), 2, '.', ''),
+            'outstanding_balance' => (string) $loan->total_balance,
+            'paid_installments' => $installments->where('status', 'paid')->count(),
+            'total_installments' => $installments->count(),
+        ]]);
     }
 }

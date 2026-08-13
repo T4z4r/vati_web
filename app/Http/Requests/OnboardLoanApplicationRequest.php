@@ -10,6 +10,10 @@ class OnboardLoanApplicationRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        if (! $this->filled('application_type')) {
+            $this->merge(['application_type' => 'main']);
+        }
+
         if ($this->has('utilizations')) {
             $this->merge([
                 'utilizations' => array_values(array_filter(
@@ -56,13 +60,13 @@ class OnboardLoanApplicationRequest extends FormRequest
             'existing_loan_balance' => ['nullable', 'numeric', 'min:0'],
             'refinancing_amount' => ['nullable', 'numeric', 'min:0'],
             'increment_amount' => ['nullable', 'numeric', 'min:0'],
-            'loan_purpose' => ['required', 'string', 'max:2000'],
+            'loan_purpose' => ['nullable', 'string', 'max:2000'],
             'business_summary' => ['nullable', 'string', 'max:5000'],
-            'assessment' => ['required', 'array'],
-            'assessment.core_business_income' => ['required', 'numeric', 'min:0'],
+            'assessment' => ['nullable', 'array'],
+            'assessment.core_business_income' => ['nullable', 'numeric', 'min:0'],
             'assessment.other_income' => ['nullable', 'numeric', 'min:0'],
-            'assessment.business_expenses' => ['required', 'numeric', 'min:0'],
-            'assessment.household_expenses' => ['required', 'numeric', 'min:0'],
+            'assessment.business_expenses' => ['nullable', 'numeric', 'min:0'],
+            'assessment.household_expenses' => ['nullable', 'numeric', 'min:0'],
             'assessment.existing_external_debt' => ['nullable', 'numeric', 'min:0'],
             'assessment.assessment_comment' => ['nullable', 'string', 'max:5000'],
             'utilizations' => ['nullable', 'array'],

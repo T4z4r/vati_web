@@ -40,6 +40,19 @@ class LoanApplicationResource extends JsonResource
             'applicant_thumbprint_path' => $this->applicant_thumbprint_path,
             'guarantors' => $this->whenLoaded('guarantors'),
             'documents' => $this->whenLoaded('documents'),
+            'requirements' => [
+                'submission' => [
+                    'attachments_required' => false,
+                    'applicant_evidence_required' => false,
+                    'guarantor_evidence_required' => false,
+                ],
+                'approval' => [
+                    'attachments_required' => false,
+                    'applicant_evidence_required' => true,
+                    'complete_guarantors_required' => 2,
+                    'confirmed_group_witnesses_required' => $this->relationLoaded('product') ? $this->product->required_group_witnesses : null,
+                ],
+            ],
             'nominees' => $this->when($this->relationLoaded('member') && $this->member->relationLoaded('nominees'), fn () => $this->member->nominees),
             'cancellation' => $this->whenLoaded('cancellation'),
             'witness_progress' => $this->when($this->relationLoaded('product'), fn () => [

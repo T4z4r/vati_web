@@ -87,7 +87,7 @@ class OnboardingApiTest extends TestCase
             'maximum_amount' => 5000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12,
             'annual_interest_rate' => 24, 'interest_method' => 'flat', 'repayment_frequency' => 'weekly', 'status' => true,
         ]);
-        $applicationResponse = $this->postJson('/api/v1/onboarding/loan-applications', [
+        $applicationResponse = $this->postJson('/api/v1/loan-applications', [
             'member_id' => $memberId,
             'loan_product_id' => $product->id,
             'application_type' => 'main',
@@ -105,10 +105,12 @@ class OnboardingApiTest extends TestCase
                 ['purpose' => 'Working capital', 'allocation_amount' => 500000, 'current_asset_value' => 200000],
                 ['purpose' => 'Equipment', 'allocation_amount' => 100000, 'current_asset_value' => 0],
             ],
-        ])->assertCreated()->assertJsonPath('message', 'Loan application onboarding completed.')
+        ])->assertCreated()->assertJsonPath('message', 'Loan application created.')
             ->assertJsonPath('data.member.id', $memberId)
             ->assertJsonPath('data.group.id', $groupId)
-            ->assertJsonPath('data.status', 'draft');
+            ->assertJsonPath('data.status', 'draft')
+            ->assertJsonPath('data.requirements.submission.attachments_required', false)
+            ->assertJsonPath('data.requirements.approval.complete_guarantors_required', 2);
 
         $applicationId = $applicationResponse->json('data.id');
         $this->assertDatabaseHas('loan_applications', ['id' => $applicationId, 'branch_id' => $branch->id, 'group_id' => $groupId, 'business_summary' => null]);

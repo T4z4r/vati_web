@@ -85,9 +85,20 @@ class FlutterApiRequirementsTest extends TestCase
         $this->getJson("/api/v1/loan-applications/{$application->id}")
             ->assertOk()->assertJsonPath('data.member.member_number', 'VATI-M-100')
             ->assertJsonStructure(['data' => ['member', 'group', 'assessment', 'documents', 'risk_signals', 'history']]);
-        $this->getJson('/api/v1/dashboard')->assertOk()->assertJsonStructure(['data' => ['credit_officer' => ['pending_credit_review', 'daily_target', 'priority_applications']]]);
+        $officerDashboard = $this->getJson('/api/v1/dashboard')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['credit_officer' => ['pending_credit_review', 'daily_target', 'priority_applications']]]);
+        $this->assertArrayNotHasKey('management_financial_summary', $officerDashboard->json('data'));
         $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonStructure(['data' => ['gross_loan_portfolio', 'collection_rate', 'portfolio_at_risk']]);
         $this->getJson('/api/v1/portfolio/branches')->assertOk()->assertJsonStructure(['success', 'data', 'meta' => ['current_page', 'total'], 'links']);
+
+        Sanctum::actingAs($this->admin);
+        $this->getJson('/api/v1/dashboard')->assertOk()->assertJsonStructure([
+            'data' => ['management_financial_summary' => [
+                'total_loan_portfolio', 'total_posted_payments', 'repayment_profit_or_loss',
+                'total_loan_disbursement', 'total_loan_applications', 'amount_requested_for_disbursement',
+            ]],
+        ]);
     }
 
     public function test_documents_can_be_uploaded_verified_downloaded_and_exported(): void
@@ -102,6 +113,52 @@ class FlutterApiRequirementsTest extends TestCase
             ->assertOk()->assertJsonPath('data.verification_status', 'verified');
         $this->get("/api/v1/loan-applications/{$application->id}/documents/{$documentId}/download")->assertOk();
         $this->get("/api/v1/loan-applications/{$application->id}/export")->assertOk()->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_member_api_matches_full_web_profile_documents_and_pdf_flow(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $create = $this->post('/api/v1/members', [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Rehema',
+            'last_name' => 'Juma',
+            'phone' => '255710555101',
+            'photo' => UploadedFile::fake()->image('rehema.jpg', 300, 300),
+            'kyc' => ['business_name' => 'Rehema Shop'],
+            'nominees' => [['name' => 'Amina', 'relationship' => 'Daughter', 'percentage' => 100]],
+            'family_members' => [['name' => 'Amina Juma', 'relationship' => 'Daughter', 'age' => 12]],
+            'assets' => [['name' => 'Freezer', 'category' => 'Business', 'quantity' => 1, 'estimated_value' => 900000]],
+        ])->assertCreated()
+            ->assertJsonPath('data.kyc.business_name', 'Rehema Shop')
+            ->assertJsonPath('data.family_members.0.name', 'Amina Juma')
+            ->assertJsonPath('data.assets.0.name', 'Freezer')
+            ->assertJsonStructure(['data' => ['photo_url']]);
+        $memberId = $create->json('data.id');
+        Storage::disk('public')->assertExists(Member::findOrFail($memberId)->photo_path);
+
+        $this->putJson("/api/v1/members/{$memberId}", [
+            'guardian_name' => 'Mzee Juma',
+            'kyc' => ['business_name' => 'Rehema Wholesale'],
+            'nominees' => [['name' => 'Amina', 'relationship' => 'Daughter', 'percentage' => 60], ['name' => 'Baraka', 'relationship' => 'Son', 'percentage' => 40]],
+            'family_members' => [['name' => 'Baraka Juma', 'relationship' => 'Son', 'age' => 8]],
+            'assets' => [['name' => 'Delivery Bike', 'category' => 'Business', 'quantity' => 1, 'estimated_value' => 1500000]],
+        ])->assertOk()
+            ->assertJsonPath('data.guardian_name', 'Mzee Juma')
+            ->assertJsonPath('data.kyc.business_name', 'Rehema Wholesale')
+            ->assertJsonCount(2, 'data.nominees')
+            ->assertJsonPath('data.assets.0.name', 'Delivery Bike');
+
+        $document = $this->post("/api/v1/members/{$memberId}/documents", [
+            'document_type' => 'national_id',
+            'file' => UploadedFile::fake()->create('nida.pdf', 20, 'application/pdf'),
+        ])->assertCreated()->assertJsonPath('data.file_name', 'nida.pdf');
+        $documentId = $document->json('data.id');
+        $this->get("/api/v1/members/{$memberId}/documents/{$documentId}/download")->assertOk();
+        $this->get("/api/v1/members/{$memberId}/export")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload('VATI-member-'.Member::findOrFail($memberId)->membership_number.'.pdf');
     }
 
     public function test_notification_read_state_and_member_photo_upload_work(): void

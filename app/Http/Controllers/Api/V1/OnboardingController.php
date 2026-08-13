@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\OnboardLoanApplicationRequest;
-use App\Http\Requests\OnboardMemberRequest;
+use App\Http\Requests\StoreMemberRequest;
 use App\Http\Resources\LoanApplicationResource;
 use App\Http\Resources\MemberResource;
 use App\Services\OnboardingService;
@@ -31,7 +31,7 @@ class OnboardingController extends ApiController
         ], 201);
     }
 
-    public function member(OnboardMemberRequest $request, OnboardingService $service)
+    public function member(StoreMemberRequest $request, OnboardingService $service)
     {
         $member = $service->member($request->validated(), $request->user());
 
@@ -50,9 +50,9 @@ class OnboardingController extends ApiController
             'message' => 'Loan application onboarding completed.',
             'data' => new LoanApplicationResource($application),
             'next_steps' => [
-                'Capture applicant consent, signature, and thumbprint.',
-                'Capture two guarantor declarations and required documents.',
-                'Verify checklist documents, add group witnesses, then submit the application.',
+                'Submit the draft application for review when the captured information is ready.',
+                'Applicant evidence, guarantor declarations, and attachments may be completed separately.',
+                'Complete approval requirements and group witnesses before final approval.',
             ],
         ], 201);
     }
