@@ -77,6 +77,7 @@ class WebPortalTest extends TestCase
         $this->actingAs($this->admin);
         $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d')])->assertRedirect();
         $member = Member::firstOrFail();
+        $member->update(['photo_path' => 'members/photos/asha-musa.jpg']);
         $this->assertDatabaseHas('group_memberships', ['member_id' => $member->id, 'group_id' => $this->group->id, 'status' => 'active']);
         $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa']);
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group');
@@ -84,6 +85,8 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
             ->assertOk()
             ->assertSee('Applicant profile (auto-populated)')
+            ->assertSee('Applicant photograph')
+            ->assertSee('asha-musa.jpg', false)
             ->assertSee('Projected repayment schedule')
             ->assertSee('schedule-body', false)
             ->assertSee('data-frequency="weekly"', false)

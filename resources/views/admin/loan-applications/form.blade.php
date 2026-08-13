@@ -106,6 +106,17 @@
                     <span id="profile-member-number" class="badge active"></span>
                 </div>
                 <div class="card-body">
+                    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                        <img id="profile-member-photo" src="" alt="Selected member photograph"
+                            style="display:none;width:112px;height:112px;border-radius:14px;object-fit:cover;border:1px solid var(--border)">
+                        <div id="profile-member-photo-fallback" class="avatar"
+                            style="width:112px;height:112px;border-radius:14px;font-size:28px">—</div>
+                        <div>
+                            <small class="muted">Applicant photograph</small>
+                            <h3 id="profile-member-photo-name" style="margin:4px 0 0">Selected member</h3>
+                            <p id="profile-member-photo-status" class="muted" style="margin:4px 0 0">No photograph available</p>
+                        </div>
+                    </div>
                     <h3 class="section-title">Personal and organization information</h3>
                     <div class="detail-grid">
                         <div class="detail"><small>Applicant name</small><strong data-member-field="full_name">—</strong></div>
@@ -269,6 +280,8 @@
         const memberProfiles = @json($memberProfiles);
         const memberSelect = document.getElementById('member-select');
         const memberProfile = document.getElementById('member-profile');
+        const memberPhoto = document.getElementById('profile-member-photo');
+        const memberPhotoFallback = document.getElementById('profile-member-photo-fallback');
         const canAutofillApplication = @json(!$editing && !session()->hasOldInput());
         const product = document.getElementById('product');
         const amount = document.getElementById('amount');
@@ -316,6 +329,21 @@
                 element.textContent = text(values[element.dataset.memberField]);
             });
             document.getElementById('profile-member-number').textContent = profile.membership_number;
+            document.getElementById('profile-member-photo-name').textContent = profile.full_name;
+            memberPhoto.alt = `${profile.full_name} photograph`;
+            memberPhotoFallback.textContent = profile.initials || '—';
+
+            if (profile.photo_url) {
+                memberPhoto.src = profile.photo_url;
+                memberPhoto.style.display = '';
+                memberPhotoFallback.style.display = 'none';
+                document.getElementById('profile-member-photo-status').textContent = 'Photograph from member profile';
+            } else {
+                memberPhoto.removeAttribute('src');
+                memberPhoto.style.display = 'none';
+                memberPhotoFallback.style.display = 'flex';
+                document.getElementById('profile-member-photo-status').textContent = 'No photograph has been uploaded for this member';
+            }
 
             if (canAutofillApplication) {
                 document.getElementById('existing-loan-balance').value = Number(profile.current_loan_balance || 0);

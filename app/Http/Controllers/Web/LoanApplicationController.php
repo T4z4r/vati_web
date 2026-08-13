@@ -180,6 +180,8 @@ class LoanApplicationController extends Controller
             'memberProfiles' => $members->mapWithKeys(fn (Member $member) => [$member->id => [
                 'membership_number' => $member->membership_number,
                 'full_name' => trim("{$member->first_name} {$member->middle_name} {$member->last_name}"),
+                'initials' => strtoupper(substr($member->first_name, 0, 1).substr($member->last_name, 0, 1)),
+                'photo_url' => $member->photo_path ? asset('storage/'.$member->photo_path) : null,
                 'guardian_name' => $member->guardian_name,
                 'occupation' => $member->occupation,
                 'date_of_birth' => $member->date_of_birth?->toDateString(),
