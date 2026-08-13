@@ -15,6 +15,7 @@ use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Region;
 use App\Models\User;
+use App\Services\ApplicationComplianceService;
 use App\Services\DisbursementService;
 use App\Services\LoanAdministrationService;
 use App\Services\LoanCancellationService;
@@ -59,16 +60,11 @@ class ComplianceWorkflowTest extends TestCase
         Sanctum::actingAs($this->admin);
     }
 
-    public function test_complete_legal_evidence_and_verified_checklist_are_required(): void
+    public function test_submission_allows_missing_applicant_evidence_but_approval_still_requires_it(): void
     {
         $application = $this->application();
 
         $this->postJson("/api/v1/loan-applications/{$application->id}/submit")->assertUnprocessable();
-        $this->put("/api/v1/loan-applications/{$application->id}/compliance/applicant", [
-            'accept_declaration' => '1',
-            'applicant_signature' => UploadedFile::fake()->image('signature.png'),
-            'applicant_thumbprint' => UploadedFile::fake()->image('thumbprint.png'),
-        ])->assertOk();
 
         foreach (['family', 'non_family'] as $index => $type) {
             $this->post("/api/v1/loan-applications/{$application->id}/compliance/guarantors", [
@@ -92,8 +88,15 @@ class ComplianceWorkflowTest extends TestCase
         }
 
         $this->postJson("/api/v1/loan-applications/{$application->id}/submit")->assertOk()->assertJsonPath('data.status', 'submitted');
+        $this->assertNull($application->refresh()->consented_at);
+        $this->assertNull($application->applicant_signature_path);
+        $this->assertNull($application->applicant_thumbprint_path);
         $this->assertSame(100.0, (float) $this->member->nominees()->sum('percentage'));
         $this->assertSame(2, $application->guarantors()->count());
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Applicant consent, signature, thumbprint, and versioned loan terms are required before approval.');
+        app(ApplicationComplianceService::class)->assertReadyForApproval($application);
     }
 
     public function test_cooling_off_period_blocks_disbursement_and_allows_cancellation(): void

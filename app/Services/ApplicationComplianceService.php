@@ -98,9 +98,6 @@ class ApplicationComplianceService
     public function assertReadyForSubmission(LoanApplication $application): void
     {
         $application->loadMissing(['guarantors', 'documents', 'member.nominees', 'term']);
-        if (! $application->term || ! $application->consented_at || ! $application->applicant_signature_path || ! $application->applicant_thumbprint_path) {
-            throw new DomainException('Applicant consent, signature, thumbprint, and versioned loan terms are required.');
-        }
         if ($application->guarantors->count() < 2 || $application->guarantors->contains(fn ($g) => ! $g->signature_path || ! $g->thumbprint_path || ! $g->joint_photo_path || ! $g->declaration_accepted_at)) {
             throw new DomainException('Two complete guarantor declarations with signatures, thumbprints, and joint photographs are required.');
         }
@@ -117,8 +114,16 @@ class ApplicationComplianceService
     public function assertReadyForApproval(LoanApplication $application): void
     {
         $this->assertReadyForSubmission($application);
+        $this->assertApplicantEvidence($application);
         if ($application->documents->where('is_required', true)->contains(fn ($document) => $document->verification_status !== 'verified')) {
             throw new DomainException('Every required checklist document must be verified before approval.');
+        }
+    }
+
+    private function assertApplicantEvidence(LoanApplication $application): void
+    {
+        if (! $application->term || ! $application->consented_at || ! $application->applicant_signature_path || ! $application->applicant_thumbprint_path) {
+            throw new DomainException('Applicant consent, signature, thumbprint, and versioned loan terms are required before approval.');
         }
     }
 
