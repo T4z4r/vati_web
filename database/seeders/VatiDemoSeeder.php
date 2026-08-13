@@ -40,6 +40,8 @@ class VatiDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(SuperAdminSeeder::class);
+
         DB::transaction(function () {
             $region = Region::updateOrCreate(
                 ['code' => 'DSM'],
