@@ -8,6 +8,7 @@
     $fullName = trim(collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' '));
     $money = fn ($value) => 'TZS '.number_format((float) ($value ?? 0), 2);
     $display = fn ($value, $fallback = 'Not recorded') => filled($value) ? $value : $fallback;
+    $canDecideApplication = in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']);
 @endphp
 
 <div class="page-head">
@@ -29,9 +30,68 @@
         @if($application->cancellation_deadline && !$application->cancellation && !$application->loan?->disbursement)
             <form method="POST" action="{{ route('admin.loan-applications.cancel', $application) }}">@csrf<input type="hidden" name="reason" value="Mwombaji ametumia haki ya kughairi"><button class="btn btn-danger" data-confirm="Ughairi ombi hili?">Ghairi ombi</button></form>
         @endif
+        @if($canDecideApplication)
+            @can('approve-loan-applications')
+                <button class="btn btn-primary" type="button" data-modal-open="approve-application-modal">Idhinisha ombi</button>
+            @endcan
+            @can('reject-loan-applications')
+                <button class="btn btn-danger" type="button" data-modal-open="reject-application-modal">Kataa ombi</button>
+            @endcan
+        @endif
         @if($application->loan)<a class="btn btn-primary" href="{{ route('admin.loans.show', $application->loan) }}">Fungua mkopo <span class="ph ph-arrow-right" aria-hidden="true"></span></a>@endif
     </div>
 </div>
+
+@if($canDecideApplication)
+    @can('approve-loan-applications')
+        <div class="modal-backdrop" id="approve-application-modal" role="dialog" aria-modal="true" aria-labelledby="approve-application-title" hidden>
+            <div class="modal-panel">
+                <div class="modal-head">
+                    <div>
+                        <p class="eyebrow">Loan decision</p>
+                        <h2 id="approve-application-title">Idhinisha ombi</h2>
+                    </div>
+                    <button class="icon-btn" type="button" data-modal-close aria-label="Close approval modal"><span class="ph ph-x" aria-hidden="true"></span></button>
+                </div>
+                <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="muted">Approval will check compliance and witness requirements before creating the loan account.</p>
+                        <label>Maoni ya uidhinishaji<textarea name="remarks" rows="5"></textarea></label>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" type="button" data-modal-close>Ghairi</button>
+                        <button class="btn btn-primary">Idhinisha ombi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
+    @can('reject-loan-applications')
+        <div class="modal-backdrop" id="reject-application-modal" role="dialog" aria-modal="true" aria-labelledby="reject-application-title" hidden>
+            <div class="modal-panel">
+                <div class="modal-head">
+                    <div>
+                        <p class="eyebrow">Loan decision</p>
+                        <h2 id="reject-application-title">Kataa ombi</h2>
+                    </div>
+                    <button class="icon-btn" type="button" data-modal-close aria-label="Close rejection modal"><span class="ph ph-x" aria-hidden="true"></span></button>
+                </div>
+                <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="muted">Record a clear reason for rejecting this loan application.</p>
+                        <label>Sababu ya kukataa<textarea name="remarks" minlength="5" rows="5" required></textarea></label>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" type="button" data-modal-close>Ghairi</button>
+                        <button class="btn btn-danger">Kataa ombi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
+@endif
 
 <div class="stats">
     <div class="stat gold"><small>Requested amount</small><strong>TZS {{ number_format($application->requested_amount) }}</strong></div>
@@ -174,16 +234,40 @@
             @endif
         </div>
 
-        @if(in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
-            <br><div class="card"><div class="card-head"><h2>Uamuzi wa mkopo</h2></div><div class="card-body">
-                @can('approve-loan-applications')
-                    <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">@csrf<label>Maoni ya uidhinishaji<textarea name="remarks"></textarea></label><div class="form-actions"><button class="btn btn-primary" data-confirm="Uidhinishe ombi hili la mkopo?">Idhinisha ombi</button></div></form>
-                @endcan
-                @can('reject-loan-applications')
-                    <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}">@csrf<label>Sababu ya kukataa<textarea name="remarks" minlength="5" required></textarea></label><div class="form-actions"><button class="btn btn-danger" data-confirm="Ukatae ombi hili la mkopo?">Kataa ombi</button></div></form>
-                @endcan
-            </div></div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openModal = modal => {
+                if (!modal) return;
+                modal.hidden = false;
+                document.body.classList.add('modal-open');
+                modal.querySelector('textarea, button, input, select')?.focus();
+            };
+            const closeModal = modal => {
+                if (!modal) return;
+                modal.hidden = true;
+                document.body.classList.remove('modal-open');
+            };
+
+            document.querySelectorAll('[data-modal-open]').forEach(button => {
+                button.addEventListener('click', () => openModal(document.getElementById(button.dataset.modalOpen)));
+            });
+            document.querySelectorAll('[data-modal-close]').forEach(button => {
+                button.addEventListener('click', () => closeModal(button.closest('.modal-backdrop')));
+            });
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                modal.addEventListener('click', event => {
+                    if (event.target === modal) closeModal(modal);
+                });
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape') return;
+                closeModal(document.querySelector('.modal-backdrop:not([hidden])'));
+            });
+        });
+    </script>
+@endpush
