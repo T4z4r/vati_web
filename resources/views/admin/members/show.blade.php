@@ -249,7 +249,7 @@
 <br>
 <div class="card">
     <div class="card-head"><h2>Loan applications</h2><span>{{ $applications->count() }} applications</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Status</th><th>Decision</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Guarantors</th><th>Group witnesses</th><th>Status</th><th>Decision</th></tr></thead><tbody>
         @forelse($applications as $application)
             <tr>
                 <td>@can('view-loan-applications')<a class="table-link" href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a>@else{{ $application->application_number }}@endcan</td>
@@ -258,6 +258,22 @@
                 <td class="money">{{ $money($application->requested_amount) }}</td>
                 <td>{{ $application->duration_months }} months</td>
                 <td>{{ $display($application->loan_purpose) }}</td>
+                <td>
+                    @forelse($application->guarantors as $guarantor)<div>{{ $guarantor->name }} <small>({{ $display($guarantor->relationship, 'relationship not recorded') }})</small></div>@empty<span class="muted">None</span>@endforelse
+                    @if($application->status->value === 'draft')
+                        @can('create-loan-applications')
+                            <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#guarantors">Manage</a>
+                        @endcan
+                    @endif
+                </td>
+                <td>
+                    @forelse($application->groupWitnesses as $witness)<div>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</div>@empty<span class="muted">None</span>@endforelse
+                    @if($application->status->value === 'draft')
+                        @can('create-loan-applications')
+                            <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#group-witnesses">Manage</a>
+                        @endcan
+                    @endif
+                </td>
                 <td><span class="badge {{ $application->status->value }}">{{ str_replace('_', ' ', $application->status->value) }}</span></td>
                 <td>
                     @if(in_array($application->status->value, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
@@ -283,7 +299,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="8" class="empty">No loan applications yet.</td></tr>
+            <tr><td colspan="10" class="empty">No loan applications yet.</td></tr>
         @endforelse
     </tbody></table></div>
 </div>

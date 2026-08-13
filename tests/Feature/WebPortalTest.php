@@ -163,6 +163,7 @@ class WebPortalTest extends TestCase
         $this->assertDatabaseHas('member_family_members', ['member_id' => $member->id, 'name' => 'Amani Musa']);
         $this->assertDatabaseCount('member_assets', 1);
         $this->assertDatabaseHas('asset_types', ['name' => 'Refrigerator', 'category' => 'Household']);
+        $onboardingWitness = $this->member('Witness Member', '255712000099');
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group')->assertSee(basename($member->photo_path), false)->assertSee('data-member-photo', false);
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
@@ -174,12 +175,25 @@ class WebPortalTest extends TestCase
             ->assertSee('schedule-body', false)
             ->assertSee('data-frequency="weekly"', false)
             ->assertSee('memberProfiles', false)
+            ->assertSee('Guarantors / Wadhamini')
+            ->assertSee('Group Witnesses / Mashahidi wa Kikundi')
+            ->assertSee('Witness Member')
             ->assertSee('Asha Musa');
 
-        $this->post('/admin/loan-applications', $this->applicationPayload($member))->assertRedirect();
+        $applicationPayload = $this->applicationPayload($member);
+        $applicationPayload['guarantors'] = [
+            ['guarantor_type' => 'family', 'name' => 'Musa Juma', 'relationship' => 'Father', 'phone' => '255700111222', 'national_id' => 'G-001'],
+            ['guarantor_type' => 'non_family', 'name' => 'Rehema Ally', 'relationship' => 'Friend', 'phone' => '255700333444', 'national_id' => 'G-002'],
+        ];
+        $applicationPayload['witness_member_ids'] = [$onboardingWitness->id];
+        $this->post('/admin/loan-applications', $applicationPayload)->assertRedirect();
         $this->assertDatabaseHas('loan_applications', ['member_id' => $member->id, 'group_id' => $this->group->id, 'branch_id' => $this->branch->id, 'status' => 'draft']);
         $application = $member->loanApplications()->firstOrFail();
         $this->assertSame(0, $application->utilizations()->count());
+        $this->assertDatabaseCount('loan_guarantors', 2);
+        $this->assertDatabaseHas('loan_group_witnesses', ['loan_application_id' => $application->id, 'member_id' => $onboardingWitness->id]);
+        $this->get(route('admin.members.show', $member))->assertOk()->assertSee('Musa Juma')->assertSee('Rehema Ally')->assertSee('Witness Member')->assertSee('Manage');
+        $this->get(route('admin.loan-applications.edit', $application))->assertOk()->assertSee('Musa Juma')->assertSee('Rehema Ally')->assertSee('Witness Member');
         $this->get(route('admin.loan-applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number)
@@ -207,9 +221,21 @@ class WebPortalTest extends TestCase
         $updated = $this->applicationPayload($member);
         $updated['requested_amount'] = 1200000;
         $updated['utilizations'] = [['purpose' => 'Working capital', 'allocation_amount' => 1200000, 'current_asset_value' => 0]];
+        $updated['guarantors'] = $application->guarantors()->orderBy('id')->get()->map(fn ($guarantor, $index) => [
+            'id' => $guarantor->id,
+            'guarantor_type' => $guarantor->guarantor_type,
+            'name' => $index === 0 ? 'Musa Juma Updated' : $guarantor->name,
+            'relationship' => $guarantor->relationship,
+            'phone' => $guarantor->phone,
+            'national_id' => $guarantor->national_id,
+        ])->all();
+        $updated['witness_member_ids'] = [$onboardingWitness->id];
         $this->put(route('admin.loan-applications.update', $application), $updated)->assertRedirect(route('admin.loan-applications.show', $application));
         $this->assertDatabaseHas('loan_applications', ['id' => $application->id, 'requested_amount' => 1200000]);
         $this->assertDatabaseHas('loan_utilizations', ['loan_application_id' => $application->id, 'allocation_amount' => 1200000]);
+        $this->assertDatabaseCount('loan_guarantors', 2);
+        $this->assertDatabaseHas('loan_guarantors', ['loan_application_id' => $application->id, 'name' => 'Musa Juma Updated']);
+        $this->assertDatabaseHas('loan_group_witnesses', ['loan_application_id' => $application->id, 'member_id' => $onboardingWitness->id]);
     }
 
     public function test_branch_staff_cannot_open_head_office_administration(): void

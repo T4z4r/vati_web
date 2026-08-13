@@ -66,6 +66,8 @@ class OnboardingService
         return DB::transaction(function () use ($data, $user) {
             $assessment = Arr::pull($data, 'assessment');
             $utilizations = Arr::pull($data, 'utilizations', []);
+            $guarantors = Arr::pull($data, 'guarantors', []);
+            $witnessMemberIds = Arr::pull($data, 'witness_member_ids', []);
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
 
@@ -88,6 +90,7 @@ class OnboardingService
             if (in_array($data['application_type'], ['refinance', 'top_up'], true) && ! $hasCurrentLoan) {
                 throw new DomainException('Refinance and top-up applications require a current loan.');
             }
+            $witnesses = $this->eligibleWitnesses($member, $witnessMemberIds);
 
             $figures = $this->calculator->calculate($product, (float) $data['requested_amount'], (int) $data['duration_months']);
             $income = (float) ($assessment['core_business_income'] ?? 0) + (float) ($assessment['other_income'] ?? 0);
@@ -113,10 +116,22 @@ class OnboardingService
             foreach ($utilizations as $utilization) {
                 $application->utilizations()->create($utilization);
             }
+            foreach ($guarantors as $guarantor) {
+                unset($guarantor['id']);
+                $application->guarantors()->create($guarantor);
+            }
+            foreach ($witnesses as $witness) {
+                $application->groupWitnesses()->create([
+                    'group_id' => $member->group_id,
+                    'member_id' => $witness->id,
+                    'confirmed_at' => now(),
+                    'recorded_by' => $user->id,
+                ]);
+            }
 
             activity()->causedBy($user)->performedOn($application)->withProperties(['member_id' => $member->id, 'group_id' => $member->group_id])->log('Loan application onboarded');
 
-            return $application->load('member.nominees', 'product', 'group', 'branch', 'assessment', 'utilizations');
+            return $application->load('member.nominees', 'product', 'group', 'branch', 'assessment', 'utilizations', 'guarantors', 'groupWitnesses.member');
         });
     }
 
@@ -133,6 +148,10 @@ class OnboardingService
 
             $assessment = Arr::pull($data, 'assessment');
             $utilizations = Arr::pull($data, 'utilizations', []);
+            $replaceGuarantors = array_key_exists('guarantors', $data);
+            $guarantors = Arr::pull($data, 'guarantors', []);
+            $replaceWitnesses = array_key_exists('witness_member_ids', $data);
+            $witnessMemberIds = Arr::pull($data, 'witness_member_ids', []);
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
             if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
@@ -154,6 +173,7 @@ class OnboardingService
             if (in_array($data['application_type'], ['refinance', 'top_up'], true) && ! $hasCurrentLoan) {
                 throw new DomainException('Refinance and top-up applications require a current loan.');
             }
+            $witnesses = $this->eligibleWitnesses($member, $witnessMemberIds);
 
             $figures = $this->calculator->calculate($product, (float) $data['requested_amount'], (int) $data['duration_months']);
             $income = (float) ($assessment['core_business_income'] ?? 0) + (float) ($assessment['other_income'] ?? 0);
@@ -184,9 +204,62 @@ class OnboardingService
             foreach ($utilizations as $utilization) {
                 $application->utilizations()->create($utilization);
             }
+            if ($replaceGuarantors) {
+                $this->syncGuarantors($application, $guarantors);
+            }
+            if ($replaceWitnesses) {
+                $this->syncWitnesses($application, $member, $witnesses, $user);
+            }
             activity()->causedBy($user)->performedOn($application)->log('Draft loan application edited');
 
-            return $application->refresh()->load('member.nominees', 'product', 'group', 'branch', 'assessment', 'utilizations');
+            return $application->refresh()->load('member.nominees', 'product', 'group', 'branch', 'assessment', 'utilizations', 'guarantors', 'groupWitnesses.member');
         });
+    }
+
+    private function eligibleWitnesses(Member $applicant, array $memberIds)
+    {
+        if ($memberIds === []) {
+            return collect();
+        }
+
+        $witnesses = Member::with('activeGroupMembership')->whereIn('id', $memberIds)->get();
+        if ($witnesses->count() !== count(array_unique($memberIds)) || $witnesses->contains(fn (Member $member) => $member->id === $applicant->id
+            || $member->status !== 'active'
+            || (int) $member->group_id !== (int) $applicant->group_id
+            || (int) $member->activeGroupMembership?->group_id !== (int) $applicant->group_id
+        )) {
+            throw new DomainException('Every group witness must be another active member of the applicant’s group.');
+        }
+
+        return $witnesses;
+    }
+
+    private function syncGuarantors(LoanApplication $application, array $guarantors): void
+    {
+        $existing = $application->guarantors()->get();
+        $keptIds = [];
+        foreach ($guarantors as $guarantor) {
+            $id = Arr::pull($guarantor, 'id');
+            $record = $id ? $existing->firstWhere('id', (int) $id) : null;
+            if ($record) {
+                $record->update($guarantor);
+            } else {
+                $record = $application->guarantors()->create($guarantor);
+            }
+            $keptIds[] = $record->id;
+        }
+        $application->guarantors()->when($keptIds, fn ($query) => $query->whereNotIn('id', $keptIds))->delete();
+    }
+
+    private function syncWitnesses(LoanApplication $application, Member $applicant, $witnesses, User $user): void
+    {
+        $memberIds = $witnesses->pluck('id')->all();
+        $application->groupWitnesses()->when($memberIds, fn ($query) => $query->whereNotIn('member_id', $memberIds))->delete();
+        foreach ($witnesses as $witness) {
+            $application->groupWitnesses()->firstOrCreate(
+                ['member_id' => $witness->id],
+                ['group_id' => $applicant->group_id, 'confirmed_at' => now(), 'recorded_by' => $user->id]
+            );
+        }
     }
 }

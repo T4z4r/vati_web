@@ -18,6 +18,24 @@ class OnboardLoanApplicationRequest extends FormRequest
                 )),
             ]);
         }
+
+        if ($this->has('guarantors')) {
+            $this->merge([
+                'guarantors' => array_values(array_filter(
+                    $this->input('guarantors', []),
+                    fn ($row) => collect($row)->except('id')->contains(fn ($value) => filled($value))
+                )),
+            ]);
+        }
+
+        if ($this->has('witness_member_ids')) {
+            $this->merge([
+                'witness_member_ids' => array_values(array_filter(
+                    $this->input('witness_member_ids', []),
+                    fn ($value) => filled($value)
+                )),
+            ]);
+        }
     }
 
     public function authorize(): bool
@@ -51,6 +69,22 @@ class OnboardLoanApplicationRequest extends FormRequest
             'utilizations.*.purpose' => ['required', 'string', 'max:255'],
             'utilizations.*.allocation_amount' => ['required', 'numeric', 'gt:0'],
             'utilizations.*.current_asset_value' => ['nullable', 'numeric', 'min:0'],
+            'guarantors' => ['nullable', 'array', 'max:2'],
+            'guarantors.*.id' => ['nullable', 'integer'],
+            'guarantors.*.guarantor_type' => ['required', Rule::in(['family', 'non_family'])],
+            'guarantors.*.name' => ['required', 'string', 'max:150'],
+            'guarantors.*.relationship' => ['required', 'string', 'max:100'],
+            'guarantors.*.phone' => ['required', 'string', 'max:20'],
+            'guarantors.*.national_id' => ['nullable', 'string', 'max:50'],
+            'guarantors.*.voter_id' => ['nullable', 'string', 'max:50'],
+            'guarantors.*.house_number' => ['nullable', 'string', 'max:100'],
+            'guarantors.*.street' => ['nullable', 'string', 'max:100'],
+            'guarantors.*.ward' => ['nullable', 'string', 'max:100'],
+            'guarantors.*.district' => ['nullable', 'string', 'max:100'],
+            'guarantors.*.region' => ['nullable', 'string', 'max:100'],
+            'guarantors.*.business_address' => ['nullable', 'string', 'max:1000'],
+            'witness_member_ids' => ['nullable', 'array', 'max:10'],
+            'witness_member_ids.*' => ['integer', 'distinct', 'exists:members,id'],
         ];
     }
 

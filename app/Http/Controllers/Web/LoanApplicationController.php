@@ -46,7 +46,7 @@ class LoanApplicationController extends Controller
     public function edit(Request $request, LoanApplication $loanApplication)
     {
         abort_unless($loanApplication->status === ApplicationStatus::DRAFT, 409, 'Only draft applications can be edited.');
-        $loanApplication->load('assessment', 'utilizations');
+        $loanApplication->load('assessment', 'utilizations', 'guarantors', 'groupWitnesses');
 
         return view('admin.loan-applications.form', $this->formData($request, $loanApplication, $loanApplication->member_id));
     }
@@ -213,6 +213,7 @@ class LoanApplicationController extends Controller
                 'area' => $member->branch?->area?->name,
                 'organization_region' => $member->branch?->area?->region?->name,
                 'group' => $member->group?->group_name,
+                'group_id' => $member->group_id,
                 'meeting_day' => $member->group?->meeting_day,
                 'group_location' => $member->group?->location,
                 'loan_officer' => $member->group?->loanOfficer?->name,

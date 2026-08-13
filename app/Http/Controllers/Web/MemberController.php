@@ -93,7 +93,7 @@ class MemberController extends Controller
         ]);
 
         $applications = $member->loanApplications()
-            ->with(['product', 'loan', 'guarantors'])
+            ->with(['product', 'loan', 'guarantors', 'groupWitnesses.member'])
             ->latest()
             ->get();
 

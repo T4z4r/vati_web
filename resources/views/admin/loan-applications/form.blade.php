@@ -12,6 +12,14 @@
                 ['purpose' => '', 'allocation_amount' => '', 'current_asset_value' => 0],
             ],
         );
+        $guarantors = old('guarantors', $application->guarantors?->map(fn ($guarantor) => $guarantor->only([
+            'id', 'guarantor_type', 'name', 'relationship', 'phone', 'national_id', 'voter_id',
+            'house_number', 'street', 'ward', 'district', 'region', 'business_address',
+        ]))->values()->all() ?? []);
+        while (count($guarantors) < 2) {
+            $guarantors[] = [];
+        }
+        $selectedWitnesses = collect(old('witness_member_ids', $application->groupWitnesses?->pluck('member_id')->all() ?? []))->map(fn ($id) => (int) $id)->all();
     @endphp
 
     <div class="page-head">
@@ -235,6 +243,40 @@
                 </label>
             </div>
 
+            <h3 id="guarantors" class="section-title" style="margin-top:25px">Guarantors / Wadhamini <small class="muted">(Optional during onboarding)</small></h3>
+            <p class="muted">Record up to two guarantors now. Signature, thumbprint and joint-photo evidence can be completed from the application details page.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Type</th><th>Name</th><th>Relationship</th><th>Phone</th><th>National/Voter ID</th><th>Residential address</th></tr></thead>
+                    <tbody>
+                        @foreach($guarantors as $index => $guarantor)
+                            <tr>
+                                <td>
+                                    @if(!empty($guarantor['id']))<input type="hidden" name="guarantors[{{ $index }}][id]" value="{{ $guarantor['id'] }}">@endif
+                                    <select name="guarantors[{{ $index }}][guarantor_type]" data-select2="false"><option value="">Select</option><option value="family" @selected(($guarantor['guarantor_type'] ?? '') === 'family')>Family</option><option value="non_family" @selected(($guarantor['guarantor_type'] ?? '') === 'non_family')>Non-family</option></select>
+                                </td>
+                                <td><input name="guarantors[{{ $index }}][name]" value="{{ $guarantor['name'] ?? '' }}"></td>
+                                <td><input name="guarantors[{{ $index }}][relationship]" value="{{ $guarantor['relationship'] ?? '' }}"></td>
+                                <td><input name="guarantors[{{ $index }}][phone]" value="{{ $guarantor['phone'] ?? '' }}"></td>
+                                <td><input name="guarantors[{{ $index }}][national_id]" value="{{ $guarantor['national_id'] ?? $guarantor['voter_id'] ?? '' }}"></td>
+                                <td><input name="guarantors[{{ $index }}][business_address]" value="{{ $guarantor['business_address'] ?? '' }}" placeholder="House, street, ward, district"></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 id="group-witnesses" class="section-title" style="margin-top:25px">Group Witnesses / Mashahidi wa Kikundi <small class="muted">(Optional during onboarding)</small></h3>
+            <p class="muted">Only active members of the selected applicant's group can be witnesses. The applicant cannot witness their own application.</p>
+            <input type="hidden" name="witness_member_ids[]" value="">
+            <label>Select group witnesses
+                <select id="witness-member-select" name="witness_member_ids[]" multiple>
+                    @foreach($members as $candidate)
+                        <option value="{{ $candidate->id }}" data-group="{{ $candidate->group_id }}" @selected(in_array($candidate->id, $selectedWitnesses, true))>{{ $candidate->membership_number }} · {{ $candidate->first_name }} {{ $candidate->last_name }} · {{ $candidate->group?->group_name }}</option>
+                    @endforeach
+                </select>
+            </label>
+
             <h3 class="section-title" style="margin-top:25px">Use of loan amount <small class="muted">(Optional)</small></h3>
             <p class="muted">You may leave this section blank. If provided, allocation amounts must total the requested loan amount exactly.</p>
             <div class="table-wrap">
@@ -280,6 +322,7 @@
         const memberProfiles = @json($memberProfiles);
         const memberSelect = document.getElementById('member-select');
         const memberProfile = document.getElementById('member-profile');
+        const witnessSelect = document.getElementById('witness-member-select');
         const memberPhoto = document.getElementById('profile-member-photo');
         const memberPhotoFallback = document.getElementById('profile-member-photo-fallback');
         const canAutofillApplication = @json(!$editing && !session()->hasOldInput());
@@ -306,6 +349,13 @@
 
         function showMemberProfile() {
             const profile = memberProfiles[memberSelect.value];
+            [...witnessSelect.options].forEach(option => {
+                const unavailable = !profile || option.value === memberSelect.value || Number(option.dataset.group) !== Number(profile.group_id);
+                option.hidden = unavailable;
+                option.disabled = unavailable;
+                if (unavailable) option.selected = false;
+            });
+            if (window.jQuery && window.jQuery(witnessSelect).data('select2')) window.jQuery(witnessSelect).trigger('change.select2');
             memberProfile.style.display = profile ? '' : 'none';
             if (!profile) return;
 
