@@ -47,7 +47,7 @@ class OnboardLoanApplicationRequest extends FormRequest
             'assessment.household_expenses' => ['required', 'numeric', 'min:0'],
             'assessment.existing_external_debt' => ['nullable', 'numeric', 'min:0'],
             'assessment.assessment_comment' => ['nullable', 'string', 'max:5000'],
-            'utilizations' => ['required', 'array', 'min:1'],
+            'utilizations' => ['nullable', 'array'],
             'utilizations.*.purpose' => ['required', 'string', 'max:255'],
             'utilizations.*.allocation_amount' => ['required', 'numeric', 'gt:0'],
             'utilizations.*.current_asset_value' => ['nullable', 'numeric', 'min:0'],
@@ -62,8 +62,9 @@ class OnboardLoanApplicationRequest extends FormRequest
                 $validator->errors()->add('loan_product_id', 'The selected loan product is inactive.');
             }
 
-            $allocated = (float) collect($this->input('utilizations', []))->sum('allocation_amount');
-            if (abs($allocated - (float) $this->input('requested_amount')) > 0.009) {
+            $utilizations = collect($this->input('utilizations', []));
+            $allocated = (float) $utilizations->sum('allocation_amount');
+            if ($utilizations->isNotEmpty() && abs($allocated - (float) $this->input('requested_amount')) > 0.009) {
                 $validator->errors()->add('utilizations', 'Use-of-funds allocations must total the requested amount.');
             }
 

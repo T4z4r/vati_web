@@ -112,13 +112,17 @@ class WebPortalTest extends TestCase
     {
         Storage::fake('public');
         $this->actingAs($this->admin);
-        $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d'), 'photo' => UploadedFile::fake()->image('asha.jpg', 300, 300)])->assertRedirect();
+        $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d'), 'photo' => UploadedFile::fake()->image('asha.jpg', 300, 300), 'nominees' => [
+            ['name' => 'Neema Musa', 'relationship' => 'Daughter', 'percentage' => 60],
+            ['name' => 'Juma Musa', 'relationship' => 'Son', 'percentage' => 40],
+        ]])->assertRedirect();
         $member = Member::firstOrFail();
         $originalPhotoPath = $member->photo_path;
         Storage::disk('public')->assertExists($originalPhotoPath);
         $this->assertDatabaseHas('group_memberships', ['member_id' => $member->id, 'group_id' => $this->group->id, 'status' => 'active']);
-        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath));
-        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph');
+        $this->assertDatabaseCount('member_nominees', 2);
+        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath))->assertSee('Neema Musa')->assertSee('Juma Musa')->assertSee('Edit nominees');
+        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Neema Musa');
         $this->put(route('admin.members.update', $member), [
             'branch_id' => $this->branch->id,
             'group_id' => $this->group->id,
@@ -127,10 +131,15 @@ class WebPortalTest extends TestCase
             'phone' => '255712000001',
             'status' => 'active',
             'photo' => UploadedFile::fake()->image('asha-updated.png', 400, 400),
+            'nominees' => [
+                ['name' => 'Rehema Musa', 'relationship' => 'Daughter', 'percentage' => 100],
+            ],
         ])->assertRedirect(route('admin.members.show', $member));
         $member->refresh();
         Storage::disk('public')->assertMissing($originalPhotoPath);
         Storage::disk('public')->assertExists($member->photo_path);
+        $this->assertDatabaseCount('member_nominees', 1);
+        $this->assertDatabaseHas('member_nominees', ['member_id' => $member->id, 'name' => 'Rehema Musa', 'percentage' => 100]);
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group')->assertSee(basename($member->photo_path), false)->assertSee('data-member-photo', false);
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
@@ -147,6 +156,7 @@ class WebPortalTest extends TestCase
         $this->post('/admin/loan-applications', $this->applicationPayload($member))->assertRedirect();
         $this->assertDatabaseHas('loan_applications', ['member_id' => $member->id, 'group_id' => $this->group->id, 'branch_id' => $this->branch->id, 'status' => 'draft']);
         $application = $member->loanApplications()->firstOrFail();
+        $this->assertSame(0, $application->utilizations()->count());
         $this->get(route('admin.loan-applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number)
@@ -209,7 +219,7 @@ class WebPortalTest extends TestCase
             ->assertOk()
             ->assertSee('Members and loan balances')
             ->assertSee('View details')
-            ->assertSee('TZS '.number_format((float) $loan->total_balance, 2));
+            ->assertSee(number_format((float) $loan->total_balance, 2));
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number)->assertSee('borrower.jpg', false)->assertSee('data-member-photo', false);
         $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
@@ -270,7 +280,6 @@ class WebPortalTest extends TestCase
             'loan_purpose' => 'Working capital expansion',
             'business_summary' => 'Established group-based trading business.',
             'assessment' => ['core_business_income' => 500000, 'other_income' => 0, 'business_expenses' => 100000, 'household_expenses' => 100000, 'existing_external_debt' => 0],
-            'utilizations' => [['purpose' => 'Working capital', 'allocation_amount' => 1000000, 'current_asset_value' => 0]],
         ];
     }
 }

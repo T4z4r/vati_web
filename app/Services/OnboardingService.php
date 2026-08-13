@@ -53,7 +53,7 @@ class OnboardingService
     {
         return DB::transaction(function () use ($data, $user) {
             $assessment = Arr::pull($data, 'assessment');
-            $utilizations = Arr::pull($data, 'utilizations');
+            $utilizations = Arr::pull($data, 'utilizations', []);
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
 
@@ -120,7 +120,7 @@ class OnboardingService
             }
 
             $assessment = Arr::pull($data, 'assessment');
-            $utilizations = Arr::pull($data, 'utilizations');
+            $utilizations = Arr::pull($data, 'utilizations', []);
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
             if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {

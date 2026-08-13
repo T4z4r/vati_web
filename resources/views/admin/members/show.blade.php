@@ -182,7 +182,7 @@
         <br>
 
         <div class="card">
-            <div class="card-head"><h2>Nominees</h2><span>{{ $member->nominees->count() }}</span></div>
+            <div class="card-head"><h2>Nominees / Wateule</h2><div class="head-actions"><span>{{ $member->nominees->count() }}</span>@can('edit-members')<a class="btn btn-sm btn-secondary" href="{{ route('admin.members.edit', $member) }}#nominees">Edit nominees</a>@endcan</div></div>
             <div class="table-wrap"><table><thead><tr><th>Name</th><th>Relationship</th><th>Share</th><th>Attested</th></tr></thead><tbody>
                 @forelse($member->nominees as $nominee)
                     <tr><td>{{ $nominee->name }}</td><td>{{ $display($nominee->relationship) }}</td><td>{{ number_format((float) $nominee->percentage, 2) }}%</td><td>{{ $nominee->attested_at?->format('d M Y') ?? '—' }}</td></tr>

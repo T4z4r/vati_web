@@ -1,7 +1,17 @@
 @extends('layouts.admin')
 @section('title', $member->exists ? 'Edit Member' : 'Register Member')
 @section('content')
-    @php($editing = $member->exists)
+    @php
+        $editing = $member->exists;
+        $nomineeRows = old('nominees', $member->nominees?->map(fn ($nominee) => [
+            'name' => $nominee->name,
+            'relationship' => $nominee->relationship,
+            'percentage' => $nominee->percentage,
+        ])->values()->all() ?? []);
+        while (count($nomineeRows) < 3) {
+            $nomineeRows[] = ['name' => '', 'relationship' => '', 'percentage' => ''];
+        }
+    @endphp
     <div class="page-head">
         <div>
             <p class="eyebrow">{{ $editing ? $member->membership_number : 'NEW MEMBER' }}</p>
@@ -187,6 +197,23 @@
                         name="kyc[household_monthly_expenses]"
                         value="{{ old('kyc.household_monthly_expenses', $member->kyc?->household_monthly_expenses) }}"
                         placeholder="In Tanzanian Shillings"></label>
+            </div>
+
+            <h3 id="nominees" class="section-title" style="margin-top:25px">👥 Nominees / Wateule</h3>
+            <p class="muted">Optional. Leave all rows blank if no nominee is being recorded. If provided, percentage shares must total exactly 100%.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nominee name</th><th>Relationship</th><th>Share (%)</th></tr></thead>
+                    <tbody>
+                        @foreach($nomineeRows as $index => $nominee)
+                            <tr>
+                                <td><input name="nominees[{{ $index }}][name]" value="{{ $nominee['name'] ?? '' }}" placeholder="Full name"></td>
+                                <td><input name="nominees[{{ $index }}][relationship]" value="{{ $nominee['relationship'] ?? '' }}" placeholder="e.g. Child, spouse"></td>
+                                <td><input type="number" name="nominees[{{ $index }}][percentage]" value="{{ $nominee['percentage'] ?? '' }}" min="0.01" max="100" step="0.01" placeholder="Share percentage"></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
 
             <!-- DOCUMENTS & ATTACHMENTS -->

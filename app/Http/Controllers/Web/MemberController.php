@@ -109,13 +109,24 @@ class MemberController extends Controller
 
     public function edit(Request $request, Member $member)
     {
-        $member->load('kyc');
+        $member->load('kyc', 'nominees');
 
         return view('admin.members.create', $this->formData($request, $member, $member->group_id));
     }
 
     public function update(Request $request, Member $member, GroupMembershipService $memberships)
     {
+        if ($request->has('nominees')) {
+            $request->merge([
+                'nominees' => array_values(array_filter(
+                    $request->input('nominees', []),
+                    fn ($row) => filled($row['name'] ?? null)
+                        || filled($row['relationship'] ?? null)
+                        || (float) ($row['percentage'] ?? 0) > 0
+                )),
+            ]);
+        }
+
         $data = $request->validate([
             'branch_id' => ['required', 'exists:branches,id'],
             'group_id' => ['required', 'exists:member_groups,id'],
@@ -151,7 +162,16 @@ class MemberController extends Controller
             'kyc.bank_account_number' => ['nullable', 'string', 'max:50'],
             'kyc.bank_account_name' => ['nullable', 'string', 'max:100'],
             'kyc.bank_name' => ['nullable', 'string', 'max:100'],
+            'nominees' => ['nullable', 'array'],
+            'nominees.*.name' => ['required', 'string', 'max:150'],
+            'nominees.*.relationship' => ['required', 'string', 'max:100'],
+            'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
         ]);
+
+        if (array_key_exists('nominees', $data) && count($data['nominees']) > 0
+            && abs((float) collect($data['nominees'])->sum('percentage') - 100) > 0.009) {
+            return back()->withInput()->withErrors(['nominees' => 'Nominee allocations must total exactly 100%.']);
+        }
 
         $group = MemberGroup::findOrFail($data['group_id']);
         if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
@@ -168,6 +188,7 @@ class MemberController extends Controller
         try {
             DB::transaction(function () use ($member, $data, $memberships, $group) {
                 $kyc = Arr::pull($data, 'kyc');
+                $nominees = Arr::pull($data, 'nominees');
                 $groupChanged = (int) $member->group_id !== (int) $data['group_id'];
                 $member->update($data);
 
@@ -177,6 +198,13 @@ class MemberController extends Controller
 
                 if ($groupChanged) {
                     $memberships->assign($member, $group, $member->admission_date ?? today());
+                }
+
+                if ($nominees !== null) {
+                    $member->nominees()->delete();
+                    foreach ($nominees as $nominee) {
+                        $member->nominees()->create([...$nominee, 'attested_at' => now()]);
+                    }
                 }
             });
         } catch (Throwable $exception) {

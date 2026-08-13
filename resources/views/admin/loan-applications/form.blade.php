@@ -7,7 +7,7 @@
         $utilizations = old(
             'utilizations',
             $application->utilizations?->toArray() ?: [
-                ['purpose' => 'Working capital', 'allocation_amount' => '', 'current_asset_value' => 0],
+                ['purpose' => '', 'allocation_amount' => '', 'current_asset_value' => 0],
                 ['purpose' => '', 'allocation_amount' => '', 'current_asset_value' => 0],
                 ['purpose' => '', 'allocation_amount' => '', 'current_asset_value' => 0],
             ],
@@ -235,8 +235,8 @@
                 </label>
             </div>
 
-            <h3 class="section-title" style="margin-top:25px">Use of loan amount</h3>
-            <p class="muted">Allocation amounts must total the requested loan amount exactly. Leave unused rows blank.</p>
+            <h3 class="section-title" style="margin-top:25px">Use of loan amount <small class="muted">(Optional)</small></h3>
+            <p class="muted">You may leave this section blank. If provided, allocation amounts must total the requested loan amount exactly.</p>
             <div class="table-wrap">
                 <table>
                     <thead>

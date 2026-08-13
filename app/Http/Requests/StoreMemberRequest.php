@@ -7,6 +7,20 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMemberRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('nominees')) {
+            $this->merge([
+                'nominees' => array_values(array_filter(
+                    $this->input('nominees', []),
+                    fn ($row) => filled($row['name'] ?? null)
+                        || filled($row['relationship'] ?? null)
+                        || (float) ($row['percentage'] ?? 0) > 0
+                )),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -55,7 +69,7 @@ class StoreMemberRequest extends FormRequest
             'kyc.house_ownership_status' => ['nullable', 'string', 'max:100'],
             'kyc.house_roof_type' => ['nullable', 'string', 'max:100'],
             'kyc.house_fence_type' => ['nullable', 'string', 'max:100'],
-            'nominees' => ['nullable', 'array', 'min:1'],
+            'nominees' => ['nullable', 'array'],
             'nominees.*.name' => ['required', 'string', 'max:150'],
             'nominees.*.relationship' => ['required', 'string', 'max:100'],
             'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
@@ -72,7 +86,8 @@ class StoreMemberRequest extends FormRequest
             if ($group && (int) $group->branch_id !== (int) $this->input('branch_id')) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
             }
-            if ($this->has('nominees') && abs((float) collect($this->input('nominees'))->sum('percentage') - 100) > 0.009) {
+            $nominees = collect($this->input('nominees', []));
+            if ($nominees->isNotEmpty() && abs((float) $nominees->sum('percentage') - 100) > 0.009) {
                 $validator->errors()->add('nominees', 'Nominee allocations must total exactly 100%.');
             }
         });
