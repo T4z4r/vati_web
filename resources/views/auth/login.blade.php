@@ -10,6 +10,8 @@
     <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
+    <link rel="stylesheet" href="{{ asset('css/page-loader.css') }}">
+    <script src="{{ asset('js/page-loader.js') }}" defer></script>
     <style>
         :root {
             --forest-950: #052418;
@@ -778,6 +780,7 @@
 </head>
 
 <body>
+    <x-page-loader />
     <main class="login-page">
         <section class="story-panel" aria-label="VATI operations portal overview">
             <div class="lang-switch" role="group" aria-label="Language">

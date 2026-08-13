@@ -1,0 +1,114 @@
+.page-is-loading body {
+    overflow: hidden;
+}
+
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: #fff;
+    background: radial-gradient(circle at 50% 42%, rgba(198, 154, 40, 0.2), transparent 28%),
+        linear-gradient(145deg, #002f19, #005c2d);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.page-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.page-loader-card {
+    min-width: 220px;
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    text-align: center;
+}
+
+.page-loader-mark {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+}
+
+.page-loader-mark img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.22));
+}
+
+.page-loader-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(255, 255, 255, 0.14);
+    border-top-color: #c69a28;
+    border-right-color: rgba(198, 154, 40, 0.55);
+    border-radius: 50%;
+    animation: vati-loader-spin 1s linear infinite;
+}
+
+.page-loader-copy strong,
+.page-loader-copy span {
+    display: block;
+}
+
+.page-loader-copy strong {
+    color: #f1cf72;
+    font: 700 20px/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+}
+
+.page-loader-copy span {
+    margin-top: 5px;
+    color: #c9ddd1;
+    font: 400 11px/1.5 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.page-loader-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.page-loader-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    animation: vati-loader-pulse 1.15s ease-in-out infinite;
+}
+
+.page-loader-dots i:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.page-loader-dots i:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes vati-loader-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes vati-loader-pulse {
+    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-loader,
+    .page-loader-ring,
+    .page-loader-dots i {
+        animation: none;
+        transition: none;
+    }
+}

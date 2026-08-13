@@ -11,9 +11,12 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/page-loader.css') }}">
+    <script src="{{ asset('js/page-loader.js') }}" defer></script>
 </head>
 
 <body class="admin-shell">
+    <x-page-loader />
     <aside class="sidebar" id="sidebar" aria-label="Sidebar">
         <a class="brand light" href="{{ route('admin.dashboard') }}"><img
                 class="brand-mark" src="{{ asset('images/vati_app_icon_foreground.png') }}" alt="VATI logo"><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
@@ -124,7 +127,10 @@
                 cancelButtonColor: '#68736b',
                 reverseButtons: true,
             }).then(result => {
-                if (result.isConfirmed) el.closest('form')?.submit();
+                if (result.isConfirmed) {
+                    window.VatiPageLoader?.show();
+                    el.closest('form')?.submit();
+                }
             });
         }));
     </script>
