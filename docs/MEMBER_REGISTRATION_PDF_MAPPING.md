@@ -85,6 +85,18 @@ This document maps all fields from the VATI Microfinance Member's Passbook (Kita
 3. **MemberKyc Model** - Stores financial and business information
 4. **Branch & Area Models** - Store organizational hierarchy
 
+## Member API
+
+`POST /api/v1/members` and `POST /api/v1/onboarding/members` accept the complete member profile, address, passbook dates, nested `kyc`, and nested `nominees` data. When nominees are supplied, their percentages must total exactly 100.
+
+`GET /api/v1/members/{member}` returns the complete member record. In addition to the registration fields, its detail payload contains:
+
+- branch, group, issuing officer, KYC, nominees, documents, security account, and passbook replacements;
+- all loan applications;
+- every loan with passbook fees, balances, loan cycles, guarantors, installments, installment records, payments, security movements, disbursement, settlement, clearance, and default notices.
+
+The paginated `GET /api/v1/members` response remains lightweight because these detailed relationships are included only when they have been loaded by the detail endpoint.
+
 ## Passbook-Related Fields
 
 The passbook document captures loan information which is stored separately:

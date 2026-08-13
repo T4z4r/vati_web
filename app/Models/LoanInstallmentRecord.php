@@ -16,6 +16,7 @@ class LoanInstallmentRecord extends Model
     {
         return [
             'payment_date' => 'date',
+            'actual_payment_date' => 'date',
             'principal_amount' => 'decimal:2',
             'interest_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',

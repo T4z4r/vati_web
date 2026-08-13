@@ -29,22 +29,26 @@ class MemberController extends ApiController
         $member = DB::transaction(function () use ($request, $numbers, $memberships) {
             $data = $request->validated();
             $kyc = Arr::pull($data, 'kyc');
+            $nominees = Arr::pull($data, 'nominees', []);
             $member = Member::create([...$data, 'membership_number' => $numbers->member(), 'created_by' => $request->user()->id]);
             if ($kyc) {
                 $member->kyc()->create($kyc);
             }
             $memberships->assign($member, MemberGroup::findOrFail($member->group_id), $member->admission_date ?? today());
+            foreach ($nominees as $nominee) {
+                $member->nominees()->create([...$nominee, 'attested_at' => now()]);
+            }
             activity()->causedBy($request->user())->performedOn($member)->log('Member registered');
 
             return $member;
         });
 
-        return response()->json(['success' => true, 'message' => 'Member created successfully.', 'data' => new MemberResource($member->load('branch', 'group', 'kyc'))], 201);
+        return response()->json(['success' => true, 'message' => 'Member created successfully.', 'data' => new MemberResource($this->loadDetail($member))], 201);
     }
 
     public function show(Member $member)
     {
-        return response()->json(['success' => true, 'data' => new MemberResource($member->load('branch', 'group', 'kyc'))]);
+        return response()->json(['success' => true, 'data' => new MemberResource($this->loadDetail($member))]);
     }
 
     public function update(Request $request, Member $member, GroupMembershipService $memberships)
@@ -67,5 +71,34 @@ class MemberController extends ApiController
         $member->delete();
 
         return response()->noContent();
+    }
+
+    private function loadDetail(Member $member): Member
+    {
+        return $member->load([
+            'branch.manager',
+            'group.loanOfficer',
+            'createdBy',
+            'kyc',
+            'activeGroupMembership',
+            'nominees',
+            'documents.uploadedBy',
+            'securityAccount.transactions',
+            'passbookReplacements',
+            'loanApplications.product',
+            'loanApplications.loan',
+            'loans.product',
+            'loans.application.guarantors',
+            'loans.cycles',
+            'loans.installments',
+            'loans.installmentRecords.collector',
+            'loans.payments',
+            'loans.securityTransactions.collectedBy',
+            'loans.securityTransactions.approvedBy',
+            'loans.disbursement',
+            'loans.settlement',
+            'loans.clearance',
+            'loans.defaultNotices',
+        ]);
     }
 }

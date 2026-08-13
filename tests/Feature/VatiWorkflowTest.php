@@ -63,10 +63,71 @@ class VatiWorkflowTest extends TestCase
     public function test_member_registration_and_duplicate_phone_validation(): void
     {
         Sanctum::actingAs($this->admin);
-        $payload = ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001'];
+        $payload = [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Asha',
+            'middle_name' => 'Juma',
+            'last_name' => 'Musa',
+            'guardian_name' => 'Juma Musa',
+            'phone' => '255712000001',
+            'alternate_phone' => '255712000002',
+            'national_id' => '19900101-12345-00001-00',
+            'voter_id' => 'VOTER-001',
+            'date_of_birth' => '1990-01-01',
+            'gender' => 'Female',
+            'marital_status' => 'Married',
+            'occupation' => 'Trader',
+            'nationality' => 'Tanzanian',
+            'physical_address' => 'Kinondoni, Dar es Salaam',
+            'region' => 'Dar es Salaam',
+            'district' => 'Kinondoni',
+            'ward' => 'Kijitonyama',
+            'street' => 'Ali Hassan Mwinyi Road',
+            'admission_date' => today()->toDateString(),
+            'passbook_issue_date' => today()->toDateString(),
+            'kyc' => [
+                'mpesa_phone' => '255712000001',
+                'bank_account_number' => '00123456789',
+                'bank_account_name' => 'Asha Juma Musa',
+                'bank_name' => 'VATI Test Bank',
+                'house_number' => 'KJ-42',
+                'police_station' => 'Kijitonyama',
+                'business_name' => 'Asha Produce',
+                'business_type' => 'Food trading',
+                'business_address' => 'Kijitonyama Market',
+                'household_monthly_income' => 800000,
+                'household_monthly_expenses' => 300000,
+                'number_of_dependants' => 2,
+                'head_of_household' => 'Asha Juma Musa',
+                'house_ownership_status' => 'Owned',
+                'house_roof_type' => 'Iron sheets',
+                'house_fence_type' => 'Block wall',
+            ],
+            'nominees' => [
+                ['name' => 'Child One', 'relationship' => 'Child', 'percentage' => 60],
+                ['name' => 'Child Two', 'relationship' => 'Child', 'percentage' => 40],
+            ],
+        ];
 
-        $this->postJson('/api/v1/members', $payload)->assertCreated()->assertJsonPath('success', true)->assertJsonPath('data.membership_number', 'VATI-M-'.now()->year.'-000001');
+        $response = $this->postJson('/api/v1/members', $payload)
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.membership_number', 'VATI-M-'.now()->year.'-000001')
+            ->assertJsonPath('data.guardian_name', 'Juma Musa')
+            ->assertJsonPath('data.kyc.house_number', 'KJ-42')
+            ->assertJsonPath('data.nominees.1.percentage', '40.00')
+            ->assertJsonPath('data.issued_by.id', $this->admin->id)
+            ->assertJsonCount(2, 'data.nominees')
+            ->assertJsonCount(0, 'data.loans');
         $this->assertDatabaseHas('group_memberships', ['member_id' => 1, 'group_id' => $this->group->id, 'status' => 'active']);
+        $this->assertDatabaseHas('member_kycs', ['member_id' => 1, 'house_number' => 'KJ-42', 'number_of_dependants' => 2]);
+        $this->assertDatabaseCount('member_nominees', 2);
+        $this->getJson('/api/v1/members/'.$response->json('data.id'))
+            ->assertOk()
+            ->assertJsonPath('data.group.meeting_day', null)
+            ->assertJsonPath('data.kyc.business_name', 'Asha Produce')
+            ->assertJsonCount(2, 'data.nominees');
         $this->postJson('/api/v1/members', $payload)->assertUnprocessable()->assertJsonValidationErrors('phone');
     }
 
@@ -123,6 +184,15 @@ class VatiWorkflowTest extends TestCase
         app(PaymentService::class)->reverse($payment, $this->admin, 'Incorrect collection reference');
         $this->assertSame($before, (float) $loan->refresh()->total_balance);
         $this->assertSame('reversed', $payment->refresh()->status);
+
+        Sanctum::actingAs($this->admin);
+        $this->getJson("/api/v1/members/{$member->id}")
+            ->assertOk()
+            ->assertJsonPath('data.loan_applications.0.application_number', $application->application_number)
+            ->assertJsonPath('data.loans.0.loan_number', $loan->loan_number)
+            ->assertJsonPath('data.loans.0.status', 'active')
+            ->assertJsonPath('data.loans.0.payments.0.status', 'reversed')
+            ->assertJsonCount($loan->number_of_installments, 'data.loans.0.installments');
     }
 
     public function test_branch_user_cannot_access_another_branch_member(): void

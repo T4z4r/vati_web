@@ -45,7 +45,7 @@ class OnboardingService
             }
             activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group->id])->log('Member onboarded');
 
-            return $member->load('branch', 'group', 'kyc', 'activeGroupMembership', 'nominees');
+            return $member->load('branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'activeGroupMembership', 'nominees', 'documents.uploadedBy', 'securityAccount.transactions', 'passbookReplacements');
         });
     }
 

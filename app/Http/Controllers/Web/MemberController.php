@@ -35,10 +35,15 @@ class MemberController extends Controller
         $member = DB::transaction(function () use ($request, $numbers, $memberships) {
             $data = $request->validated();
             $kyc = Arr::pull($data, 'kyc');
+            $nominees = Arr::pull($data, 'nominees', []);
             $member = Member::create([...$data, 'membership_number' => $numbers->member(), 'created_by' => $request->user()->id]);
             if ($kyc) {
                 $member->kyc()->create($kyc);
-            }$memberships->assign($member, MemberGroup::findOrFail($member->group_id), $member->admission_date ?? today());
+            }
+            $memberships->assign($member, MemberGroup::findOrFail($member->group_id), $member->admission_date ?? today());
+            foreach ($nominees as $nominee) {
+                $member->nominees()->create([...$nominee, 'attested_at' => now()]);
+            }
             activity()->causedBy($request->user())->performedOn($member)->log('Member registered');
 
             return $member;

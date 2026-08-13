@@ -44,9 +44,20 @@ class StoreMemberRequest extends FormRequest
             'kyc.business_type' => ['nullable', 'string', 'max:100'],
             'kyc.business_address' => ['nullable', 'string'],
             'kyc.mpesa_phone' => ['nullable', 'string', 'max:20'],
-            'kyc.bank_account_number' => ['nullable', 'string', 'max:50'],
-            'kyc.bank_account_name' => ['nullable', 'string', 'max:100'],
-            'kyc.bank_name' => ['nullable', 'string', 'max:100'],
+            'kyc.bank_account_number' => ['nullable', 'string', 'max:100'],
+            'kyc.bank_account_name' => ['nullable', 'string', 'max:150'],
+            'kyc.bank_name' => ['nullable', 'string', 'max:150'],
+            'kyc.house_number' => ['nullable', 'string', 'max:100'],
+            'kyc.police_station' => ['nullable', 'string', 'max:150'],
+            'kyc.number_of_dependants' => ['nullable', 'integer', 'min:0'],
+            'kyc.head_of_household' => ['nullable', 'string', 'max:150'],
+            'kyc.house_ownership_status' => ['nullable', 'string', 'max:100'],
+            'kyc.house_roof_type' => ['nullable', 'string', 'max:100'],
+            'kyc.house_fence_type' => ['nullable', 'string', 'max:100'],
+            'nominees' => ['nullable', 'array', 'min:1'],
+            'nominees.*.name' => ['required', 'string', 'max:150'],
+            'nominees.*.relationship' => ['required', 'string', 'max:100'],
+            'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
         ];
     }
 
@@ -59,6 +70,9 @@ class StoreMemberRequest extends FormRequest
             }
             if ($group && (int) $group->branch_id !== (int) $this->input('branch_id')) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
+            }
+            if ($this->has('nominees') && abs((float) collect($this->input('nominees'))->sum('percentage') - 100) > 0.009) {
+                $validator->errors()->add('nominees', 'Nominee allocations must total exactly 100%.');
             }
         });
     }
