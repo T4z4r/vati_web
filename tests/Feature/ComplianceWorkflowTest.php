@@ -71,22 +71,45 @@ class ComplianceWorkflowTest extends TestCase
             ['name' => 'Child Two', 'relationship' => 'Child', 'percentage' => 40],
         ]])->assertOk();
 
-        foreach (['member_identity', 'guarantor_identity'] as $type) {
-            $response = $this->post("/api/v1/loan-applications/{$application->id}/compliance/documents", ['document_type' => $type, 'document' => UploadedFile::fake()->create("{$type}.pdf", 20, 'application/pdf')])->assertCreated();
-            $documentId = $response->json('data.id');
-            $this->postJson("/api/v1/loan-applications/{$application->id}/compliance/documents/{$documentId}/verify", ['decision' => 'verified'])->assertOk();
-        }
-
         $this->postJson("/api/v1/loan-applications/{$application->id}/submit")->assertOk()->assertJsonPath('data.status', 'submitted');
         $this->assertNull($application->refresh()->consented_at);
         $this->assertNull($application->applicant_signature_path);
         $this->assertNull($application->applicant_thumbprint_path);
         $this->assertSame(100.0, (float) $this->member->nominees()->sum('percentage'));
         $this->assertSame(0, $application->guarantors()->count());
+        $this->assertSame(0, $application->documents()->count());
 
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Two complete guarantor declarations with signatures, thumbprints, and joint photographs are required before approval.');
         app(ApplicationComplianceService::class)->assertReadyForApproval($application);
+    }
+
+    public function test_loan_application_attachments_are_optional_for_approval(): void
+    {
+        $application = $this->application();
+        $this->makeCompliant($application, true);
+        $application->member->nominees()->create(['name' => 'Nominee', 'relationship' => 'Child', 'percentage' => 100, 'attested_at' => now()]);
+        foreach (['family', 'non_family'] as $index => $type) {
+            $application->guarantors()->create([
+                'guarantor_type' => $type,
+                'name' => "Guarantor {$index}",
+                'relationship' => 'Relative',
+                'phone' => "25572000000{$index}",
+                'signature_path' => 'signature.png',
+                'thumbprint_path' => 'thumbprint.png',
+                'joint_photo_path' => 'photo.png',
+                'declaration_text' => 'Accepted',
+                'declaration_accepted_at' => now(),
+            ]);
+        }
+
+        $this->postJson("/api/v1/loan-applications/{$application->id}/submit")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'submitted');
+        $this->assertSame(0, $application->documents()->count());
+
+        app(ApplicationComplianceService::class)->assertReadyForApproval($application->refresh());
+        $this->addToAssertionCount(1);
     }
 
     public function test_cooling_off_period_blocks_disbursement_and_allows_cancellation(): void

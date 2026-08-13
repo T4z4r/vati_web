@@ -123,7 +123,7 @@
 
     <div>
         <div class="card">
-            <div class="card-head"><h2>Document checklist</h2></div>
+            <div class="card-head"><h2>Optional attachments</h2></div>
             <div class="card-body">
                 @forelse($application->documents as $document)
                     <div class="detail" style="margin-bottom:10px"><small>{{ str_replace('_', ' ', $document->document_type) }}</small><strong>{{ $document->verification_status }}</strong></div>
@@ -132,14 +132,14 @@
                             <form method="POST" action="{{ route('admin.loan-applications.compliance.documents.verify', [$application, $document]) }}">@csrf<input type="hidden" name="decision" value="verified"><button class="btn btn-sm btn-primary">Verify</button></form>
                         @endif
                     @endcan
-                @empty<p class="muted">No checklist documents uploaded.</p>@endforelse
+                @empty<p class="muted">No optional attachments uploaded.</p>@endforelse
 
                 @if($status === 'draft')
                     <form method="POST" enctype="multipart/form-data" action="{{ route('admin.loan-applications.compliance.documents', $application) }}">
                         @csrf
                         <label>Document type<select name="document_type"><option value="member_identity">Member identity</option><option value="guarantor_identity">Guarantor identity</option><option value="local_government_letter">Local government letter</option><option value="business_license">Business license</option><option value="house_lease">House lease</option><option value="other">Other</option></select></label>
                         <label>PDF or image<input type="file" name="document" accept=".pdf,image/*" required></label>
-                        <div class="form-actions"><button class="btn btn-gold">Upload checklist item</button></div>
+                        <div class="form-actions"><button class="btn btn-gold">Upload attachment</button></div>
                     </form>
                 @endif
             </div>

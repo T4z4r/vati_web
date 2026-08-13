@@ -28,7 +28,7 @@ class ApplicationDocumentController extends ApiController
             'is_required' => ['sometimes', 'boolean'],
             'remarks' => ['nullable', 'string', 'max:2000'],
         ]);
-        $document = $service->addDocument($loanApplication, $data['document_type'], $request->file('file'), $request->user(), $request->boolean('is_required', true), $data['remarks'] ?? null);
+        $document = $service->addDocument($loanApplication, $data['document_type'], $request->file('file'), $request->user(), $request->boolean('is_required'), $data['remarks'] ?? null);
 
         return response()->json(['success' => true, 'data' => $this->shape($loanApplication, $document->load(['uploader', 'verifier']))], 201);
     }

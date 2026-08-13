@@ -15,8 +15,6 @@ class ApplicationComplianceService
 {
     public const GUARANTOR_DECLARATION = 'I accept responsibility for repayment of this loan if the applicant defaults, subject to the signed loan agreement and applicable law.';
 
-    public const REQUIRED_DOCUMENTS = ['member_identity', 'guarantor_identity'];
-
     public function captureApplicant(LoanApplication $application, array $data, ?UploadedFile $signature, ?UploadedFile $thumbprint, string $ip): LoanApplication
     {
         $this->ensureDraft($application);
@@ -66,7 +64,7 @@ class ApplicationComplianceService
         });
     }
 
-    public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = true, ?string $remarks = null): LoanDocument
+    public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = false, ?string $remarks = null): LoanDocument
     {
         $this->ensureDraft($application);
 
@@ -97,14 +95,9 @@ class ApplicationComplianceService
 
     public function assertReadyForSubmission(LoanApplication $application): void
     {
-        $application->loadMissing(['documents', 'member.nominees', 'term']);
+        $application->loadMissing('member.nominees');
         if (abs((float) $application->member->nominees->sum('percentage') - 100) > 0.009) {
             throw new DomainException('Nominee allocations must total exactly 100%.');
-        }
-        foreach (self::REQUIRED_DOCUMENTS as $type) {
-            if (! $application->documents->contains('document_type', $type)) {
-                throw new DomainException("The {$type} checklist document is required.");
-            }
         }
     }
 
@@ -113,9 +106,6 @@ class ApplicationComplianceService
         $this->assertReadyForSubmission($application);
         $this->assertGuarantorEvidence($application);
         $this->assertApplicantEvidence($application);
-        if ($application->documents->where('is_required', true)->contains(fn ($document) => $document->verification_status !== 'verified')) {
-            throw new DomainException('Every required checklist document must be verified before approval.');
-        }
     }
 
     private function assertGuarantorEvidence(LoanApplication $application): void
