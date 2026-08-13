@@ -12,10 +12,12 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
     <link rel="stylesheet" href="{{ asset('css/page-loader.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
     <script src="{{ asset('js/page-loader.js') }}" defer></script>
+    <script src="{{ asset('js/form-loading.js') }}" defer></script>
 </head>
 
-<body class="admin-shell">
+<body class="admin-shell" data-loading-text="{{ __('Loading...') }}">
     <x-page-loader />
     <aside class="sidebar" id="sidebar" aria-label="Sidebar">
         <a class="brand light" href="{{ route('admin.dashboard') }}"><img
@@ -128,8 +130,7 @@
                 reverseButtons: true,
             }).then(result => {
                 if (result.isConfirmed) {
-                    window.VatiPageLoader?.show();
-                    el.closest('form')?.submit();
+                    el.closest('form')?.requestSubmit();
                 }
             });
         }));
