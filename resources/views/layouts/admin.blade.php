@@ -20,49 +20,60 @@
 <body class="admin-shell" data-loading-text="{{ __('Loading...') }}">
     <x-page-loader />
     <aside class="sidebar" id="sidebar" aria-label="Sidebar">
-        <a class="brand light" href="{{ route('admin.dashboard') }}"><img
-                class="brand-mark" src="{{ asset('images/vati_app_icon_foreground.png') }}" alt="VATI logo"><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
+        <a class="brand light" href="{{ route('admin.dashboard') }}"><img class="brand-mark"
+                src="{{ asset('images/vati_app_icon_foreground.png') }}"
+                alt="VATI logo"><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
         <nav>
             <p class="nav-label">{{ __('Overview') }}</p>
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                href="{{ route('admin.dashboard') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">dashboard</span> {{ __('Dashboard') }}</a>
+                href="{{ route('admin.dashboard') }}"><span class="material-symbols-outlined nav-icon"
+                    aria-hidden="true">dashboard</span> {{ __('Dashboard') }}</a>
             <p class="nav-label">{{ __('Operations') }}</p>
             @can('view-members')
                 <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
-                    href="{{ route('admin.members.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">groups</span> {{ __('Members') }}</a>
+                    href="{{ route('admin.members.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">groups</span> {{ __('Members') }}</a>
             @endcan
             @can('view-groups')
                 <a class="{{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
-                    href="{{ route('admin.groups.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">group_work</span> {{ __('Groups') }}</a>
+                    href="{{ route('admin.groups.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">group_work</span> {{ __('Groups') }}</a>
             @endcan
             @can('view-loan-applications')
                 <a class="{{ request()->routeIs('admin.loan-applications.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-applications.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">description</span>
+                    href="{{ route('admin.loan-applications.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">description</span>
                     {{ __('Applications') }}</a>
             @endcan
             @can('view-loans')
                 <a class="{{ request()->routeIs('admin.loans.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loans.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">payments</span>
+                    href="{{ route('admin.loans.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">payments</span>
                     {{ __('Loans & Collections') }}</a>
             @endcan
             <p class="nav-label">{{ __('Management') }}</p>
             @can('view-loan-products')
                 <a class="{{ request()->routeIs('admin.loan-products.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-products.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">account_balance_wallet</span>
+                    href="{{ route('admin.loan-products.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">account_balance_wallet</span>
                     {{ __('Loan Products') }}</a>
             @endcan
             @can('view-reports')
                 <a class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
-                    href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">monitoring</span> {{ __('Reports') }}</a>
+                    href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">monitoring</span> {{ __('Reports') }}</a>
             @endcan
             @role('super_admin|head_office_admin')
                 <a class="{{ request()->routeIs('admin.organization.*') ? 'active' : '' }}"
-                    href="{{ route('admin.organization.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">account_tree</span>
+                    href="{{ route('admin.organization.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">account_tree</span>
                     {{ __('Organization') }}</a>
                 <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">manage_accounts</span> {{ __('Staff Accounts') }}</a>
+                    href="{{ route('admin.users.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">manage_accounts</span> {{ __('Staff Accounts') }}</a>
                 <a class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
-                    href="{{ route('admin.roles.permissions.index') }}"><span class="material-symbols-outlined nav-icon" aria-hidden="true">admin_panel_settings</span> {{ __('Roles & Permissions') }}</a>
+                    href="{{ route('admin.roles.permissions.index') }}"><span class="material-symbols-outlined nav-icon"
+                        aria-hidden="true">admin_panel_settings</span> {{ __('Roles & Permissions') }}</a>
             @endrole
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>
@@ -72,7 +83,8 @@
     <div class="main-area">
         <header class="topbar">
             <button class="menu-btn" id="sidebarToggle" type="button" aria-label="{{ __('Toggle sidebar') }}"
-                aria-expanded="true" title="{{ __('Collapse sidebar') }}"><span class="material-symbols-outlined" aria-hidden="true">menu</span></button>
+                aria-expanded="true" title="{{ __('Collapse sidebar') }}"><span class="material-symbols-outlined"
+                    aria-hidden="true">menu</span></button>
             <div class="crumb"><small>{{ __('VATI OPERATIONS') }}</small><strong>@yield('title', __('Dashboard'))</strong></div>
             <div class="top-actions">
                 <div class="lang-switch" role="group" aria-label="Language">
@@ -88,12 +100,14 @@
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="icon-btn"
                         title="{{ __('Sign out') }}"
-                        data-confirm="{{ __('Are you sure you want to sign out?') }}"><span class="material-symbols-outlined" aria-hidden="true">logout</span></button></form>
+                        data-confirm="{{ __('Are you sure you want to sign out?') }}"><span
+                            class="material-symbols-outlined" aria-hidden="true">logout</span></button></form>
             </div>
         </header>
         <main class="content">
             @if (session('success'))
-                <div class="alert alert-success"><span class="material-symbols-outlined" aria-hidden="true">check_circle</span> {{ session('success') }}</div>
+                <div class="alert alert-success"><span class="material-symbols-outlined"
+                        aria-hidden="true">check_circle</span> {{ session('success') }}</div>
             @endif
             @if (session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>

@@ -11,6 +11,7 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
     <link rel="stylesheet" href="{{ asset('css/page-loader.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
     <script src="{{ asset('js/page-loader.js') }}" defer></script>
     <style>
         :root {
@@ -594,7 +595,7 @@
             background: #f8fbf9;
         }
 
-        .secure-note > .material-symbols-outlined {
+        .secure-note>.material-symbols-outlined {
             flex: 0 0 27px;
             color: var(--forest-700);
             font-size: 27px;
@@ -838,7 +839,8 @@
                 <img class="brand-mark" src="{{ asset('images/vati_app_icon.png') }}" alt="VATI logo"><span>VATI</span>
             </a>
 
-            <form class="login-card" method="POST" action="{{ route('login.store') }}" id="login-form" novalidate>
+            <form class="login-card" method="POST" action="{{ route('login.store') }}" id="login-form" data-no-loading
+                novalidate>
                 @csrf
                 <div class="card-topline" aria-hidden="true"></div>
 
@@ -882,7 +884,8 @@
                             placeholder="{{ __('Enter your password') }}" autocomplete="current-password" required>
                         <button class="password-toggle" type="button" id="password-toggle"
                             aria-label="{{ __('Show password') }}" aria-pressed="false"><span
-                                class="material-symbols-outlined toggle-icon" aria-hidden="true">visibility</span></button>
+                                class="material-symbols-outlined toggle-icon"
+                                aria-hidden="true">visibility</span></button>
                     </div>
                     <small class="field-help">
                         @error('password')
@@ -898,8 +901,8 @@
                 </div>
 
                 <button class="submit-button" type="submit" id="login-button">
-                    <span class="button-label">{{ __('Sign in to portal') }}</span><span class="material-symbols-outlined submit-arrow"
-                        aria-hidden="true">arrow_forward</span>
+                    <span class="button-label">{{ __('Sign in to portal') }}</span><span
+                        class="material-symbols-outlined submit-arrow" aria-hidden="true">arrow_forward</span>
                 </button>
 
                 <div class="secure-note">
@@ -947,8 +950,9 @@
                 }
 
                 submit.disabled = true;
+                submit.insertAdjacentHTML('afterbegin', '<span class="btn-spinner" aria-hidden="true"></span>');
                 submit.querySelector('.button-label').textContent = @json(__('Signing in...'));
-                submit.querySelector('.submit-arrow').textContent = '';
+                submit.querySelector('.submit-arrow').remove();
             });
         })();
     </script>
