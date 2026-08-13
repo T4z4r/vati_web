@@ -40,6 +40,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store');
         Route::resource('users', UserController::class);
     });
+    Route::put('roles/{role}/permissions', [UserController::class, 'updateRolePermissions'])
+        ->name('roles.permissions.update')
+        ->middleware('role:super_admin');
 
     Route::resource('groups', GroupController::class)->only(['create', 'store'])->middleware('permission:create-groups');
     Route::resource('groups', GroupController::class)->only(['edit', 'update'])->middleware('permission:edit-groups');

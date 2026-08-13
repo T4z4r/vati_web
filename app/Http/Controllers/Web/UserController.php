@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -16,7 +17,11 @@ class UserController extends Controller
     {
         $users = User::with(['branch', 'roles'])->when($request->search, fn ($q, $value) => $q->where(fn ($q) => $q->where('name', 'like', "%{$value}%")->orWhere('email', 'like', "%{$value}%")))->latest()->paginate(20)->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', [
+            'users' => $users,
+            'roles' => Role::with('permissions')->orderBy('name')->get(),
+            'permissions' => Permission::where('guard_name', 'web')->orderBy('name')->get(),
+        ]);
     }
 
     public function create()
@@ -81,6 +86,30 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Staff account deleted.');
+    }
+
+    public function updateRolePermissions(Request $request, Role $role)
+    {
+        if ($role->guard_name !== 'web') {
+            abort(404);
+        }
+        if ($role->name === 'super_admin') {
+            return back()->with('error', 'The super administrator permissions are locked to preserve system access.');
+        }
+
+        $data = $request->validate([
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::exists('permissions', 'name')->where('guard_name', 'web')],
+        ]);
+        $permissions = collect($data['permissions'] ?? [])->unique()->values()->all();
+        $role->syncPermissions($permissions);
+
+        activity()
+            ->causedBy($request->user())
+            ->withProperties(['role' => $role->name, 'permissions' => $permissions])
+            ->log('Role permissions updated');
+
+        return back()->with('success', 'Permissions updated for '.str_replace('_', ' ', $role->name).'.');
     }
 
     private function formData(User $user): array

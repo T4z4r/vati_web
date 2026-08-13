@@ -16,6 +16,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class WebPortalTest extends TestCase
@@ -74,6 +75,39 @@ class WebPortalTest extends TestCase
             ->assertSee('field.placeholder = label', false);
     }
 
+    public function test_super_admin_can_assign_permissions_to_roles(): void
+    {
+        $cashier = Role::findByName('cashier');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Role permission assignment')
+            ->assertSee('Save role permissions');
+
+        $this->put(route('admin.roles.permissions.update', $cashier), [
+            'permissions' => ['view-dashboard', 'view-reports'],
+        ])->assertRedirect();
+
+        $this->assertEqualsCanonicalizing(
+            ['view-dashboard', 'view-reports'],
+            $cashier->fresh()->permissions->pluck('name')->all()
+        );
+
+        $superAdmin = Role::findByName('super_admin');
+        $superAdminPermissionCount = $superAdmin->permissions()->count();
+        $this->put(route('admin.roles.permissions.update', $superAdmin), ['permissions' => []])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+        $this->assertSame($superAdminPermissionCount, $superAdmin->fresh()->permissions()->count());
+
+        $headOfficeAdmin = User::factory()->create(['branch_id' => null]);
+        $headOfficeAdmin->assignRole('head_office_admin');
+        $this->actingAs($headOfficeAdmin)
+            ->put(route('admin.roles.permissions.update', $cashier), ['permissions' => ['view-dashboard']])
+            ->assertForbidden();
+    }
+
     public function test_web_member_and_application_creation_workflow(): void
     {
         Storage::fake('public');
@@ -97,7 +131,7 @@ class WebPortalTest extends TestCase
         $member->refresh();
         Storage::disk('public')->assertMissing($originalPhotoPath);
         Storage::disk('public')->assertExists($member->photo_path);
-        $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group');
+        $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group')->assertSee(basename($member->photo_path), false)->assertSee('data-member-photo', false);
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
             ->assertOk()
@@ -116,6 +150,8 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number)
+            ->assertSee(basename($member->photo_path), false)
+            ->assertSee('data-member-photo', false)
             ->assertSeeInOrder([
                 'Loan application identification',
                 'Applicant personal profile',
@@ -149,6 +185,7 @@ class WebPortalTest extends TestCase
     {
         $this->actingAs($this->admin);
         $borrower = $this->member('Borrower', '255713000001');
+        $borrower->update(['photo_path' => 'members/photos/borrower.jpg']);
         $firstWitness = $this->member('Witness One', '255713000002');
         $secondWitness = $this->member('Witness Two', '255713000003');
 
@@ -173,7 +210,7 @@ class WebPortalTest extends TestCase
             ->assertSee('Members and loan balances')
             ->assertSee('View details')
             ->assertSee('TZS '.number_format((float) $loan->total_balance, 2));
-        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number);
+        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number)->assertSee('borrower.jpg', false)->assertSee('data-member-photo', false);
         $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
         $firstInstallment = $loan->installments()->orderBy('installment_number')->firstOrFail();

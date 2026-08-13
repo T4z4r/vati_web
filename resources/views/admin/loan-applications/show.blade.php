@@ -11,10 +11,13 @@
 @endphp
 
 <div class="page-head">
-    <div>
-        <p class="eyebrow">{{ $application->application_number }}</p>
-        <h1>{{ $application->member->first_name }} {{ $application->member->last_name }}</h1>
-        <p>{{ $application->product->name }} · {{ $application->group->group_name }}</p>
+    <div style="display:flex;align-items:center;gap:16px">
+        @include('admin.partials.member-photo', ['member' => $member, 'size' => 88])
+        <div>
+            <p class="eyebrow">{{ $application->application_number }}</p>
+            <h1>{{ $application->member->first_name }} {{ $application->member->last_name }}</h1>
+            <p>{{ $application->product->name }} · {{ $application->group->group_name }}</p>
+        </div>
     </div>
     <div class="head-actions">
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
