@@ -20,10 +20,10 @@
     </div>
 
     <div class="dash-tabs" role="tablist" aria-label="{{ __('Dashboard sections') }}">
-        <button type="button" class="dash-tab active" data-tab="overview" role="tab"
-            aria-selected="true"><span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>{{ __('Overview') }}</button>
-        <button type="button" class="dash-tab" data-tab="charts" role="tab"
-            aria-selected="false"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span>{{ __('Charts') }}</button>
+        <button type="button" class="dash-tab active" data-tab="overview" role="tab" aria-selected="true"><span
+                class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>{{ __('Overview') }}</button>
+        <button type="button" class="dash-tab" data-tab="charts" role="tab" aria-selected="false"><span
+                class="material-symbols-outlined" aria-hidden="true">monitoring</span>{{ __('Charts') }}</button>
     </div>
 
     <div class="dash-panel" data-panel="overview">
@@ -42,9 +42,11 @@
                 <small>{{ __('Collection rate') }}</small><strong>{{ number_format($collectionRate, 1) }}%</strong>
                 <div class="progress"><span style="width:{{ min(100, $collectionRate) }}%"></span></div>
             </div>
-            <div class="stat"><span class="material-symbols-outlined stat-icon" aria-hidden="true">schedule</span><small>{{ __('Expected today') }}</small><strong>TZS
+            <div class="stat"><span class="material-symbols-outlined stat-icon"
+                    aria-hidden="true">schedule</span><small>{{ __('Expected today') }}</small><strong>TZS
                     {{ number_format($expected) }}</strong><em>{{ __('Scheduled collections') }}</em></div>
-            <div class="stat"><span class="material-symbols-outlined stat-icon" aria-hidden="true">payments</span><small>{{ __('Collected today') }}</small><strong>TZS
+            <div class="stat"><span class="material-symbols-outlined stat-icon"
+                    aria-hidden="true">payments</span><small>{{ __('Collected today') }}</small><strong>TZS
                     {{ number_format($collected) }}</strong><em>{{ __('Posted payments') }}</em></div>
             <div class="stat danger">
                 <span class="material-symbols-outlined stat-icon" aria-hidden="true">warning</span>
@@ -94,13 +96,16 @@
                     <h2>{{ __('Quick actions') }}</h2>
                 </div>
                 <div class="card-body">
-                    <div class="form-grid"><a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                    <div class="form-grid"><a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span
+                                class="material-symbols-outlined" aria-hidden="true">person_add</span>
                             {{ __('Register member') }}</a><a class="btn btn-gold"
-                            href="{{ route('admin.loan-applications.create') }}"><span class="material-symbols-outlined" aria-hidden="true">note_add</span> {{ __('New application') }}</a><a
-                            class="btn btn-secondary"
-                            href="{{ route('admin.groups.create') }}"><span class="material-symbols-outlined" aria-hidden="true">group_add</span> {{ __('Create group') }}</a><a
-                            class="btn btn-secondary"
-                            href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span> {{ __('View reports') }}</a>
+                            href="{{ route('admin.loan-applications.create') }}"><span class="material-symbols-outlined"
+                                aria-hidden="true">note_add</span> {{ __('New application') }}</a><a
+                            class="btn btn-secondary" href="{{ route('admin.groups.create') }}"><span
+                                class="material-symbols-outlined" aria-hidden="true">group_add</span>
+                            {{ __('Create group') }}</a><a class="btn btn-secondary"
+                            href="{{ route('admin.reports.index') }}"><span class="material-symbols-outlined"
+                                aria-hidden="true">bar_chart</span> {{ __('View reports') }}</a>
                     </div>
                 </div>
             </div>

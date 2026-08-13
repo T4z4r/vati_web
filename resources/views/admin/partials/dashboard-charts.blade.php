@@ -8,17 +8,20 @@
 <div class="charts-grid">
     <div class="card chart-card">
         <div class="card-head">
-            <h2><span class="material-symbols-outlined" aria-hidden="true">trending_up</span>{{ __('Collections trend (last 14 days)') }}</h2>
+            <h2><span class="material-symbols-outlined"
+                    aria-hidden="true">trending_up</span>{{ __('Collections trend (last 14 days)') }}</h2>
         </div>
         <div class="card-body"><canvas id="chart-collections-trend"></canvas></div>
     </div>
     <div class="card chart-card">
         <div class="card-head">
-            <h2><span class="material-symbols-outlined" aria-hidden="true">donut_small</span>{{ __('Loan status breakdown') }}</h2>
+            <h2><span class="material-symbols-outlined"
+                    aria-hidden="true">donut_small</span>{{ __('Loan status breakdown') }}</h2>
         </div>
         <div class="card-body">
             @if (empty($loanStatus['labels']))
-                <div class="chart-empty"><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span></div>
+                <div class="chart-empty"><span class="material-symbols-outlined"
+                        aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span></div>
             @else
                 <canvas id="chart-loan-status"></canvas>
             @endif
@@ -29,11 +32,13 @@
 <div class="charts-grid even">
     <div class="card chart-card">
         <div class="card-head">
-            <h2><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>{{ __('Application pipeline') }}</h2>
+            <h2><span class="material-symbols-outlined"
+                    aria-hidden="true">bar_chart</span>{{ __('Application pipeline') }}</h2>
         </div>
         <div class="card-body">
             @if (empty($applicationStatus['labels']))
-                <div class="chart-empty"><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span></div>
+                <div class="chart-empty"><span class="material-symbols-outlined"
+                        aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span></div>
             @else
                 <canvas id="chart-application-status"></canvas>
             @endif
@@ -42,11 +47,14 @@
     @if ($branchPortfolio !== null)
         <div class="card chart-card">
             <div class="card-head">
-                <h2><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>{{ __('Portfolio by branch') }}</h2>
+                <h2><span class="material-symbols-outlined"
+                        aria-hidden="true">account_balance</span>{{ __('Portfolio by branch') }}</h2>
             </div>
             <div class="card-body">
                 @if (empty($branchPortfolio['labels']))
-                    <div class="chart-empty"><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span></div>
+                    <div class="chart-empty"><span class="material-symbols-outlined"
+                            aria-hidden="true">bar_chart</span><span>{{ __('No chart data available yet.') }}</span>
+                    </div>
                 @else
                     <canvas id="chart-branch-portfolio"></canvas>
                 @endif
