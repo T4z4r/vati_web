@@ -38,6 +38,30 @@ class PaymentService
             }
             $amount = min($amount, $outstandingBalance);
 
+            $installmentsQuery = $loan->installments()
+                ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
+                ->orderBy('installment_number')
+                ->lockForUpdate();
+
+            if (! empty($data['loan_installment_id'])) {
+                $targetInstallment = (clone $installmentsQuery)->whereKey($data['loan_installment_id'])->first();
+                if (! $targetInstallment) {
+                    throw new DomainException('The selected installment is not payable for this loan.');
+                }
+
+                $targetOutstanding = round(max(0,
+                    (float) $targetInstallment->total_due
+                    - (float) $targetInstallment->total_paid
+                    - (float) $targetInstallment->interest_exemption
+                ), 2);
+                if ($amount - $targetOutstanding > 0.009) {
+                    throw new DomainException('Payment amount cannot exceed the selected installment balance.');
+                }
+                $installments = collect([$targetInstallment]);
+            } else {
+                $installments = $installmentsQuery->get();
+            }
+
             $payment = Payment::create([
                 'uuid' => $data['uuid'] ?? null,
                 'idempotency_key' => $data['idempotency_key'] ?? null,
@@ -59,7 +83,7 @@ class PaymentService
             ]);
 
             $remaining = round($amount, 2);
-            foreach ($loan->installments()->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])->orderBy('installment_number')->lockForUpdate()->get() as $installment) {
+            foreach ($installments as $installment) {
                 if ($remaining <= 0) {
                     break;
                 }

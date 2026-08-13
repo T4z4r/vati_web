@@ -170,9 +170,13 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number);
         $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
-        $this->post(route('admin.payments.store', $loan), ['amount' => 100000, 'payment_method' => 'cash'])->assertRedirect();
-        $this->assertDatabaseHas('payments', ['loan_id' => $loan->id, 'amount' => 100000, 'status' => 'posted']);
-        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Payment history');
+        $firstInstallment = $loan->installments()->orderBy('installment_number')->firstOrFail();
+        $partialAmount = round((float) $firstInstallment->total_due / 2, 2);
+        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Confirm repayment')->assertSee('loan_installment_id', false);
+        $this->post(route('admin.payments.store', $loan), ['loan_installment_id' => $firstInstallment->id, 'amount' => $partialAmount, 'payment_method' => 'cash'])->assertRedirect();
+        $this->assertDatabaseHas('payments', ['loan_id' => $loan->id, 'amount' => $partialAmount, 'status' => 'posted']);
+        $this->assertSame('partially_paid', $firstInstallment->refresh()->status);
+        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Payment history')->assertSee('partially paid');
         $this->get(route('admin.members.show', $borrower))
             ->assertOk()
             ->assertSee($loan->loan_number)

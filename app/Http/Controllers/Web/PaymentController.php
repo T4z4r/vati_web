@@ -13,7 +13,7 @@ class PaymentController extends Controller
 {
     public function store(Request $request, Loan $loan, PaymentService $service)
     {
-        $data = $request->validate(['amount' => ['required', 'numeric', 'gt:0'], 'payment_method' => ['required', 'in:cash,mpesa,airtel_money,mixx,halopesa,bank_transfer'], 'reference_number' => ['nullable', 'max:100'], 'paid_at' => ['nullable', 'date'], 'remarks' => ['nullable', 'string']]);
+        $data = $request->validate(['amount' => ['required', 'numeric', 'gt:0'], 'loan_installment_id' => ['nullable', 'integer', 'exists:loan_installments,id'], 'payment_method' => ['required', 'in:cash,mpesa,airtel_money,mixx,halopesa,bank_transfer'], 'reference_number' => ['nullable', 'max:100'], 'paid_at' => ['nullable', 'date'], 'remarks' => ['nullable', 'string']]);
         $data['idempotency_key'] = 'web-'.str()->uuid();
         try {
             $service->post($loan, $request->user(), (float) $data['amount'], $data);
