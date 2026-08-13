@@ -54,5 +54,8 @@
     "Hide password": "Ficha nywila",
     "SHOW": "ONYESHA",
     "HIDE": "FICHA",
-    "Signing in...": "Inaingia..."
+    "Signing in...": "Inaingia...",
+    "Staff Accounts": "Akaunti za Wafanyakazi",
+    "Roles & Permissions": "Majukumu na Ruhusa",
+    "Assign system permissions to staff roles from this dedicated page.": "Weka ruhusa za mfumo kwa majukumu ya wafanyakazi kwenye ukurasa huu maalum."
 }

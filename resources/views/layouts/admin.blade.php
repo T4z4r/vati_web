@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') · VATI</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
 </head>
 
 <body class="admin-shell">
     <aside class="sidebar" id="sidebar" aria-label="Sidebar">
-        <a class="brand light" href="{{ route('admin.dashboard') }}"><span
-                class="brand-mark">V</span><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
+        <a class="brand light" href="{{ route('admin.dashboard') }}"><img
+                class="brand-mark" src="{{ asset('images/vati_app_icon_foreground.png') }}" alt="VATI logo"><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
         <nav>
             <p class="nav-label">{{ __('Overview') }}</p>
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"

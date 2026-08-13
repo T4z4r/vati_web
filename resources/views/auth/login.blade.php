@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#062e1d">
     <meta name="color-scheme" content="light">
     <title>Sign in | VATI Microfinance</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
     <style>
         :root {
             --forest-950: #052418;
@@ -122,6 +123,13 @@
             font-family: Georgia, serif;
             font-size: 26px;
             font-weight: 800;
+        }
+
+        img.brand-mark {
+            object-fit: contain;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .brand-copy strong,
@@ -787,7 +795,7 @@
                     class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
             </div>
             <a class="brand" href="{{ route('home') }}" aria-label="VATI Microfinance home">
-                <span class="brand-mark" aria-hidden="true">V</span>
+                <img class="brand-mark" src="{{ asset('images/vati_app_icon_foreground.png') }}" alt="VATI logo">
                 <span class="brand-copy"><strong>VATI</strong><small>Microfinance Limited</small></span>
             </a>
 
@@ -832,7 +840,7 @@
                     class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
             </div>
             <a class="mobile-brand" href="{{ route('home') }}" aria-label="VATI Microfinance home">
-                <span class="brand-mark" aria-hidden="true">V</span><span>VATI</span>
+                <img class="brand-mark" src="{{ asset('images/vati_app_icon.png') }}" alt="VATI logo"><span>VATI</span>
             </a>
 
             <form class="login-card" method="POST" action="{{ route('login.store') }}" id="login-form" novalidate>

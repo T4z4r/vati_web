@@ -79,6 +79,18 @@ p {
     font-size: 30px;
     margin: auto;
 }
+img.brand-mark {
+    object-fit: contain;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.landing-logo {
+    display: block;
+    width: min(100%, 430px);
+    height: auto;
+    margin: 0 auto 28px;
+}
 .brand strong,
 .brand small {
     display: block;
