@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', $application->exists ? 'Edit loan application' : 'New loan application')
+@section('title', $application->exists ? 'Hariri ombi la mkopo' : 'Ombi jipya la mkopo')
 @section('content')
     @php
         $editing = $application->exists;
@@ -24,13 +24,13 @@
 
     <div class="page-head">
         <div>
-            <p class="eyebrow">CREDIT ONBOARDING</p>
-            <h1>{{ $editing ? 'Edit draft application' : 'Create loan application' }}</h1>
-            <p>Capture terms, affordability, and the complete use-of-funds plan.</p>
+            <p class="eyebrow">USAJILI WA MKOPO</p>
+            <h1>{{ $editing ? 'Hariri rasimu ya ombi' : 'Unda ombi la mkopo' }}</h1>
+            <p>Weka masharti, uwezo wa kulipa na mpango wa matumizi ya fedha.</p>
         </div>
         <a class="btn btn-secondary"
             href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-            Back</a>
+            Rudi</a>
     </div>
 
     <form class="card" method="POST"
@@ -41,17 +41,17 @@
         @endif
         <div class="card-body">
             @if ($editing)
-                <div class="alert alert-danger">Saving financial changes invalidates the previous applicant consent and
-                    biometric confirmation. Capture them again before submission.</div>
+                <div class="alert alert-danger">Kuhifadhi mabadiliko ya kifedha kunafuta ridhaa na uthibitisho wa awali wa mwombaji.
+                    Zikusanye tena kabla ya kuwasilisha.</div>
             @endif
-            <h3 class="section-title">Application terms</h3>
+            <h3 class="section-title">Masharti ya ombi</h3>
             <div class="form-grid">
-                <label>Member
+                <label>Mwanachama
                     @if ($editing)
                         <input type="hidden" name="member_id" value="{{ $application->member_id }}">
                     @endif
                     <select id="member-select" name="{{ $editing ? 'member_display' : 'member_id' }}" required @disabled($editing)>
-                        <option value="">Select active member</option>
+                        <option value="">Chagua mwanachama hai</option>
                         @foreach ($members as $member)
                             <option value="{{ $member->id }}" @selected((int) old('member_id', $selectedMember) === $member->id)>
                                 {{ $member->membership_number }} · {{ $member->first_name }} {{ $member->last_name }} ·
@@ -59,9 +59,9 @@
                         @endforeach
                     </select>
                 </label>
-                <label>Loan product
+                <label>Bidhaa ya mkopo
                     <select id="product" name="loan_product_id" required>
-                        <option value="">Select product</option>
+                        <option value="">Chagua bidhaa</option>
                         @foreach ($products as $product)
                             <option value="{{ $product->id }}" data-min="{{ $product->minimum_amount }}"
                                 data-max="{{ $product->maximum_amount }}" data-rate="{{ $product->annual_interest_rate }}"
@@ -78,39 +78,39 @@
                         @endforeach
                     </select>
                 </label>
-                <label>Application type
+                <label>Aina ya ombi
                     <select id="application-type" name="application_type" required>
-                        @foreach (['main' => 'Main loan', 'refinance' => 'Refinancing', 'top_up' => 'Top up'] as $value => $label)
+                        @foreach (['main' => 'Mkopo mkuu', 'refinance' => 'Kufadhili upya', 'top_up' => 'Ongezeko la mkopo'] as $value => $label)
                             <option value="{{ $value }}" @selected(old('application_type', $application->application_type ?: 'main') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </label>
-                <label>Requested amount (TZS)<input id="amount" type="number" min="1" name="requested_amount"
+                <label>Kiasi kinachoombwa (TZS)<input id="amount" type="number" min="1" name="requested_amount"
                         value="{{ old('requested_amount', $application->requested_amount) }}" required></label>
-                <label>Duration (months)<input id="months" type="number" min="1" name="duration_months"
+                <label>Muda (miezi)<input id="months" type="number" min="1" name="duration_months"
                         value="{{ old('duration_months', $application->duration_months) }}" required></label>
-                <label>Estimated total repayment<input id="estimate" readonly
-                        placeholder="Choose product and terms"></label>
-                <label>Estimated charges<input id="charges" readonly placeholder="Choose product and terms"></label>
-                <label>Estimated amount receivable<input id="receivable" readonly
-                        placeholder="Choose product and terms"></label>
-                <label>Existing loan balance<input id="existing-loan-balance" type="number" min="0" name="existing_loan_balance"
+                <label>Makadirio ya jumla ya marejesho<input id="estimate" readonly
+                        placeholder="Chagua bidhaa na masharti"></label>
+                <label>Makadirio ya gharama<input id="charges" readonly placeholder="Chagua bidhaa na masharti"></label>
+                <label>Makadirio ya kiasi atakachopokea<input id="receivable" readonly
+                        placeholder="Chagua bidhaa na masharti"></label>
+                <label>Salio la mkopo uliopo<input id="existing-loan-balance" type="number" min="0" name="existing_loan_balance"
                         value="{{ old('existing_loan_balance', $application->existing_loan_balance ?? 0) }}"></label>
-                <label>Refinancing amount<input type="number" min="0" name="refinancing_amount"
+                <label>Kiasi cha kufadhili upya<input type="number" min="0" name="refinancing_amount"
                         value="{{ old('refinancing_amount', $application->refinancing_amount ?? 0) }}"></label>
-                <label>Top-up increment<input type="number" min="0" name="increment_amount"
+                <label>Ongezeko la mkopo<input type="number" min="0" name="increment_amount"
                         value="{{ old('increment_amount', $application->increment_amount ?? 0) }}"></label>
-                <label class="full">Loan purpose
+                <label class="full">Madhumuni ya mkopo
                     <textarea name="loan_purpose" required>{{ old('loan_purpose', $application->loan_purpose) }}</textarea>
                 </label>
-                <label class="full">Business summary <span class="muted">(optional)</span>
+                <label class="full">Muhtasari wa biashara <span class="muted">(si lazima)</span>
                     <textarea id="business-summary" name="business_summary">{{ old('business_summary', $application->business_summary) }}</textarea>
                 </label>
             </div>
 
             <div id="member-profile" class="card" style="margin-top:24px;display:none">
                 <div class="card-head">
-                    <div><h2>Applicant profile (auto-populated)</h2><small>Read-only information from the selected member record</small></div>
+                    <div><h2>Wasifu wa mwombaji (unajazwa moja kwa moja)</h2><small>Taarifa za kusoma tu kutoka kwenye kumbukumbu ya mwanachama</small></div>
                     <span id="profile-member-number" class="badge active"></span>
                 </div>
                 <div class="card-body">
@@ -120,76 +120,76 @@
                         <div id="profile-member-photo-fallback" class="avatar"
                             style="width:112px;height:112px;border-radius:14px;font-size:28px">—</div>
                         <div>
-                            <small class="muted">Applicant photograph</small>
-                            <h3 id="profile-member-photo-name" style="margin:4px 0 0">Selected member</h3>
-                            <p id="profile-member-photo-status" class="muted" style="margin:4px 0 0">No photograph available</p>
+                            <small class="muted">Picha ya mwombaji</small>
+                            <h3 id="profile-member-photo-name" style="margin:4px 0 0">Mwanachama aliyechaguliwa</h3>
+                            <p id="profile-member-photo-status" class="muted" style="margin:4px 0 0">Hakuna picha iliyowekwa</p>
                         </div>
                     </div>
-                    <h3 class="section-title">Personal and organization information</h3>
+                    <h3 class="section-title">Taarifa binafsi na za shirika</h3>
                     <div class="detail-grid">
-                        <div class="detail"><small>Applicant name</small><strong data-member-field="full_name">—</strong></div>
-                        <div class="detail"><small>Father / husband / guardian</small><strong data-member-field="guardian_name">—</strong></div>
-                        <div class="detail"><small>Occupation</small><strong data-member-field="occupation">—</strong></div>
-                        <div class="detail"><small>Age</small><strong data-member-field="age">—</strong></div>
-                        <div class="detail"><small>Date of birth</small><strong data-member-field="date_of_birth">—</strong></div>
-                        <div class="detail"><small>Gender</small><strong data-member-field="gender">—</strong></div>
-                        <div class="detail"><small>Marital status</small><strong data-member-field="marital_status">—</strong></div>
-                        <div class="detail"><small>Nationality</small><strong data-member-field="nationality">—</strong></div>
-                        <div class="detail"><small>Phone</small><strong data-member-field="phone">—</strong></div>
-                        <div class="detail"><small>National / voter ID</small><strong data-member-field="identification">—</strong></div>
-                        <div class="detail"><small>Branch</small><strong data-member-field="branch">—</strong></div>
-                        <div class="detail"><small>Area / region</small><strong data-member-field="organization_location">—</strong></div>
-                        <div class="detail"><small>Group</small><strong data-member-field="group">—</strong></div>
-                        <div class="detail"><small>Meeting day / location</small><strong data-member-field="group_meeting">—</strong></div>
-                        <div class="detail"><small>Loan officer</small><strong data-member-field="loan_officer">—</strong></div>
+                        <div class="detail"><small>Jina la mwombaji</small><strong data-member-field="full_name">—</strong></div>
+                        <div class="detail"><small>Baba / mume / mlezi</small><strong data-member-field="guardian_name">—</strong></div>
+                        <div class="detail"><small>Kazi</small><strong data-member-field="occupation">—</strong></div>
+                        <div class="detail"><small>Umri</small><strong data-member-field="age">—</strong></div>
+                        <div class="detail"><small>Tarehe ya kuzaliwa</small><strong data-member-field="date_of_birth">—</strong></div>
+                        <div class="detail"><small>Jinsia</small><strong data-member-field="gender">—</strong></div>
+                        <div class="detail"><small>Hali ya ndoa</small><strong data-member-field="marital_status">—</strong></div>
+                        <div class="detail"><small>Uraia</small><strong data-member-field="nationality">—</strong></div>
+                        <div class="detail"><small>Simu</small><strong data-member-field="phone">—</strong></div>
+                        <div class="detail"><small>Kitambulisho cha taifa / mpiga kura</small><strong data-member-field="identification">—</strong></div>
+                        <div class="detail"><small>Tawi</small><strong data-member-field="branch">—</strong></div>
+                        <div class="detail"><small>Eneo / mkoa</small><strong data-member-field="organization_location">—</strong></div>
+                        <div class="detail"><small>Kikundi</small><strong data-member-field="group">—</strong></div>
+                        <div class="detail"><small>Siku / mahali pa mkutano</small><strong data-member-field="group_meeting">—</strong></div>
+                        <div class="detail"><small>Afisa mikopo</small><strong data-member-field="loan_officer">—</strong></div>
                     </div>
 
-                    <h3 class="section-title" style="margin-top:22px">Residence, business and banking</h3>
+                    <h3 class="section-title" style="margin-top:22px">Makazi, biashara na benki</h3>
                     <div class="detail-grid">
-                        <div class="detail"><small>House number</small><strong data-member-field="house_number">—</strong></div>
-                        <div class="detail"><small>Physical address</small><strong data-member-field="physical_address">—</strong></div>
-                        <div class="detail"><small>Street / ward</small><strong data-member-field="member_location">—</strong></div>
-                        <div class="detail"><small>District / region</small><strong data-member-field="member_region">—</strong></div>
-                        <div class="detail"><small>Nearest police station</small><strong data-member-field="police_station">—</strong></div>
-                        <div class="detail"><small>Business / work location</small><strong data-member-field="business_profile">—</strong></div>
-                        <div class="detail"><small>M-Pesa / receiving number</small><strong data-member-field="mpesa_phone">—</strong></div>
-                        <div class="detail"><small>Bank account</small><strong data-member-field="bank_profile">—</strong></div>
-                        <div class="detail"><small>Housing status</small><strong data-member-field="house_ownership_status">—</strong></div>
-                        <div class="detail"><small>Head of household</small><strong data-member-field="head_of_household">—</strong></div>
-                        <div class="detail"><small>Dependants</small><strong data-member-field="number_of_dependants">—</strong></div>
-                        <div class="detail"><small>House roof / fence</small><strong data-member-field="house_structure">—</strong></div>
-                        <div class="detail"><small>Monthly household income</small><strong data-member-field="household_monthly_income">—</strong></div>
-                        <div class="detail"><small>Monthly household expenses</small><strong data-member-field="household_monthly_expenses">—</strong></div>
-                        <div class="detail"><small>Existing VATI loan balance</small><strong data-member-field="current_loan_balance">—</strong></div>
-                        <div class="detail"><small>Family / assets / nominees</small><strong data-member-field="record_counts">—</strong></div>
+                        <div class="detail"><small>Namba ya nyumba</small><strong data-member-field="house_number">—</strong></div>
+                        <div class="detail"><small>Anwani ya makazi</small><strong data-member-field="physical_address">—</strong></div>
+                        <div class="detail"><small>Mtaa / kata</small><strong data-member-field="member_location">—</strong></div>
+                        <div class="detail"><small>Wilaya / mkoa</small><strong data-member-field="member_region">—</strong></div>
+                        <div class="detail"><small>Kituo cha polisi kilicho karibu</small><strong data-member-field="police_station">—</strong></div>
+                        <div class="detail"><small>Biashara / mahali pa kazi</small><strong data-member-field="business_profile">—</strong></div>
+                        <div class="detail"><small>Namba ya M-Pesa / kupokea</small><strong data-member-field="mpesa_phone">—</strong></div>
+                        <div class="detail"><small>Akaunti ya benki</small><strong data-member-field="bank_profile">—</strong></div>
+                        <div class="detail"><small>Hali ya umiliki wa nyumba</small><strong data-member-field="house_ownership_status">—</strong></div>
+                        <div class="detail"><small>Mkuu wa kaya</small><strong data-member-field="head_of_household">—</strong></div>
+                        <div class="detail"><small>Wategemezi</small><strong data-member-field="number_of_dependants">—</strong></div>
+                        <div class="detail"><small>Paa / uzio wa nyumba</small><strong data-member-field="house_structure">—</strong></div>
+                        <div class="detail"><small>Mapato ya kaya kwa mwezi</small><strong data-member-field="household_monthly_income">—</strong></div>
+                        <div class="detail"><small>Matumizi ya kaya kwa mwezi</small><strong data-member-field="household_monthly_expenses">—</strong></div>
+                        <div class="detail"><small>Salio la mkopo wa VATI</small><strong data-member-field="current_loan_balance">—</strong></div>
+                        <div class="detail"><small>Familia / mali / wateule</small><strong data-member-field="record_counts">—</strong></div>
                     </div>
-                    <p class="muted" style="margin:16px 0 0">Update incorrect information from the member profile before creating this application.</p>
+                    <p class="muted" style="margin:16px 0 0">Sahihisha taarifa zisizo sahihi kwenye wasifu wa mwanachama kabla ya kuunda ombi hili.</p>
                 </div>
             </div>
 
             <div class="card" style="margin-top:24px">
                 <div class="card-head">
-                    <h2>Loan computation summary</h2>
+                    <h2>Muhtasari wa hesabu za mkopo</h2>
                 </div>
                 <div class="card-body detail-grid">
-                    <div class="detail"><small>Estimated total repayment</small><strong id="summary-estimate">TZS
+                    <div class="detail"><small>Makadirio ya jumla ya marejesho</small><strong id="summary-estimate">TZS
                             0.00</strong></div>
-                    <div class="detail"><small>Estimated charges</small><strong id="summary-charges">TZS 0.00</strong></div>
-                    <div class="detail"><small>Estimated amount receivable</small><strong id="summary-receivable">TZS
+                    <div class="detail"><small>Makadirio ya gharama</small><strong id="summary-charges">TZS 0.00</strong></div>
+                    <div class="detail"><small>Makadirio ya kiasi atakachopokea</small><strong id="summary-receivable">TZS
                             0.00</strong></div>
-                    <div class="detail"><small>Processing fee</small><strong id="summary-processing-fee">TZS 0.00</strong>
+                    <div class="detail"><small>Ada ya uchakataji</small><strong id="summary-processing-fee">TZS 0.00</strong>
                     </div>
-                    <div class="detail"><small>Transaction fee</small><strong id="summary-transaction-fee">TZS 0.00</strong>
+                    <div class="detail"><small>Ada ya muamala</small><strong id="summary-transaction-fee">TZS 0.00</strong>
                     </div>
-                    <div class="detail"><small>Security held</small><strong id="summary-security">TZS 0.00</strong></div>
+                    <div class="detail"><small>Dhamana iliyoshikiliwa</small><strong id="summary-security">TZS 0.00</strong></div>
                 </div>
             </div>
 
             <div id="repayment-schedule" class="card" style="margin-top:24px;display:none">
                 <div class="card-head">
                     <div>
-                        <h2>Projected repayment schedule</h2>
-                        <small id="schedule-description">Calculated from the current loan application terms</small>
+                        <h2>Makadirio ya ratiba ya marejesho</h2>
+                        <small id="schedule-description">Imekokotolewa kwa masharti ya sasa ya ombi la mkopo</small>
                     </div>
                     <span id="schedule-frequency" class="badge active"></span>
                 </div>
@@ -198,18 +198,18 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Installment</th>
-                                    <th>Repayment period</th>
-                                    <th>Principal (TZS)</th>
-                                    <th>Interest (TZS)</th>
-                                    <th>Total installment (TZS)</th>
-                                    <th>Balance after payment (TZS)</th>
+                                    <th>Awamu</th>
+                                    <th>Kipindi cha marejesho</th>
+                                    <th>Mtaji (TZS)</th>
+                                    <th>Riba (TZS)</th>
+                                    <th>Jumla ya awamu (TZS)</th>
+                                    <th>Salio baada ya malipo (TZS)</th>
                                 </tr>
                             </thead>
                             <tbody id="schedule-body"></tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="2">Totals</th>
+                                    <th colspan="2">Jumla</th>
                                     <th id="schedule-principal-total">0.00</th>
                                     <th id="schedule-interest-total">0.00</th>
                                     <th id="schedule-repayment-total">0.00</th>
@@ -218,36 +218,36 @@
                             </tfoot>
                         </table>
                     </div>
-                    <p class="muted" style="margin:12px 0 0">This is an application-stage projection. Actual due dates are assigned when the approved loan is disbursed.</p>
+                    <p class="muted" style="margin:12px 0 0">Haya ni makadirio ya hatua ya maombi. Tarehe halisi za malipo huwekwa mkopo ulioidhinishwa unapotolewa.</p>
                 </div>
             </div>
 
-            <h3 class="section-title" style="margin-top:25px">Income & expenditure assessment</h3>
+            <h3 class="section-title" style="margin-top:25px">Tathmini ya mapato na matumizi</h3>
             <div class="form-grid">
-                <label>Core business income<input id="core-business-income" type="number" min="0" name="assessment[core_business_income]"
+                <label>Mapato ya msingi ya biashara<input id="core-business-income" type="number" min="0" name="assessment[core_business_income]"
                         value="{{ old('assessment.core_business_income', $assessment?->core_business_income ?? 0) }}"
                         required></label>
-                <label>Other income<input type="number" min="0" name="assessment[other_income]"
+                <label>Mapato mengine<input type="number" min="0" name="assessment[other_income]"
                         value="{{ old('assessment.other_income', $assessment?->other_income ?? 0) }}"></label>
-                <label>Business expenses<input type="number" min="0" name="assessment[business_expenses]"
+                <label>Matumizi ya biashara<input type="number" min="0" name="assessment[business_expenses]"
                         value="{{ old('assessment.business_expenses', $assessment?->business_expenses ?? 0) }}"
                         required></label>
-                <label>Household expenses<input id="household-expenses" type="number" min="0" name="assessment[household_expenses]"
+                <label>Matumizi ya kaya<input id="household-expenses" type="number" min="0" name="assessment[household_expenses]"
                         value="{{ old('assessment.household_expenses', $assessment?->household_expenses ?? 0) }}"
                         required></label>
-                <label>Existing external debt<input type="number" min="0"
+                <label>Deni la nje lililopo<input type="number" min="0"
                         name="assessment[existing_external_debt]"
                         value="{{ old('assessment.existing_external_debt', $assessment?->existing_external_debt ?? 0) }}"></label>
-                <label class="full">Assessment comment
+                <label class="full">Maoni ya tathmini
                     <textarea name="assessment[assessment_comment]">{{ old('assessment.assessment_comment', $assessment?->assessment_comment) }}</textarea>
                 </label>
             </div>
 
-            <h3 id="guarantors" class="section-title" style="margin-top:25px">Guarantors / Wadhamini <small class="muted">(Optional during onboarding)</small></h3>
-            <p class="muted">Record up to two guarantors now. Signature, thumbprint and joint-photo evidence can be completed from the application details page.</p>
+            <h3 id="guarantors" class="section-title" style="margin-top:25px">Wadhamini <small class="muted">(Si lazima wakati wa usajili)</small></h3>
+            <p class="muted">Weka hadi wadhamini wawili. Sahihi, alama ya kidole na picha ya pamoja vinaweza kukamilishwa kwenye ukurasa wa maelezo ya ombi.</p>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Type</th><th>Name</th><th>Relationship</th><th>Phone</th><th>National/Voter ID</th><th>Residential address</th></tr></thead>
+                    <thead><tr><th>Aina</th><th>Jina</th><th>Uhusiano</th><th>Simu</th><th>Kitambulisho cha taifa/mpiga kura</th><th>Anwani ya makazi</th></tr></thead>
                     <tbody>
                         @foreach($guarantors as $index => $guarantor)
                             <tr>
@@ -266,10 +266,10 @@
                 </table>
             </div>
 
-            <h3 id="group-witnesses" class="section-title" style="margin-top:25px">Group Witnesses / Mashahidi wa Kikundi <small class="muted">(Optional during onboarding)</small></h3>
-            <p class="muted">Only active members of the selected applicant's group can be witnesses. The applicant cannot witness their own application.</p>
+            <h3 id="group-witnesses" class="section-title" style="margin-top:25px">Mashahidi wa Kikundi <small class="muted">(Si lazima wakati wa usajili)</small></h3>
+            <p class="muted">Wanachama hai wa kikundi cha mwombaji pekee ndio wanaoweza kuwa mashahidi. Mwombaji hawezi kushuhudia ombi lake mwenyewe.</p>
             <input type="hidden" name="witness_member_ids[]" value="">
-            <label>Select group witnesses
+            <label>Chagua mashahidi wa kikundi
                 <select id="witness-member-select" name="witness_member_ids[]" multiple>
                     @foreach($members as $candidate)
                         <option value="{{ $candidate->id }}" data-group="{{ $candidate->group_id }}" @selected(in_array($candidate->id, $selectedWitnesses, true))>{{ $candidate->membership_number }} · {{ $candidate->first_name }} {{ $candidate->last_name }} · {{ $candidate->group?->group_name }}</option>
@@ -277,15 +277,15 @@
                 </select>
             </label>
 
-            <h3 class="section-title" style="margin-top:25px">Use of loan amount <small class="muted">(Optional)</small></h3>
-            <p class="muted">You may leave this section blank. If provided, allocation amounts must total the requested loan amount exactly.</p>
+            <h3 class="section-title" style="margin-top:25px">Matumizi ya kiasi cha mkopo <small class="muted">(Si lazima)</small></h3>
+            <p class="muted">Unaweza kuacha sehemu hii wazi. Ikiwa imejazwa, jumla ya matumizi lazima ilingane kabisa na kiasi cha mkopo kilichoombwa.</p>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>Purpose</th>
-                            <th>Allocation (TZS)</th>
-                            <th>Present asset value</th>
+                            <th>Madhumuni</th>
+                            <th>Kiasi kilichotengwa (TZS)</th>
+                            <th>Thamani ya sasa ya mali</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -305,13 +305,13 @@
                     </tbody>
                 </table>
             </div>
-            <p class="muted" style="margin-top:10px">Allocated: <strong id="allocated-total">TZS 0</strong></p>
+            <p class="muted" style="margin-top:10px">Kilichotengwa: <strong id="allocated-total">TZS 0</strong></p>
 
             <div class="form-actions">
                 <a class="btn btn-secondary"
-                    href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}">Cancel</a>
+                    href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}">Ghairi</a>
                 <button
-                    class="btn btn-primary">{{ $editing ? 'Save draft changes' : 'Create draft application' }}</button>
+                    class="btn btn-primary">{{ $editing ? 'Hifadhi mabadiliko ya rasimu' : 'Unda rasimu ya ombi' }}</button>
             </div>
         </div>
     </form>

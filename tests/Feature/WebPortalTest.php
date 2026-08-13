@@ -49,9 +49,9 @@ class WebPortalTest extends TestCase
 
     public function test_guest_can_sign_in_and_open_dashboard(): void
     {
-        $this->get('/')->assertOk()->assertSee('Sign in to portal')->assertSee('One platform.');
+        $this->get('/')->assertOk()->assertSee(__('Sign in to portal'))->assertSee(__('One platform.'));
         $this->get('/admin')->assertRedirect('/login');
-        $this->get('/login')->assertOk()->assertSee('Welcome back');
+        $this->get('/login')->assertOk()->assertSee(__('Welcome back'));
         $this->post('/login', ['email' => $this->admin->email, 'password' => 'password'])->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($this->admin);
     }
@@ -106,13 +106,13 @@ class WebPortalTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.roles.permissions.index'))
             ->assertOk()
-            ->assertSee('Role permission assignment')
-            ->assertSee('Save role permissions');
+            ->assertSee(__('Role permission assignment'))
+            ->assertSee(__('Save role permissions'));
 
         $this->get(route('admin.users.index'))
             ->assertOk()
-            ->assertSee('Roles &amp; Permissions', false)
-            ->assertDontSee('Role permission assignment');
+            ->assertSee(e(__('Roles & Permissions')), false)
+            ->assertDontSee(__('Role permission assignment'));
 
         $this->put(route('admin.roles.permissions.update', $cashier), [
             'permissions' => ['view-dashboard', 'view-reports'],
@@ -196,15 +196,15 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
             ->assertOk()
-            ->assertSee('Applicant profile (auto-populated)')
-            ->assertSee('Applicant photograph')
+            ->assertSee('Wasifu wa mwombaji (unajazwa moja kwa moja)')
+            ->assertSee('Picha ya mwombaji')
             ->assertSee(basename($member->photo_path), false)
-            ->assertSee('Projected repayment schedule')
+            ->assertSee('Makadirio ya ratiba ya marejesho')
             ->assertSee('schedule-body', false)
             ->assertSee('data-frequency="weekly"', false)
             ->assertSee('memberProfiles', false)
-            ->assertSee('Guarantors / Wadhamini')
-            ->assertSee('Group Witnesses / Mashahidi wa Kikundi')
+            ->assertSee('Wadhamini')
+            ->assertSee('Mashahidi wa Kikundi')
             ->assertSee('Witness Member')
             ->assertSee('Asha Musa');
 
@@ -225,7 +225,7 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number)
-            ->assertSee('Download application PDF')
+            ->assertSee('Pakua PDF ya ombi')
             ->assertSee(basename($member->photo_path), false)
             ->assertSee('data-member-photo', false)
             ->assertSeeInOrder([
@@ -236,11 +236,11 @@ class WebPortalTest extends TestCase
                 'Family assets',
                 'Income and expenditure assessment',
                 'Use of loan amount',
-                'Nominee information',
-                'Guarantor declarations',
-                'Optional attachments',
-                'Group witnesses',
-                'Recommendations and verification',
+                'Taarifa za wateule',
+                'Tamko la wadhamini',
+                'Viambatisho vya hiari',
+                'Mashahidi wa kikundi',
+                'Mapendekezo na uthibitisho',
             ]);
         $this->get(route('admin.loan-applications.export', $application))
             ->assertOk()
@@ -299,15 +299,15 @@ class WebPortalTest extends TestCase
         $this->assertNotNull($loan);
         $this->get(route('admin.groups.show', $this->group))
             ->assertOk()
-            ->assertSee('Members and loan balances')
-            ->assertSee('View details')
+            ->assertSee(__('Members and loan balances'))
+            ->assertSee(__('View details'))
             ->assertSee(number_format((float) $loan->total_balance, 2));
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number)->assertSee('borrower.jpg', false)->assertSee('data-member-photo', false);
         $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
         $firstInstallment = $loan->installments()->orderBy('installment_number')->firstOrFail();
         $partialAmount = round((float) $firstInstallment->total_due / 2, 2);
-        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Confirm repayment')->assertSee('loan_installment_id', false);
+        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee(__('Confirm repayment'))->assertSee('loan_installment_id', false);
         $this->post(route('admin.payments.store', $loan), ['loan_installment_id' => $firstInstallment->id, 'amount' => $partialAmount, 'payment_method' => 'cash'])->assertRedirect();
         $this->assertDatabaseHas('payments', ['loan_id' => $loan->id, 'amount' => $partialAmount, 'status' => 'posted']);
         $this->assertSame('partially_paid', $firstInstallment->refresh()->status);
@@ -329,11 +329,11 @@ class WebPortalTest extends TestCase
             ->assertSee(number_format($partialAmount, 2))
             ->assertSee(number_format($realizedRepaymentIncome, 2))
             ->assertSee(number_format(1000000, 2));
-        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee('Payment history')->assertSee('partially paid');
+        $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee(__('Payment history'))->assertSee('partially paid');
         $this->get(route('admin.members.show', $borrower))
             ->assertOk()
             ->assertSee($loan->loan_number)
-            ->assertSee('Confirm repayment')
+            ->assertSee(__('Confirm repayment'))
             ->assertSee('loan_installment_id', false)
             ->assertSeeInOrder([
                 'Complete loan history',

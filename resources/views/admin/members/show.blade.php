@@ -12,21 +12,21 @@
     <div>
         <p class="eyebrow">{{ $member->membership_number }}</p>
         <h1>{{ $fullName }}</h1>
-        <p>Kitabu cha Marejesho ya Mteja (Member's Passbook)</p>
+        <p>Kitabu cha Marejesho ya Mwanachama</p>
     </div>
     <div class="head-actions">
         <span class="badge {{ $member->status }}">{{ ucfirst($member->status) }}</span>
-        <a class="btn btn-gold" href="{{ route('admin.members.export', $member) }}">Download member PDF</a>
+        <a class="btn btn-gold" href="{{ route('admin.members.export', $member) }}">Pakua PDF ya mwanachama</a>
         @can('create-loan-applications')
-            <a class="btn btn-primary" href="{{ route('admin.loan-applications.create', ['member_id' => $member->id]) }}">New loan application</a>
+            <a class="btn btn-primary" href="{{ route('admin.loan-applications.create', ['member_id' => $member->id]) }}">Ombi jipya la mkopo</a>
         @endcan
         @can('edit-members')
-            <a class="btn btn-secondary" href="{{ route('admin.members.edit', $member) }}">Edit member</a>
+            <a class="btn btn-secondary" href="{{ route('admin.members.edit', $member) }}">Hariri mwanachama</a>
         @endcan
         @can('delete-members')
             <form method="POST" action="{{ route('admin.members.destroy', $member) }}">
                 @csrf @method('DELETE')
-                <button class="btn btn-danger" data-confirm="Delete this member? Members with loan history cannot be deleted.">Delete</button>
+                <button class="btn btn-danger" data-confirm="Ufute mwanachama huyu? Mwanachama mwenye historia ya mikopo hawezi kufutwa.">Futa</button>
             </form>
         @endcan
     </div>
@@ -43,12 +43,12 @@
             </div>
         @endif
         <div class="detail-grid" style="flex:1">
-        <div><small style="opacity:.75">Membership / SL number</small><strong style="display:block;font-size:18px;margin-top:5px">{{ $member->membership_number }}</strong></div>
-        <div><small style="opacity:.75">Branch / Jina la Tawi</small><strong style="display:block;margin-top:5px">{{ $display($member->branch?->branch_name) }}</strong></div>
-        <div><small style="opacity:.75">Group / Jina la Kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->group_name) }}</strong></div>
-        <div><small style="opacity:.75">Meeting day / Siku ya Kukutana</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->meeting_day) }}</strong></div>
-        <div><small style="opacity:.75">Group location / Mahali Kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->location) }}</strong></div>
-        <div><small style="opacity:.75">Member contact / Namba ya Simu</small><strong style="display:block;margin-top:5px">{{ $display($member->phone) }}</strong></div>
+        <div><small style="opacity:.75">Namba ya uanachama / SL</small><strong style="display:block;font-size:18px;margin-top:5px">{{ $member->membership_number }}</strong></div>
+        <div><small style="opacity:.75">Jina la tawi</small><strong style="display:block;margin-top:5px">{{ $display($member->branch?->branch_name) }}</strong></div>
+        <div><small style="opacity:.75">Jina la kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->group_name) }}</strong></div>
+        <div><small style="opacity:.75">Siku ya kukutana</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->meeting_day) }}</strong></div>
+        <div><small style="opacity:.75">Mahali pa kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->location) }}</strong></div>
+        <div><small style="opacity:.75">Namba ya simu</small><strong style="display:block;margin-top:5px">{{ $display($member->phone) }}</strong></div>
         </div>
     </div>
 </div>
@@ -56,29 +56,29 @@
 <div class="grid-2">
     <div>
         <div class="card">
-            <div class="card-head"><h2>Member profile / Wasifu wa Mwanachama</h2></div>
+            <div class="card-head"><h2>Wasifu wa Mwanachama</h2></div>
             <div class="card-body detail-grid">
                 <div class="detail"><small>Full name / Jina la Mwanachama</small><strong>{{ $fullName }}</strong></div>
-                <div class="detail"><small>Guardian, father or husband</small><strong>{{ $display($member->guardian_name) }}</strong></div>
-                <div class="detail"><small>Primary phone</small><strong>{{ $display($member->phone) }}</strong></div>
-                <div class="detail"><small>Alternate phone</small><strong>{{ $display($member->alternate_phone) }}</strong></div>
-                <div class="detail"><small>National ID</small><strong>{{ $display($member->national_id) }}</strong></div>
-                <div class="detail"><small>Voter ID</small><strong>{{ $display($member->voter_id) }}</strong></div>
-                <div class="detail"><small>Date of birth</small><strong>{{ $member->date_of_birth?->format('d M Y') ?? '—' }}</strong></div>
-                <div class="detail"><small>Gender</small><strong>{{ $display($member->gender) }}</strong></div>
-                <div class="detail"><small>Marital status</small><strong>{{ $display($member->marital_status) }}</strong></div>
-                <div class="detail"><small>Occupation</small><strong>{{ $display($member->occupation) }}</strong></div>
-                <div class="detail"><small>Nationality</small><strong>{{ $display($member->nationality) }}</strong></div>
+                <div class="detail"><small>Mlezi, baba au mume</small><strong>{{ $display($member->guardian_name) }}</strong></div>
+                <div class="detail"><small>Simu kuu</small><strong>{{ $display($member->phone) }}</strong></div>
+                <div class="detail"><small>Simu mbadala</small><strong>{{ $display($member->alternate_phone) }}</strong></div>
+                <div class="detail"><small>Kitambulisho cha taifa</small><strong>{{ $display($member->national_id) }}</strong></div>
+                <div class="detail"><small>Kitambulisho cha mpiga kura</small><strong>{{ $display($member->voter_id) }}</strong></div>
+                <div class="detail"><small>Tarehe ya kuzaliwa</small><strong>{{ $member->date_of_birth?->format('d M Y') ?? '—' }}</strong></div>
+                <div class="detail"><small>Jinsia</small><strong>{{ $display($member->gender) }}</strong></div>
+                <div class="detail"><small>Hali ya ndoa</small><strong>{{ $display($member->marital_status) }}</strong></div>
+                <div class="detail"><small>Kazi</small><strong>{{ $display($member->occupation) }}</strong></div>
+                <div class="detail"><small>Uraia</small><strong>{{ $display($member->nationality) }}</strong></div>
                 <div class="detail"><small>Admission date / Tarehe ya kujiunga</small><strong>{{ $member->admission_date?->format('d M Y') ?? '—' }}</strong></div>
-                <div class="detail"><small>Passbook issue date</small><strong>{{ $member->passbook_issue_date?->format('d M Y') ?? '—' }}</strong></div>
-                <div class="detail"><small>Group join date</small><strong>{{ $member->activeGroupMembership?->joined_at?->format('d M Y') ?? '—' }}</strong></div>
-                <div class="detail"><small>Record status</small><strong>{{ ucfirst($member->status) }}</strong></div>
+                <div class="detail"><small>Tarehe ya kutolewa kitabu</small><strong>{{ $member->passbook_issue_date?->format('d M Y') ?? '—' }}</strong></div>
+                <div class="detail"><small>Tarehe ya kujiunga na kikundi</small><strong>{{ $member->activeGroupMembership?->joined_at?->format('d M Y') ?? '—' }}</strong></div>
+                <div class="detail"><small>Hali ya kumbukumbu</small><strong>{{ ucfirst($member->status) }}</strong></div>
             </div>
         </div>
         <br>
 
         <div class="card">
-            <div class="card-head"><h2>Address and issuing authority</h2></div>
+            <div class="card-head"><h2>Anwani na mamlaka iliyosajili</h2></div>
             <div class="card-body detail-grid">
                 <div class="detail"><small>Physical address / Anuani ya makazi</small><strong>{{ $display($member->physical_address) }}</strong></div>
                 <div class="detail"><small>Region / Mkoa</small><strong>{{ $display($member->region) }}</strong></div>
@@ -94,10 +94,10 @@
         <br>
 
         <div class="card">
-            <div class="card-head"><h2>Documents and attachments</h2><span class="badge {{ $member->documents->isNotEmpty() ? 'active' : 'pending' }}">{{ $member->documents->count() }} files</span></div>
+            <div class="card-head"><h2>Nyaraka na viambatisho</h2><span class="badge {{ $member->documents->isNotEmpty() ? 'active' : 'pending' }}">Faili {{ $member->documents->count() }}</span></div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Document type</th><th>File</th><th>Uploaded</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Aina ya nyaraka</th><th>Faili</th><th>Imepakiwa</th><th>Kitendo</th></tr></thead>
                     <tbody>
                     @forelse($member->documents as $document)
                         <tr>
@@ -105,17 +105,17 @@
                             <td>{{ $document->file_name }}</td>
                             <td>{{ $document->created_at?->format('d M Y') }}</td>
                             <td>
-                                <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.download', [$member, $document]) }}">Download</a>
+                                <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.download', [$member, $document]) }}">Pakua</a>
                                 @can('delete-members')
                                     <form method="POST" action="{{ route('admin.members.documents.destroy', [$member, $document]) }}" style="display:inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" data-confirm="Delete this document?">Delete</button>
+                                        <button class="btn btn-sm btn-danger" data-confirm="Ufute waraka huu?">Futa</button>
                                     </form>
                                 @endcan
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="empty">No documents uploaded.</td></tr>
+                        <tr><td colspan="4" class="empty">Hakuna nyaraka zilizopakiwa.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -127,7 +127,7 @@
                         <label>Document type<select name="document_type" required><option value="">Select type</option><option value="national_id">National ID</option><option value="voter_id">Voter ID</option><option value="address_proof">Proof of address</option><option value="business_license">Business license</option><option value="passbook_scan">Passbook scan</option><option value="signature_card">Signature card</option><option value="other">Other</option></select></label>
                         <label>File<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
                     </div>
-                    <div class="form-actions"><button class="btn btn-primary">Upload document</button></div>
+                    <div class="form-actions"><button class="btn btn-primary">Pakia waraka</button></div>
                 </form>
             @endcan
         </div>
@@ -407,7 +407,7 @@
                                         <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
                                         <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
                                         <label style="margin:0;min-width:100px"><small>Method</small><select name="payment_method" data-select2="false"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank</option></select></label>
-                                        <button class="btn btn-sm btn-primary" data-confirm="Confirm this installment repayment?">Confirm repayment</button>
+                                        <button class="btn btn-sm btn-primary" data-confirm="Thibitisha malipo ya awamu hii?">Thibitisha marejesho</button>
                                     </form>
                                 @else
                                     <span class="muted">No collection permission</span>
