@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
@@ -15,59 +15,70 @@
         <a class="brand light" href="{{ route('admin.dashboard') }}"><span
                 class="brand-mark">V</span><span><strong>VATI</strong><small>Microfinance Limited</small></span></a>
         <nav>
-            <p class="nav-label">Overview</p>
+            <p class="nav-label">{{ __('Overview') }}</p>
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                href="{{ route('admin.dashboard') }}"><span class="nav-icon">▦</span> Dashboard</a>
-            <p class="nav-label">Operations</p>
+                href="{{ route('admin.dashboard') }}"><span class="nav-icon">▦</span> {{ __('Dashboard') }}</a>
+            <p class="nav-label">{{ __('Operations') }}</p>
             @can('view-members')
                 <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
-                    href="{{ route('admin.members.index') }}"><span class="nav-icon">♙</span> Members</a>
+                    href="{{ route('admin.members.index') }}"><span class="nav-icon">♙</span> {{ __('Members') }}</a>
             @endcan
             @can('view-groups')
                 <a class="{{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
-                    href="{{ route('admin.groups.index') }}"><span class="nav-icon">◉</span> Groups</a>
+                    href="{{ route('admin.groups.index') }}"><span class="nav-icon">◉</span> {{ __('Groups') }}</a>
             @endcan
             @can('view-loan-applications')
                 <a class="{{ request()->routeIs('admin.loan-applications.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-applications.index') }}"><span class="nav-icon">▤</span> Applications</a>
+                    href="{{ route('admin.loan-applications.index') }}"><span class="nav-icon">▤</span>
+                    {{ __('Applications') }}</a>
             @endcan
             @can('view-loans')
                 <a class="{{ request()->routeIs('admin.loans.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loans.index') }}"><span class="nav-icon">₮</span> Loans & Collections</a>
+                    href="{{ route('admin.loans.index') }}"><span class="nav-icon">₮</span>
+                    {{ __('Loans & Collections') }}</a>
             @endcan
-            <p class="nav-label">Management</p>
+            <p class="nav-label">{{ __('Management') }}</p>
             @can('view-loan-products')
                 <a class="{{ request()->routeIs('admin.loan-products.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-products.index') }}"><span class="nav-icon">◇</span> Loan Products</a>
+                    href="{{ route('admin.loan-products.index') }}"><span class="nav-icon">◇</span>
+                    {{ __('Loan Products') }}</a>
             @endcan
             @can('view-reports')
                 <a class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
-                    href="{{ route('admin.reports.index') }}"><span class="nav-icon">↗</span> Reports</a>
+                    href="{{ route('admin.reports.index') }}"><span class="nav-icon">↗</span> {{ __('Reports') }}</a>
             @endcan
             @role('super_admin|head_office_admin')
                 <a class="{{ request()->routeIs('admin.organization.*') ? 'active' : '' }}"
-                    href="{{ route('admin.organization.index') }}"><span class="nav-icon">⌂</span> Organization</a>
+                    href="{{ route('admin.organization.index') }}"><span class="nav-icon">⌂</span>
+                    {{ __('Organization') }}</a>
                 <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}"><span class="nav-icon">⚙</span> Users & Roles</a>
+                    href="{{ route('admin.users.index') }}"><span class="nav-icon">⚙</span> {{ __('Users & Roles') }}</a>
             @endrole
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>
-            <div><strong>System online</strong><small>{{ now()->format('d M Y') }}</small></div>
+            <div><strong>{{ __('System online') }}</strong><small>{{ now()->format('d M Y') }}</small></div>
         </div>
     </aside>
     <div class="main-area">
         <header class="topbar">
-            <button class="menu-btn" id="sidebarToggle" type="button" aria-label="Toggle sidebar" aria-expanded="true"
-                title="Collapse sidebar">☰</button>
-            <div class="crumb"><small>VATI OPERATIONS</small><strong>@yield('title', 'Dashboard')</strong></div>
-            <div class="top-actions"><span
-                    class="branch-chip">{{ auth()->user()->branch?->branch_name ?? 'All branches' }}</span>
+            <button class="menu-btn" id="sidebarToggle" type="button" aria-label="{{ __('Toggle sidebar') }}"
+                aria-expanded="true" title="{{ __('Collapse sidebar') }}">☰</button>
+            <div class="crumb"><small>{{ __('VATI OPERATIONS') }}</small><strong>@yield('title', __('Dashboard'))</strong></div>
+            <div class="top-actions">
+                <div class="lang-switch" role="group" aria-label="Language">
+                    <a href="{{ route('locale.switch', 'sw') }}"
+                        class="{{ app()->getLocale() === 'sw' ? 'active' : '' }}">SW</a>
+                    <a href="{{ route('locale.switch', 'en') }}"
+                        class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                </div>
+                <span class="branch-chip">{{ auth()->user()->branch?->branch_name ?? __('All branches') }}</span>
                 <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
                 <div class="user-meta">
-                    <strong>{{ auth()->user()->name }}</strong><small>{{ str_replace('_', ' ', auth()->user()->getRoleNames()->first() ?? 'staff') }}</small>
+                    <strong>{{ auth()->user()->name }}</strong><small>{{ str_replace('_', ' ', auth()->user()->getRoleNames()->first() ?? __('staff')) }}</small>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="icon-btn"
-                        title="Sign out" data-confirm="Are you sure you want to sign out?">↪</button></form>
+                        title="{{ __('Sign out') }}"
+                        data-confirm="{{ __('Are you sure you want to sign out?') }}">↪</button></form>
             </div>
         </header>
         <main class="content">
@@ -78,7 +89,8 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
             @if ($errors->any())
-                <div class="alert alert-danger"><strong>Please correct the highlighted information.</strong>
+                <div class="alert alert-danger">
+                    <strong>{{ __('Please correct the highlighted information.') }}</strong>
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -97,12 +109,12 @@
             e.preventDefault();
             const danger = el.classList.contains('btn-danger');
             Swal.fire({
-                title: 'Please confirm',
+                title: @json(__('Please confirm')),
                 text: el.dataset.confirm,
                 icon: danger ? 'warning' : 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, continue',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: @json(__('Yes, continue')),
+                cancelButtonText: @json(__('Cancel')),
                 confirmButtonColor: danger ? '#c62828' : '#005c2d',
                 cancelButtonColor: '#68736b',
                 reverseButtons: true,
@@ -128,7 +140,7 @@
 
             const collapsed = document.body.classList.contains('sidebar-collapsed');
             toggle.setAttribute('aria-expanded', String(!collapsed));
-            toggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+            toggle.setAttribute('title', collapsed ? @json(__('Expand sidebar')) : @json(__('Collapse sidebar')));
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -146,13 +158,14 @@
                     sidebar.classList.remove('collapsed');
                     document.body.classList.remove('sidebar-collapsed');
                     toggle.setAttribute('aria-expanded', 'false');
-                    toggle.setAttribute('title', 'Toggle sidebar');
+                    toggle.setAttribute('title', @json(__('Toggle sidebar')));
                     return;
                 }
 
                 const collapsed = document.body.classList.contains('sidebar-collapsed');
                 toggle.setAttribute('aria-expanded', String(!collapsed));
-                toggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+                toggle.setAttribute('title', collapsed ? @json(__('Expand sidebar')) :
+                    @json(__('Collapse sidebar')));
             };
 
             toggle.addEventListener('click', toggleSidebar);

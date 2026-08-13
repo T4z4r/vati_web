@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\LoanStatus;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\GroupMembership;
@@ -183,6 +184,15 @@ class VatiWorkflowTest extends TestCase
         $this->assertTrue($payment->is($duplicate));
         app(PaymentService::class)->reverse($payment, $this->admin, 'Incorrect collection reference');
         $this->assertSame($before, (float) $loan->refresh()->total_balance);
+
+        $finalPayment = app(PaymentService::class)->post($loan, $this->admin, $before, ['payment_method' => 'cash', 'idempotency_key' => 'test-final-payment']);
+        $this->assertSame(0.0, (float) $loan->refresh()->total_balance);
+        $this->assertSame(LoanStatus::SETTLED, $loan->status);
+        $this->assertSame($loan->number_of_installments, $loan->installments()->where('status', 'paid')->count());
+
+        app(PaymentService::class)->reverse($finalPayment, $this->admin, 'Final payment entered incorrectly');
+        $this->assertSame($before, (float) $loan->refresh()->total_balance);
+        $this->assertContains($loan->status, [LoanStatus::ACTIVE, LoanStatus::OVERDUE]);
         $this->assertSame('reversed', $payment->refresh()->status);
 
         Sanctum::actingAs($this->admin);

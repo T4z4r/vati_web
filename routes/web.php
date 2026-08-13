@@ -14,9 +14,16 @@ use App\Http\Controllers\Web\PaymentController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SecurityController;
 use App\Http\Controllers\Web\UserController;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('admin.dashboard') : view('auth.login'))->name('home');
+Route::get('locale/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, SetLocale::SUPPORTED, true), 404);
+    session(['locale' => $locale]);
+
+    return back();
+})->name('locale.switch');
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'create'])->name('login');
     Route::post('login', [AuthController::class, 'store'])->name('login.store')->middleware('throttle:5,1');
