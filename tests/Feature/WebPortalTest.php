@@ -84,6 +84,9 @@ class WebPortalTest extends TestCase
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))
             ->assertOk()
             ->assertSee('Applicant profile (auto-populated)')
+            ->assertSee('Projected repayment schedule')
+            ->assertSee('schedule-body', false)
+            ->assertSee('data-frequency="weekly"', false)
             ->assertSee('memberProfiles', false)
             ->assertSee('Asha Musa');
 

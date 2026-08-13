@@ -63,7 +63,9 @@
                                 data-transaction-fee="{{ $product->transaction_fee_percentage }}"
                                 data-security-percentage="{{ $product->security_percentage }}"
                                 data-membership-fee="{{ $product->membership_fee }}"
-                                data-vat="{{ $product->vat_percentage }}" @selected((int) old('loan_product_id', $application->loan_product_id) === $product->id)>
+                                data-vat="{{ $product->vat_percentage }}"
+                                data-frequency="{{ $product->repayment_frequency }}"
+                                data-interest-method="{{ $product->interest_method }}" @selected((int) old('loan_product_id', $application->loan_product_id) === $product->id)>
                                 {{ $product->name }}</option>
                         @endforeach
                     </select>
@@ -164,6 +166,43 @@
                 </div>
             </div>
 
+            <div id="repayment-schedule" class="card" style="margin-top:24px;display:none">
+                <div class="card-head">
+                    <div>
+                        <h2>Projected repayment schedule</h2>
+                        <small id="schedule-description">Calculated from the current loan application terms</small>
+                    </div>
+                    <span id="schedule-frequency" class="badge active"></span>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Installment</th>
+                                    <th>Repayment period</th>
+                                    <th>Principal (TZS)</th>
+                                    <th>Interest (TZS)</th>
+                                    <th>Total installment (TZS)</th>
+                                    <th>Balance after payment (TZS)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-body"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="2">Totals</th>
+                                    <th id="schedule-principal-total">0.00</th>
+                                    <th id="schedule-interest-total">0.00</th>
+                                    <th id="schedule-repayment-total">0.00</th>
+                                    <th>0.00</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <p class="muted" style="margin:12px 0 0">This is an application-stage projection. Actual due dates are assigned when the approved loan is disbursed.</p>
+                </div>
+            </div>
+
             <h3 class="section-title" style="margin-top:25px">Income & expenditure assessment</h3>
             <div class="form-grid">
                 <label>Core business income<input id="core-business-income" type="number" min="0" name="assessment[core_business_income]"
@@ -238,6 +277,8 @@
         const charges = document.getElementById('charges');
         const receivable = document.getElementById('receivable');
         const allocations = [...document.querySelectorAll('.allocation')];
+        const repaymentSchedule = document.getElementById('repayment-schedule');
+        const scheduleBody = document.getElementById('schedule-body');
 
         function formatMoney(value) {
             return 'TZS ' + Number(value).toLocaleString(undefined, {
@@ -285,6 +326,56 @@
             }
         }
 
+        function renderRepaymentSchedule(principal, interest, duration, frequency) {
+            const memberSelected = Boolean(memberProfiles[memberSelect.value]);
+            const installmentCount = frequency === 'weekly'
+                ? Math.max(1, Math.round(duration * 52 / 12))
+                : Math.max(1, duration);
+
+            repaymentSchedule.style.display = memberSelected ? '' : 'none';
+            scheduleBody.innerHTML = '';
+
+            if (!memberSelected || !principal || !duration || !installmentCount) {
+                return;
+            }
+
+            const principalPart = Math.round((principal / installmentCount) * 100) / 100;
+            const interestPart = Math.round((interest / installmentCount) * 100) / 100;
+            let allocatedPrincipal = 0;
+            let allocatedInterest = 0;
+
+            for (let number = 1; number <= installmentCount; number++) {
+                const isLast = number === installmentCount;
+                const principalDue = isLast ? principal - allocatedPrincipal : principalPart;
+                const interestDue = isLast ? interest - allocatedInterest : interestPart;
+                allocatedPrincipal += principalDue;
+                allocatedInterest += interestDue;
+                const balance = Math.max(0, principal + interest - allocatedPrincipal - allocatedInterest);
+                const row = document.createElement('tr');
+                const values = [
+                    number,
+                    `${frequency === 'weekly' ? 'Week' : 'Month'} ${number}`,
+                    principalDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    interestDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    (principalDue + interestDue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                ];
+                values.forEach(value => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                scheduleBody.appendChild(row);
+            }
+
+            const frequencyLabel = frequency === 'weekly' ? 'Weekly' : 'Monthly';
+            document.getElementById('schedule-frequency').textContent = `${installmentCount} ${frequencyLabel.toLowerCase()} installments`;
+            document.getElementById('schedule-description').textContent = `${frequencyLabel} projection for the selected applicant and product`;
+            document.getElementById('schedule-principal-total').textContent = principal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('schedule-interest-total').textContent = interest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('schedule-repayment-total').textContent = (principal + interest).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         function calculate() {
             const option = product.selectedOptions[0];
             const principal = Number(amount.value);
@@ -319,6 +410,7 @@
                 document.getElementById('summary-transaction-fee').textContent = formatMoney(transactionFee +
                     transactionFeeVat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
+                renderRepaymentSchedule(principal, interest, duration, option.dataset.frequency || 'monthly');
             } else {
                 estimate.value = '';
                 charges.value = '';
@@ -329,12 +421,17 @@
                 document.getElementById('summary-processing-fee').textContent = 'TZS 0.00';
                 document.getElementById('summary-transaction-fee').textContent = 'TZS 0.00';
                 document.getElementById('summary-security').textContent = 'TZS 0.00';
+                repaymentSchedule.style.display = memberProfiles[memberSelect.value] ? '' : 'none';
+                scheduleBody.innerHTML = '<tr><td colspan="6" class="muted">Select a loan product and enter a valid amount and duration to generate the schedule.</td></tr>';
             }
             const allocated = allocations.reduce((sum, input) => sum + Number(input.value || 0), 0);
             document.getElementById('allocated-total').textContent = 'TZS ' + allocated.toLocaleString();
         }
         [product, amount, months, ...allocations].forEach(input => input.addEventListener('input', calculate));
-        memberSelect.addEventListener('change', showMemberProfile);
+        memberSelect.addEventListener('change', () => {
+            showMemberProfile();
+            calculate();
+        });
         showMemberProfile();
         calculate();
     </script>
