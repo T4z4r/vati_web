@@ -67,7 +67,7 @@
                     <strong>{{ auth()->user()->name }}</strong><small>{{ str_replace('_', ' ', auth()->user()->getRoleNames()->first() ?? 'staff') }}</small>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="icon-btn"
-                        title="Sign out">↪</button></form>
+                        title="Sign out" data-confirm="Are you sure you want to sign out?">↪</button></form>
             </div>
         </header>
         <main class="content">
@@ -91,9 +91,24 @@
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.querySelectorAll('[data-confirm]').forEach(el => el.addEventListener('click', e => {
-            if (!confirm(el.dataset.confirm)) e.preventDefault()
+            e.preventDefault();
+            const danger = el.classList.contains('btn-danger');
+            Swal.fire({
+                title: 'Please confirm',
+                text: el.dataset.confirm,
+                icon: danger ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, continue',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: danger ? '#c62828' : '#005c2d',
+                cancelButtonColor: '#68736b',
+                reverseButtons: true,
+            }).then(result => {
+                if (result.isConfirmed) el.closest('form')?.submit();
+            });
         }));
     </script>
     @stack('scripts')
@@ -146,7 +161,7 @@
 
             document.querySelectorAll(
                 'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="date"]):not([type="time"]):not([type="datetime-local"]), textarea'
-                ).forEach(field => {
+            ).forEach(field => {
                 if (!field.placeholder) {
                     const label = labelText(field);
                     field.placeholder = label ? `Enter ${label.toLowerCase()}` : 'Enter value';
@@ -158,7 +173,7 @@
                     const select = window.jQuery(this);
                     const first = this.options[0];
                     const placeholder = this.dataset.placeholder || (first?.value === '' ? first.text
-                    .trim() : `Select ${labelText(this).toLowerCase() || 'an option'}`);
+                        .trim() : `Select ${labelText(this).toLowerCase() || 'an option'}`);
                     select.select2({
                         width: select.closest('.filters').length ? 'resolve' : '100%',
                         placeholder,

@@ -38,8 +38,18 @@ class GroupController extends Controller
     public function show(MemberGroup $group)
     {
         $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
+        $members = $group->members()
+            ->withCount([
+                'loans as current_loans_count' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
+            ])
+            ->withSum([
+                'loans as outstanding_loan_balance' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
+            ], 'total_balance')
+            ->latest()
+            ->limit(20)
+            ->get();
 
-        return view('admin.groups.show', ['group' => $group, 'members' => $group->members()->latest()->limit(20)->get(), 'loans' => $group->loans()->with('member')->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with('member')->latest()->limit(10)->get()]);
+        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'loans' => $group->loans()->with('member')->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with('member')->latest()->limit(10)->get()]);
     }
 
     public function edit(Request $request, MemberGroup $group)
