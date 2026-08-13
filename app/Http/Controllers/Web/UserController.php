@@ -19,7 +19,13 @@ class UserController extends Controller
 
         return view('admin.users.index', [
             'users' => $users,
-            'roles' => Role::with('permissions')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function rolePermissions()
+    {
+        return view('admin.roles.permissions', [
+            'roles' => Role::with('permissions')->where('guard_name', 'web')->orderBy('name')->get(),
             'permissions' => Permission::where('guard_name', 'web')->orderBy('name')->get(),
         ]);
     }

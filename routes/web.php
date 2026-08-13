@@ -39,6 +39,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store');
         Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store');
         Route::resource('users', UserController::class);
+        Route::get('roles/permissions', [UserController::class, 'rolePermissions'])
+            ->name('roles.permissions.index');
     });
     Route::put('roles/{role}/permissions', [UserController::class, 'updateRolePermissions'])
         ->name('roles.permissions.update')

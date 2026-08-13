@@ -52,7 +52,9 @@
                     href="{{ route('admin.organization.index') }}"><span class="nav-icon">⌂</span>
                     {{ __('Organization') }}</a>
                 <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}"><span class="nav-icon">⚙</span> {{ __('Users & Roles') }}</a>
+                    href="{{ route('admin.users.index') }}"><span class="nav-icon">⚙</span> {{ __('Staff Accounts') }}</a>
+                <a class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
+                    href="{{ route('admin.roles.permissions.index') }}"><span class="nav-icon">✓</span> {{ __('Roles & Permissions') }}</a>
             @endrole
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>

@@ -59,7 +59,7 @@ class WebPortalTest extends TestCase
     public function test_admin_portal_core_pages_render(): void
     {
         $this->actingAs($this->admin);
-        foreach (['/admin', '/admin/organization', '/admin/users', '/admin/users/create', '/admin/groups', '/admin/groups/create', '/admin/members', '/admin/members/create', '/admin/loan-products', '/admin/loan-products/create', '/admin/loan-applications', '/admin/loan-applications/create', '/admin/loans', '/admin/reports'] as $uri) {
+        foreach (['/admin', '/admin/organization', '/admin/users', '/admin/users/create', '/admin/roles/permissions', '/admin/groups', '/admin/groups/create', '/admin/members', '/admin/members/create', '/admin/loan-products', '/admin/loan-products/create', '/admin/loan-applications', '/admin/loan-applications/create', '/admin/loans', '/admin/reports'] as $uri) {
             $response = $this->get($uri);
             $this->assertSame(200, $response->getStatusCode(), "{$uri} should render successfully.");
         }
@@ -80,10 +80,15 @@ class WebPortalTest extends TestCase
         $cashier = Role::findByName('cashier');
 
         $this->actingAs($this->admin)
-            ->get(route('admin.users.index'))
+            ->get(route('admin.roles.permissions.index'))
             ->assertOk()
             ->assertSee('Role permission assignment')
             ->assertSee('Save role permissions');
+
+        $this->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Roles &amp; Permissions', false)
+            ->assertDontSee('Role permission assignment');
 
         $this->put(route('admin.roles.permissions.update', $cashier), [
             'permissions' => ['view-dashboard', 'view-reports'],
