@@ -162,6 +162,11 @@ class WebPortalTest extends TestCase
 
         $loan = $application->refresh()->loan;
         $this->assertNotNull($loan);
+        $this->get(route('admin.groups.show', $this->group))
+            ->assertOk()
+            ->assertSee('Members and loan balances')
+            ->assertSee('View details')
+            ->assertSee('TZS '.number_format((float) $loan->total_balance, 2));
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number);
         $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
