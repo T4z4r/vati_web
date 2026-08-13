@@ -27,6 +27,35 @@
     </div>
 
     <div class="dash-panel" data-panel="overview">
+        @if ($managementSummary)
+            <h2 class="section-title">{{ __('Management financial summary') }}</h2>
+            <section class="stats">
+                <div class="stat gold">
+                    <small>{{ __('Total loan portfolio') }}</small><strong>TZS
+                        {{ number_format($managementSummary['portfolio'], 2) }}</strong><em>{{ __('Outstanding principal and interest') }}</em>
+                </div>
+                <div class="stat">
+                    <small>{{ __('Total posted payments') }}</small><strong>TZS
+                        {{ number_format($managementSummary['totalPayments'], 2) }}</strong><em>{{ number_format($managementSummary['totalPaymentCount']) }}
+                        {{ __('payments received') }}</em>
+                </div>
+                <div class="stat {{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'gold' : '' }}">
+                    <small>{{ __('Repayment profit / loss') }}</small><strong>{{ $managementSummary['repaymentProfitLoss'] < 0 ? '-' : '' }}TZS
+                        {{ number_format(abs($managementSummary['repaymentProfitLoss']), 2) }}</strong><em>{{ __('Interest and penalties received') }}:
+                        TZS {{ number_format($managementSummary['repaymentIncome'], 2) }} · {{ __('Waived interest') }}:
+                        TZS {{ number_format($managementSummary['repaymentLoss'], 2) }}</em>
+                </div>
+                <div class="stat">
+                    <small>{{ __('Total loan disbursement') }}</small><strong>TZS
+                        {{ number_format($managementSummary['totalDisbursements'], 2) }}</strong><em>{{ __('Principal released to members') }}</em>
+                </div>
+                <div class="stat">
+                    <small>{{ __('Total loan applications') }}</small><strong>{{ number_format($managementSummary['totalApplications']) }}</strong><em>{{ __('Requested for disbursement') }}:
+                        TZS {{ number_format($managementSummary['requestedForDisbursement'], 2) }}</em>
+                </div>
+            </section>
+        @endif
+
         <h2 class="section-title">{{ __('Daily operations') }}</h2>
         <section class="stats">
             <div class="stat">

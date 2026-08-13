@@ -570,6 +570,55 @@ body.sidebar-collapsed .main-area {
 .card-body {
     padding: 20px;
 }
+.dash-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 20px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+}
+.dash-tab {
+    border: 0;
+    background: transparent;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+}
+.dash-tab.active {
+    background: var(--green);
+    color: #fff;
+}
+.dash-panel[hidden] {
+    display: none;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.charts-grid.even {
+    grid-template-columns: 1fr 1fr;
+}
+.chart-card .card-body {
+    height: 300px;
+    position: relative;
+}
+.chart-card canvas {
+    max-height: 100%;
+}
+@media (max-width: 1100px) {
+    .charts-grid,
+    .charts-grid.even {
+        grid-template-columns: 1fr;
+    }
+}
 .stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
