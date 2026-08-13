@@ -120,14 +120,22 @@ class WebPortalTest extends TestCase
         $this->post('/admin/members', ['branch_id' => $this->branch->id, 'group_id' => $this->group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255712000001', 'admission_date' => today()->format('Y-m-d'), 'photo' => UploadedFile::fake()->image('asha.jpg', 300, 300), 'nominees' => [
             ['name' => 'Neema Musa', 'relationship' => 'Daughter', 'percentage' => 60],
             ['name' => 'Juma Musa', 'relationship' => 'Son', 'percentage' => 40],
+        ], 'family_members' => [
+            ['name' => 'Baraka Musa', 'gender' => 'Male', 'age' => 12, 'relationship' => 'Son', 'education' => 'Primary'],
+            ['name' => 'Neema Musa', 'gender' => 'Female', 'age' => 9, 'relationship' => 'Daughter', 'education' => 'Primary'],
+        ], 'assets' => [
+            ['name' => 'Television', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 350000, 'description' => 'Working condition'],
+            ['name' => 'Goats', 'category' => 'Livestock', 'quantity' => 3, 'estimated_value' => 450000],
         ]])->assertRedirect();
         $member = Member::firstOrFail();
         $originalPhotoPath = $member->photo_path;
         Storage::disk('public')->assertExists($originalPhotoPath);
         $this->assertDatabaseHas('group_memberships', ['member_id' => $member->id, 'group_id' => $this->group->id, 'status' => 'active']);
         $this->assertDatabaseCount('member_nominees', 2);
-        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath))->assertSee('Neema Musa')->assertSee('Juma Musa')->assertSee('Edit nominees');
-        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Neema Musa');
+        $this->assertDatabaseCount('member_family_members', 2);
+        $this->assertDatabaseCount('member_assets', 2);
+        $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath))->assertSee('Neema Musa')->assertSee('Juma Musa')->assertSee('Baraka Musa')->assertSee('Television')->assertSee('Edit nominees');
+        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Applicant Family Members')->assertSee('Family Assets')->assertSee('Baraka Musa')->assertSee('Television');
         $this->put(route('admin.members.update', $member), [
             'branch_id' => $this->branch->id,
             'group_id' => $this->group->id,
@@ -139,12 +147,22 @@ class WebPortalTest extends TestCase
             'nominees' => [
                 ['name' => 'Rehema Musa', 'relationship' => 'Daughter', 'percentage' => 100],
             ],
+            'family_members' => [
+                ['name' => 'Amani Musa', 'gender' => 'Male', 'age' => 15, 'relationship' => 'Son', 'occupation' => 'Student'],
+            ],
+            'assets' => [
+                ['name' => 'Refrigerator', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 600000],
+            ],
         ])->assertRedirect(route('admin.members.show', $member));
         $member->refresh();
         Storage::disk('public')->assertMissing($originalPhotoPath);
         Storage::disk('public')->assertExists($member->photo_path);
         $this->assertDatabaseCount('member_nominees', 1);
         $this->assertDatabaseHas('member_nominees', ['member_id' => $member->id, 'name' => 'Rehema Musa', 'percentage' => 100]);
+        $this->assertDatabaseCount('member_family_members', 1);
+        $this->assertDatabaseHas('member_family_members', ['member_id' => $member->id, 'name' => 'Amani Musa']);
+        $this->assertDatabaseCount('member_assets', 1);
+        $this->assertDatabaseHas('asset_types', ['name' => 'Refrigerator', 'category' => 'Household']);
         $this->get(route('admin.groups.show', $this->group))->assertOk()->assertSee('Kinondoni Group')->assertSee(basename($member->photo_path), false)->assertSee('data-member-photo', false);
         $this->get(route('admin.loan-products.show', $this->product))->assertOk()->assertSee('Weekly Loan');
         $this->get(route('admin.loan-applications.create', ['member_id' => $member->id]))

@@ -68,6 +68,15 @@ class MemberResource extends JsonResource
             'kyc' => $this->whenLoaded('kyc'),
             'active_group_membership' => $this->whenLoaded('activeGroupMembership'),
             'nominees' => $this->whenLoaded('nominees'),
+            'family_members' => $this->whenLoaded('familyMembers'),
+            'assets' => $this->whenLoaded('assets', fn () => $this->assets->map(fn ($asset) => [
+                'id' => $asset->id,
+                'name' => $asset->assetType?->name,
+                'category' => $asset->assetType?->category,
+                'quantity' => $asset->quantity,
+                'estimated_value' => $this->money($asset->estimated_value),
+                'description' => $asset->description,
+            ])->values()),
             'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => [
                 'id' => $document->id,
                 'document_type' => $document->document_type,

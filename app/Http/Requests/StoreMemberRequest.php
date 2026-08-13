@@ -19,6 +19,17 @@ class StoreMemberRequest extends FormRequest
                 )),
             ]);
         }
+
+        foreach (['family_members', 'assets'] as $collection) {
+            if ($this->has($collection)) {
+                $this->merge([
+                    $collection => array_values(array_filter(
+                        $this->input($collection, []),
+                        fn ($row) => collect($row)->contains(fn ($value) => filled($value))
+                    )),
+                ]);
+            }
+        }
     }
 
     public function authorize(): bool
@@ -73,6 +84,21 @@ class StoreMemberRequest extends FormRequest
             'nominees.*.name' => ['required', 'string', 'max:150'],
             'nominees.*.relationship' => ['required', 'string', 'max:100'],
             'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
+            'family_members' => ['nullable', 'array'],
+            'family_members.*.name' => ['required', 'string', 'max:150'],
+            'family_members.*.gender' => ['nullable', 'string', 'max:30'],
+            'family_members.*.age' => ['nullable', 'integer', 'min:0', 'max:150'],
+            'family_members.*.relationship' => ['nullable', 'string', 'max:100'],
+            'family_members.*.education' => ['nullable', 'string', 'max:100'],
+            'family_members.*.marital_status' => ['nullable', 'string', 'max:50'],
+            'family_members.*.occupation' => ['nullable', 'string', 'max:150'],
+            'family_members.*.secondary_occupation' => ['nullable', 'string', 'max:150'],
+            'assets' => ['nullable', 'array'],
+            'assets.*.name' => ['required', 'string', 'max:150'],
+            'assets.*.category' => ['nullable', 'string', 'max:100'],
+            'assets.*.quantity' => ['required', 'integer', 'min:1'],
+            'assets.*.estimated_value' => ['nullable', 'numeric', 'min:0'],
+            'assets.*.description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

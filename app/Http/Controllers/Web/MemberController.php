@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMemberRequest;
+use App\Models\AssetType;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MemberGroup;
@@ -46,6 +47,8 @@ class MemberController extends Controller
                 }
                 $kyc = Arr::pull($data, 'kyc');
                 $nominees = Arr::pull($data, 'nominees', []);
+                $familyMembers = Arr::pull($data, 'family_members', []);
+                $assets = Arr::pull($data, 'assets', []);
                 $member = Member::create([...$data, 'membership_number' => $numbers->member(), 'created_by' => $request->user()->id]);
                 if ($kyc) {
                     $member->kyc()->create($kyc);
@@ -54,6 +57,10 @@ class MemberController extends Controller
                 foreach ($nominees as $nominee) {
                     $member->nominees()->create([...$nominee, 'attested_at' => now()]);
                 }
+                foreach ($familyMembers as $familyMember) {
+                    $member->familyMembers()->create($familyMember);
+                }
+                $this->createAssets($member, $assets);
                 activity()->causedBy($request->user())->performedOn($member)->log('Member registered');
 
                 return $member;
@@ -81,6 +88,8 @@ class MemberController extends Controller
             'passbookReplacements',
             'documents',
             'nominees',
+            'familyMembers',
+            'assets.assetType',
         ]);
 
         $applications = $member->loanApplications()
@@ -109,7 +118,7 @@ class MemberController extends Controller
 
     public function edit(Request $request, Member $member)
     {
-        $member->load('kyc', 'nominees');
+        $member->load('kyc', 'nominees', 'familyMembers', 'assets.assetType');
 
         return view('admin.members.create', $this->formData($request, $member, $member->group_id));
     }
@@ -125,6 +134,17 @@ class MemberController extends Controller
                         || (float) ($row['percentage'] ?? 0) > 0
                 )),
             ]);
+        }
+
+        foreach (['family_members', 'assets'] as $collection) {
+            if ($request->has($collection)) {
+                $request->merge([
+                    $collection => array_values(array_filter(
+                        $request->input($collection, []),
+                        fn ($row) => collect($row)->contains(fn ($value) => filled($value))
+                    )),
+                ]);
+            }
         }
 
         $data = $request->validate([
@@ -166,6 +186,21 @@ class MemberController extends Controller
             'nominees.*.name' => ['required', 'string', 'max:150'],
             'nominees.*.relationship' => ['required', 'string', 'max:100'],
             'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
+            'family_members' => ['nullable', 'array'],
+            'family_members.*.name' => ['required', 'string', 'max:150'],
+            'family_members.*.gender' => ['nullable', 'string', 'max:30'],
+            'family_members.*.age' => ['nullable', 'integer', 'min:0', 'max:150'],
+            'family_members.*.relationship' => ['nullable', 'string', 'max:100'],
+            'family_members.*.education' => ['nullable', 'string', 'max:100'],
+            'family_members.*.marital_status' => ['nullable', 'string', 'max:50'],
+            'family_members.*.occupation' => ['nullable', 'string', 'max:150'],
+            'family_members.*.secondary_occupation' => ['nullable', 'string', 'max:150'],
+            'assets' => ['nullable', 'array'],
+            'assets.*.name' => ['required', 'string', 'max:150'],
+            'assets.*.category' => ['nullable', 'string', 'max:100'],
+            'assets.*.quantity' => ['required', 'integer', 'min:1'],
+            'assets.*.estimated_value' => ['nullable', 'numeric', 'min:0'],
+            'assets.*.description' => ['nullable', 'string', 'max:1000'],
         ]);
 
         if (array_key_exists('nominees', $data) && count($data['nominees']) > 0
@@ -189,6 +224,8 @@ class MemberController extends Controller
             DB::transaction(function () use ($member, $data, $memberships, $group) {
                 $kyc = Arr::pull($data, 'kyc');
                 $nominees = Arr::pull($data, 'nominees');
+                $familyMembers = Arr::pull($data, 'family_members');
+                $assets = Arr::pull($data, 'assets');
                 $groupChanged = (int) $member->group_id !== (int) $data['group_id'];
                 $member->update($data);
 
@@ -205,6 +242,18 @@ class MemberController extends Controller
                     foreach ($nominees as $nominee) {
                         $member->nominees()->create([...$nominee, 'attested_at' => now()]);
                     }
+                }
+
+                if ($familyMembers !== null) {
+                    $member->familyMembers()->delete();
+                    foreach ($familyMembers as $familyMember) {
+                        $member->familyMembers()->create($familyMember);
+                    }
+                }
+
+                if ($assets !== null) {
+                    $member->assets()->delete();
+                    $this->createAssets($member, $assets);
                 }
             });
         } catch (Throwable $exception) {
@@ -258,5 +307,18 @@ class MemberController extends Controller
             'groups' => MemberGroup::with('branch')->where('status', true)->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get(),
             'selectedGroup' => $selectedGroup,
         ];
+    }
+
+    private function createAssets(Member $member, array $assets): void
+    {
+        foreach ($assets as $asset) {
+            $name = Arr::pull($asset, 'name');
+            $category = Arr::pull($asset, 'category');
+            $assetType = AssetType::firstOrCreate(
+                ['name' => $name],
+                ['category' => $category, 'status' => true]
+            );
+            $member->assets()->create([...$asset, 'asset_type_id' => $assetType->id]);
+        }
     }
 }

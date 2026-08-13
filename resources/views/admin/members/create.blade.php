@@ -11,6 +11,29 @@
         while (count($nomineeRows) < 3) {
             $nomineeRows[] = ['name' => '', 'relationship' => '', 'percentage' => ''];
         }
+        $familyRows = old('family_members', $member->familyMembers?->map(fn ($family) => [
+            'name' => $family->name,
+            'gender' => $family->gender,
+            'age' => $family->age,
+            'relationship' => $family->relationship,
+            'education' => $family->education,
+            'marital_status' => $family->marital_status,
+            'occupation' => $family->occupation,
+            'secondary_occupation' => $family->secondary_occupation,
+        ])->values()->all() ?? []);
+        while (count($familyRows) < 2) {
+            $familyRows[] = [];
+        }
+        $assetRows = old('assets', $member->assets?->map(fn ($asset) => [
+            'name' => $asset->assetType?->name,
+            'category' => $asset->assetType?->category,
+            'quantity' => $asset->quantity,
+            'estimated_value' => $asset->estimated_value,
+            'description' => $asset->description,
+        ])->values()->all() ?? []);
+        while (count($assetRows) < 2) {
+            $assetRows[] = [];
+        }
     @endphp
     <div class="page-head">
         <div>
@@ -199,6 +222,61 @@
                         placeholder="In Tanzanian Shillings"></label>
             </div>
 
+            <h3 id="family-members" class="section-title" style="margin-top:25px">Applicant Family Members / Taarifa ya Wanafamilia wa Mwombaji</h3>
+            <p class="muted">Optional. Add each member of the applicant's household or family.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Name</th><th>Gender</th><th>Age</th><th>Relationship</th><th>Education</th><th>Marital status</th><th>Occupation</th><th>Other occupation</th><th></th></tr></thead>
+                    <tbody id="family-members-body">
+                        @foreach($familyRows as $index => $family)
+                            <tr>
+                                <td><input name="family_members[{{ $index }}][name]" value="{{ $family['name'] ?? '' }}" placeholder="Full name"></td>
+                                <td><select name="family_members[{{ $index }}][gender]" data-select2="false"><option value="">Select</option>@foreach(['Female', 'Male', 'Other'] as $value)<option value="{{ $value }}" @selected(($family['gender'] ?? '') === $value)>{{ $value }}</option>@endforeach</select></td>
+                                <td><input type="number" min="0" max="150" name="family_members[{{ $index }}][age]" value="{{ $family['age'] ?? '' }}"></td>
+                                <td><input name="family_members[{{ $index }}][relationship]" value="{{ $family['relationship'] ?? '' }}" placeholder="e.g. Child"></td>
+                                <td><input name="family_members[{{ $index }}][education]" value="{{ $family['education'] ?? '' }}"></td>
+                                <td><input name="family_members[{{ $index }}][marital_status]" value="{{ $family['marital_status'] ?? '' }}"></td>
+                                <td><input name="family_members[{{ $index }}][occupation]" value="{{ $family['occupation'] ?? '' }}"></td>
+                                <td><input name="family_members[{{ $index }}][secondary_occupation]" value="{{ $family['secondary_occupation'] ?? '' }}"></td>
+                                <td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-secondary" id="add-family-member" style="margin-top:10px">+ Add family member</button>
+
+            <h3 id="family-assets" class="section-title" style="margin-top:25px">Family Assets / Taarifa ya Rasimali za Familia</h3>
+            <p class="muted">Optional. Record household assets, quantities and their estimated values.</p>
+            <datalist id="common-assets">
+                @foreach(['Television', 'Refrigerator', 'Sofa', 'Bed', 'Radio', 'Cattle', 'Goats', 'Chickens', 'Land', 'House', 'Vehicle', 'Business equipment'] as $assetName)<option value="{{ $assetName }}">@endforeach
+            </datalist>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Asset/item</th><th>Category</th><th>Quantity</th><th>Estimated value (TZS)</th><th>Description</th><th></th></tr></thead>
+                    <tbody id="family-assets-body">
+                        @foreach($assetRows as $index => $asset)
+                            <tr>
+                                <td><input list="common-assets" name="assets[{{ $index }}][name]" value="{{ $asset['name'] ?? '' }}" placeholder="Asset name"></td>
+                                <td><input name="assets[{{ $index }}][category]" value="{{ $asset['category'] ?? '' }}" placeholder="Household, livestock..."></td>
+                                <td><input type="number" min="1" name="assets[{{ $index }}][quantity]" value="{{ $asset['quantity'] ?? '' }}" placeholder="1"></td>
+                                <td><input type="number" min="0" step="0.01" name="assets[{{ $index }}][estimated_value]" value="{{ $asset['estimated_value'] ?? '' }}"></td>
+                                <td><input name="assets[{{ $index }}][description]" value="{{ $asset['description'] ?? '' }}"></td>
+                                <td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-secondary" id="add-family-asset" style="margin-top:10px">+ Add family asset</button>
+
+            <template id="family-member-row-template">
+                <tr><td><input name="family_members[__INDEX__][name]" placeholder="Full name"></td><td><select name="family_members[__INDEX__][gender]" data-select2="false"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></td><td><input type="number" min="0" max="150" name="family_members[__INDEX__][age]"></td><td><input name="family_members[__INDEX__][relationship]" placeholder="e.g. Child"></td><td><input name="family_members[__INDEX__][education]"></td><td><input name="family_members[__INDEX__][marital_status]"></td><td><input name="family_members[__INDEX__][occupation]"></td><td><input name="family_members[__INDEX__][secondary_occupation]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
+            </template>
+            <template id="family-asset-row-template">
+                <tr><td><input list="common-assets" name="assets[__INDEX__][name]" placeholder="Asset name"></td><td><input name="assets[__INDEX__][category]" placeholder="Household, livestock..."></td><td><input type="number" min="1" name="assets[__INDEX__][quantity]" placeholder="1"></td><td><input type="number" min="0" step="0.01" name="assets[__INDEX__][estimated_value]"></td><td><input name="assets[__INDEX__][description]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
+            </template>
+
             <h3 id="nominees" class="section-title" style="margin-top:25px">👥 Nominees / Wateule</h3>
             <p class="muted">Optional. Leave all rows blank if no nominee is being recorded. If provided, percentage shares must total exactly 100%.</p>
             <div class="table-wrap">
@@ -251,6 +329,19 @@
             const photoInput = document.getElementById('member-photo-input');
             const photoPreview = document.getElementById('member-photo-preview');
             const photoPlaceholder = document.getElementById('member-photo-placeholder');
+            let familyIndex = {{ count($familyRows) }};
+            let assetIndex = {{ count($assetRows) }};
+
+            function appendRepeatRow(bodyId, templateId, index) {
+                const markup = document.getElementById(templateId).innerHTML.replaceAll('__INDEX__', index);
+                document.getElementById(bodyId).insertAdjacentHTML('beforeend', markup);
+            }
+
+            document.getElementById('add-family-member').addEventListener('click', () => appendRepeatRow('family-members-body', 'family-member-row-template', familyIndex++));
+            document.getElementById('add-family-asset').addEventListener('click', () => appendRepeatRow('family-assets-body', 'family-asset-row-template', assetIndex++));
+            document.addEventListener('click', event => {
+                if (event.target.classList.contains('remove-repeat-row')) event.target.closest('tr').remove();
+            });
 
             photoInput.addEventListener('change', () => {
                 const file = photoInput.files[0];

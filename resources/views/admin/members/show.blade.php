@@ -194,6 +194,30 @@
         <br>
 
         <div class="card">
+            <div class="card-head"><h2>Applicant Family Members / Wanafamilia</h2><div class="head-actions"><span>{{ $member->familyMembers->count() }}</span>@can('edit-members')<a class="btn btn-sm btn-secondary" href="{{ route('admin.members.edit', $member) }}#family-members">Edit family</a>@endcan</div></div>
+            <div class="table-wrap"><table><thead><tr><th>Name</th><th>Gender</th><th>Age</th><th>Relationship</th><th>Education</th><th>Marital status</th><th>Occupation</th><th>Other occupation</th></tr></thead><tbody>
+                @forelse($member->familyMembers as $family)
+                    <tr><td>{{ $family->name }}</td><td>{{ $display($family->gender) }}</td><td>{{ $family->age ?? '—' }}</td><td>{{ $display($family->relationship) }}</td><td>{{ $display($family->education) }}</td><td>{{ $display($family->marital_status) }}</td><td>{{ $display($family->occupation) }}</td><td>{{ $display($family->secondary_occupation) }}</td></tr>
+                @empty
+                    <tr><td colspan="8" class="empty">No family members recorded.</td></tr>
+                @endforelse
+            </tbody></table></div>
+        </div>
+        <br>
+
+        <div class="card">
+            <div class="card-head"><h2>Family Assets / Rasimali za Familia</h2><div class="head-actions"><span>{{ $member->assets->count() }}</span>@can('edit-members')<a class="btn btn-sm btn-secondary" href="{{ route('admin.members.edit', $member) }}#family-assets">Edit assets</a>@endcan</div></div>
+            <div class="table-wrap"><table><thead><tr><th>Asset/item</th><th>Category</th><th>Quantity</th><th>Estimated value</th><th>Description</th></tr></thead><tbody>
+                @forelse($member->assets as $asset)
+                    <tr><td>{{ $display($asset->assetType?->name) }}</td><td>{{ $display($asset->assetType?->category) }}</td><td>{{ $asset->quantity }}</td><td class="money">{{ $money($asset->estimated_value) }}</td><td>{{ $display($asset->description) }}</td></tr>
+                @empty
+                    <tr><td colspan="5" class="empty">No family assets recorded.</td></tr>
+                @endforelse
+            </tbody></table></div>
+        </div>
+        <br>
+
+        <div class="card">
             <div class="card-head"><h2>Security account / Akaunti ya Usalama</h2><strong class="money">{{ $money($member->securityAccount?->balance) }}</strong></div>
             @can('manage-security')
             <form class="card-body" method="POST" action="{{ route('admin.security.store', $member) }}">

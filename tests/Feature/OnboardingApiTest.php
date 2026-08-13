@@ -62,6 +62,12 @@ class OnboardingApiTest extends TestCase
                 ['name' => 'Child One', 'relationship' => 'Child', 'percentage' => 60],
                 ['name' => 'Child Two', 'relationship' => 'Child', 'percentage' => 40],
             ],
+            'family_members' => [
+                ['name' => 'Juma Musa', 'gender' => 'Male', 'age' => 14, 'relationship' => 'Son', 'education' => 'Secondary'],
+            ],
+            'assets' => [
+                ['name' => 'Sofa', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 500000],
+            ],
         ])->assertCreated()->assertJsonPath('message', 'Member onboarding completed.')
             ->assertJsonPath('data.group.id', $groupId)
             ->assertJsonPath('data.kyc.business_name', 'Asha Produce');
@@ -70,6 +76,11 @@ class OnboardingApiTest extends TestCase
         $this->assertDatabaseHas('group_memberships', ['member_id' => $memberId, 'group_id' => $groupId, 'status' => 'active']);
         $this->assertDatabaseHas('member_nominees', ['member_id' => $memberId, 'percentage' => 60]);
         $this->assertCount(2, $memberResponse->json('data.nominees'));
+        $this->assertDatabaseHas('member_family_members', ['member_id' => $memberId, 'name' => 'Juma Musa']);
+        $this->assertDatabaseHas('asset_types', ['name' => 'Sofa', 'category' => 'Household']);
+        $this->assertDatabaseHas('member_assets', ['member_id' => $memberId, 'quantity' => 1, 'estimated_value' => 500000]);
+        $this->assertSame('Juma Musa', $memberResponse->json('data.family_members.0.name'));
+        $this->assertSame('Sofa', $memberResponse->json('data.assets.0.name'));
 
         $product = LoanProduct::create([
             'name' => 'Weekly Business Loan', 'code' => 'ONBOARD-WEEKLY', 'minimum_amount' => 100000,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\StoreMemberRequest;
 use App\Http\Resources\MemberResource;
+use App\Models\AssetType;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Services\GroupMembershipService;
@@ -30,6 +31,8 @@ class MemberController extends ApiController
             $data = $request->validated();
             $kyc = Arr::pull($data, 'kyc');
             $nominees = Arr::pull($data, 'nominees', []);
+            $familyMembers = Arr::pull($data, 'family_members', []);
+            $assets = Arr::pull($data, 'assets', []);
             $member = Member::create([...$data, 'membership_number' => $numbers->member(), 'created_by' => $request->user()->id]);
             if ($kyc) {
                 $member->kyc()->create($kyc);
@@ -38,6 +41,10 @@ class MemberController extends ApiController
             foreach ($nominees as $nominee) {
                 $member->nominees()->create([...$nominee, 'attested_at' => now()]);
             }
+            foreach ($familyMembers as $familyMember) {
+                $member->familyMembers()->create($familyMember);
+            }
+            $this->createAssets($member, $assets);
             activity()->causedBy($request->user())->performedOn($member)->log('Member registered');
 
             return $member;
@@ -82,6 +89,8 @@ class MemberController extends ApiController
             'kyc',
             'activeGroupMembership',
             'nominees',
+            'familyMembers',
+            'assets.assetType',
             'documents.uploadedBy',
             'securityAccount.transactions',
             'passbookReplacements',
@@ -100,5 +109,15 @@ class MemberController extends ApiController
             'loans.clearance',
             'loans.defaultNotices',
         ]);
+    }
+
+    private function createAssets(Member $member, array $assets): void
+    {
+        foreach ($assets as $asset) {
+            $name = Arr::pull($asset, 'name');
+            $category = Arr::pull($asset, 'category');
+            $assetType = AssetType::firstOrCreate(['name' => $name], ['category' => $category, 'status' => true]);
+            $member->assets()->create([...$asset, 'asset_type_id' => $assetType->id]);
+        }
     }
 }

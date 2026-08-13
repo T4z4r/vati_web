@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AssetType;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
@@ -30,6 +31,8 @@ class OnboardingService
         return DB::transaction(function () use ($data, $user) {
             $kyc = Arr::pull($data, 'kyc');
             $nominees = Arr::pull($data, 'nominees', []);
+            $familyMembers = Arr::pull($data, 'family_members', []);
+            $assets = Arr::pull($data, 'assets', []);
             $group = MemberGroup::query()->lockForUpdate()->findOrFail($data['group_id']);
             if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
                 throw new DomainException('Member onboarding requires an active group in the selected branch.');
@@ -43,9 +46,18 @@ class OnboardingService
             foreach ($nominees as $nominee) {
                 $member->nominees()->create([...$nominee, 'attested_at' => now()]);
             }
+            foreach ($familyMembers as $familyMember) {
+                $member->familyMembers()->create($familyMember);
+            }
+            foreach ($assets as $asset) {
+                $name = Arr::pull($asset, 'name');
+                $category = Arr::pull($asset, 'category');
+                $assetType = AssetType::firstOrCreate(['name' => $name], ['category' => $category, 'status' => true]);
+                $member->assets()->create([...$asset, 'asset_type_id' => $assetType->id]);
+            }
             activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group->id])->log('Member onboarded');
 
-            return $member->load('branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'activeGroupMembership', 'nominees', 'documents.uploadedBy', 'securityAccount.transactions', 'passbookReplacements');
+            return $member->load('branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'activeGroupMembership', 'nominees', 'familyMembers', 'assets.assetType', 'documents.uploadedBy', 'securityAccount.transactions', 'passbookReplacements');
         });
     }
 

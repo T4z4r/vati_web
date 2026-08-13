@@ -109,6 +109,12 @@ class VatiWorkflowTest extends TestCase
                 ['name' => 'Child One', 'relationship' => 'Child', 'percentage' => 60],
                 ['name' => 'Child Two', 'relationship' => 'Child', 'percentage' => 40],
             ],
+            'family_members' => [
+                ['name' => 'Juma Musa Junior', 'gender' => 'Male', 'age' => 10, 'relationship' => 'Son'],
+            ],
+            'assets' => [
+                ['name' => 'Radio', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 80000],
+            ],
         ];
 
         $response = $this->postJson('/api/v1/members', $payload)
@@ -118,16 +124,22 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('data.guardian_name', 'Juma Musa')
             ->assertJsonPath('data.kyc.house_number', 'KJ-42')
             ->assertJsonPath('data.nominees.1.percentage', '40.00')
+            ->assertJsonPath('data.family_members.0.name', 'Juma Musa Junior')
+            ->assertJsonPath('data.assets.0.name', 'Radio')
             ->assertJsonPath('data.issued_by.id', $this->admin->id)
             ->assertJsonCount(2, 'data.nominees')
             ->assertJsonCount(0, 'data.loans');
         $this->assertDatabaseHas('group_memberships', ['member_id' => 1, 'group_id' => $this->group->id, 'status' => 'active']);
         $this->assertDatabaseHas('member_kycs', ['member_id' => 1, 'house_number' => 'KJ-42', 'number_of_dependants' => 2]);
         $this->assertDatabaseCount('member_nominees', 2);
+        $this->assertDatabaseHas('member_family_members', ['member_id' => 1, 'name' => 'Juma Musa Junior']);
+        $this->assertDatabaseHas('member_assets', ['member_id' => 1, 'quantity' => 1, 'estimated_value' => 80000]);
         $this->getJson('/api/v1/members/'.$response->json('data.id'))
             ->assertOk()
             ->assertJsonPath('data.group.meeting_day', null)
             ->assertJsonPath('data.kyc.business_name', 'Asha Produce')
+            ->assertJsonPath('data.family_members.0.name', 'Juma Musa Junior')
+            ->assertJsonPath('data.assets.0.name', 'Radio')
             ->assertJsonCount(2, 'data.nominees');
         $this->postJson('/api/v1/members', $payload)->assertUnprocessable()->assertJsonValidationErrors('phone');
     }
