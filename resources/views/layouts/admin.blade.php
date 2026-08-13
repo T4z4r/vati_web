@@ -11,14 +11,11 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/page-loader.css') }}">
     <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
-    <script src="{{ asset('js/page-loader.js') }}" defer></script>
     <script src="{{ asset('js/form-loading.js') }}" defer></script>
 </head>
 
 <body class="admin-shell" data-loading-text="{{ __('Loading...') }}">
-    <x-page-loader />
     <aside class="sidebar" id="sidebar" aria-label="Sidebar">
         <a class="brand light" href="{{ route('admin.dashboard') }}"><img class="brand-mark"
                 src="{{ asset('images/vati_app_icon_foreground.png') }}"
