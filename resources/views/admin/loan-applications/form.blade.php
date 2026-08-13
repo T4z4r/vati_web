@@ -95,8 +95,8 @@
                 <label class="full">Loan purpose
                     <textarea name="loan_purpose" required>{{ old('loan_purpose', $application->loan_purpose) }}</textarea>
                 </label>
-                <label class="full">Business summary
-                    <textarea id="business-summary" name="business_summary" required>{{ old('business_summary', $application->business_summary) }}</textarea>
+                <label class="full">Business summary <span class="muted">(optional)</span>
+                    <textarea id="business-summary" name="business_summary">{{ old('business_summary', $application->business_summary) }}</textarea>
                 </label>
             </div>
 

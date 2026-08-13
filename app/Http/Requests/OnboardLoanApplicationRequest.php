@@ -39,7 +39,7 @@ class OnboardLoanApplicationRequest extends FormRequest
             'refinancing_amount' => ['nullable', 'numeric', 'min:0'],
             'increment_amount' => ['nullable', 'numeric', 'min:0'],
             'loan_purpose' => ['required', 'string', 'max:2000'],
-            'business_summary' => ['required', 'string', 'max:5000'],
+            'business_summary' => ['nullable', 'string', 'max:5000'],
             'assessment' => ['required', 'array'],
             'assessment.core_business_income' => ['required', 'numeric', 'min:0'],
             'assessment.other_income' => ['nullable', 'numeric', 'min:0'],

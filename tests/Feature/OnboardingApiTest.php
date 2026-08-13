@@ -83,7 +83,6 @@ class OnboardingApiTest extends TestCase
             'requested_amount' => 600000,
             'duration_months' => 6,
             'loan_purpose' => 'Increase produce inventory',
-            'business_summary' => 'Established food trader serving Ubungo Market.',
             'assessment' => [
                 'core_business_income' => 800000,
                 'other_income' => 100000,
@@ -101,7 +100,7 @@ class OnboardingApiTest extends TestCase
             ->assertJsonPath('data.status', 'draft');
 
         $applicationId = $applicationResponse->json('data.id');
-        $this->assertDatabaseHas('loan_applications', ['id' => $applicationId, 'branch_id' => $branch->id, 'group_id' => $groupId]);
+        $this->assertDatabaseHas('loan_applications', ['id' => $applicationId, 'branch_id' => $branch->id, 'group_id' => $groupId, 'business_summary' => null]);
         $this->assertDatabaseCount('loan_utilizations', 2);
         $this->assertGreaterThan(0, (float) $applicationResponse->json('data.assessment.debt_service_ratio'));
     }

@@ -288,7 +288,6 @@ class WebPortalTest extends TestCase
             'refinancing_amount' => 0,
             'increment_amount' => 0,
             'loan_purpose' => 'Working capital expansion',
-            'business_summary' => 'Established group-based trading business.',
             'assessment' => ['core_business_income' => 500000, 'other_income' => 0, 'business_expenses' => 100000, 'household_expenses' => 100000, 'existing_external_debt' => 0],
         ];
     }
