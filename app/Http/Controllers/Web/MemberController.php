@@ -10,6 +10,7 @@ use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Services\GroupMembershipService;
 use App\Services\NumberGeneratorService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -114,6 +115,37 @@ class MemberController extends Controller
             ->get();
 
         return view('admin.members.show', compact('member', 'applications', 'loans'));
+    }
+
+    public function export(Member $member)
+    {
+        $member->load([
+            'branch.area.region',
+            'branch.manager',
+            'group.loanOfficer',
+            'createdBy',
+            'kyc',
+            'nominees',
+            'familyMembers',
+            'assets.assetType',
+            'securityAccount.transactions',
+            'passbookReplacements',
+            'loans' => fn ($query) => $query->latest(),
+            'loans.product',
+            'loans.application.guarantors',
+            'loans.cycles',
+            'loans.installments',
+            'loans.installmentRecords.collector',
+            'loans.securityTransactions.collectedBy',
+            'loans.securityTransactions.approvedBy',
+            'loans.payments.allocations',
+            'loans.settlement',
+            'loans.clearance',
+        ]);
+
+        return Pdf::loadView('pdf.member-passbook', compact('member'))
+            ->setPaper('a4')
+            ->download('VATI-member-'.$member->membership_number.'.pdf');
     }
 
     public function edit(Request $request, Member $member)

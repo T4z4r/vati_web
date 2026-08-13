@@ -159,6 +159,10 @@ class WebPortalTest extends TestCase
         $this->assertDatabaseCount('member_family_members', 2);
         $this->assertDatabaseCount('member_assets', 2);
         $this->get(route('admin.members.show', $member))->assertOk()->assertSeeInOrder(['Asha', 'Musa'])->assertSee(basename($originalPhotoPath))->assertSee('Neema Musa')->assertSee('Juma Musa')->assertSee('Baraka Musa')->assertSee('Television')->assertSee('Edit nominees');
+        $this->get(route('admin.members.export', $member))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload('VATI-member-'.$member->membership_number.'.pdf');
         $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Applicant Family Members')->assertSee('Family Assets')->assertSee('Baraka Musa')->assertSee('Television');
         $this->put(route('admin.members.update', $member), [
             'branch_id' => $this->branch->id,
@@ -234,7 +238,7 @@ class WebPortalTest extends TestCase
                 'Use of loan amount',
                 'Nominee information',
                 'Guarantor declarations',
-                'Document checklist',
+                'Optional attachments',
                 'Group witnesses',
                 'Recommendations and verification',
             ]);

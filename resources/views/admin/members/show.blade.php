@@ -16,6 +16,7 @@
     </div>
     <div class="head-actions">
         <span class="badge {{ $member->status }}">{{ ucfirst($member->status) }}</span>
+        <a class="btn btn-gold" href="{{ route('admin.members.export', $member) }}">Download member PDF</a>
         @can('create-loan-applications')
             <a class="btn btn-primary" href="{{ route('admin.loan-applications.create', ['member_id' => $member->id]) }}">New loan application</a>
         @endcan

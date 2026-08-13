@@ -54,6 +54,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::resource('members', MemberController::class)->only(['edit', 'update'])->middleware('permission:edit-members');
     Route::resource('members', MemberController::class)->only(['destroy'])->middleware('permission:delete-members');
     Route::resource('members', MemberController::class)->only(['index', 'show'])->middleware('permission:view-members');
+    Route::get('members/{member}/export', [MemberController::class, 'export'])->name('members.export')->middleware('permission:view-members');
     Route::put('members/{member}/kyc', [MemberController::class, 'updateKyc'])->name('members.kyc.update')->middleware('permission:edit-members');
     Route::post('members/{member}/documents', [MemberDocumentController::class, 'store'])->name('members.documents.store')->middleware('permission:edit-members');
     Route::delete('members/{member}/documents/{document}', [MemberDocumentController::class, 'destroy'])->name('members.documents.destroy')->middleware('permission:delete-members');
