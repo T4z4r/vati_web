@@ -65,6 +65,22 @@ class WebPortalTest extends TestCase
         }
     }
 
+    public function test_management_financial_summary_is_hidden_from_operational_staff(): void
+    {
+        $loanOfficer = User::factory()->create(['branch_id' => $this->branch->id]);
+        $loanOfficer->assignRole('loan_officer');
+
+        $this->actingAs($loanOfficer)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee(__('Management financial summary'))
+            ->assertDontSee(__('Total loan portfolio'))
+            ->assertDontSee(__('Total posted payments'))
+            ->assertDontSee(__('Repayment profit / loss'))
+            ->assertDontSee(__('Total loan disbursement'))
+            ->assertDontSee(__('Total loan applications'));
+    }
+
     public function test_admin_forms_load_select2_and_placeholder_enhancements(): void
     {
         $this->actingAs($this->admin)
