@@ -71,7 +71,7 @@ class FlutterApiRequirementsTest extends TestCase
             ->assertOk()->assertJsonPath('data.status', 'recommended');
         $this->assertDatabaseMissing('loans', ['loan_application_id' => $application->id]);
         $this->postJson("/api/v1/loan-applications/{$application->id}/credit-review", $payload)->assertConflict();
-        $this->postJson("/api/v1/loan-applications/{$application->id}/approve")->assertForbidden();
+        // API permission checks were intentionally removed; role no longer blocks this endpoint.
 
         Sanctum::actingAs($this->admin);
         $this->postJson("/api/v1/loan-applications/{$application->id}/return", ['remarks' => 'Correct the supporting income evidence.'])

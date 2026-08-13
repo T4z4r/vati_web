@@ -7,8 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') · VATI</title>
     <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
+    <link rel="stylesheet" href="{{ asset('css/icons.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/vati.css') }}">
     <link rel="stylesheet" href="{{ asset('css/form-loading.css') }}">
