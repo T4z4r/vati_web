@@ -29,7 +29,7 @@
             <p>Capture terms, affordability, and the complete use-of-funds plan.</p>
         </div>
         <a class="btn btn-secondary"
-            href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}">←
+            href="{{ $editing ? route('admin.loan-applications.show', $application) : route('admin.loan-applications.index') }}"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
             Back</a>
     </div>
 

@@ -6,7 +6,7 @@
             <p class="eyebrow">{{ __('CREDIT CONFIGURATION') }}</p>
             <h1>{{ $product->exists ? __('Edit') : __('Create') }} {{ __('loan product') }}</h1>
             <p>{{ __('Configure amount, duration, interest, fees, security, and witnesses.') }}</p>
-        </div><a class="btn btn-secondary" href="{{ route('admin.loan-products.index') }}">← {{ __('Back') }}</a>
+        </div><a class="btn btn-secondary" href="{{ route('admin.loan-products.index') }}"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span> {{ __('Back') }}</a>
     </div>
     <form class="card" method="POST"
         action="{{ $product->exists ? route('admin.loan-products.update', $product) : route('admin.loan-products.store') }}">@csrf

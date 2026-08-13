@@ -95,7 +95,7 @@
             <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
                 <button type="button" class="text-indigo-600 hover:text-indigo-700 font-semibold text-sm"
                     onclick="document.getElementById('cycle-form-{{ $loan->id }}').classList.toggle('hidden')">
-                    + Add Loan Cycle
+                    <span class="material-symbols-outlined" aria-hidden="true">add_circle</span> Add Loan Cycle
                 </button>
             </div>
 

@@ -7,7 +7,7 @@
             <h1>{{ __('Member groups') }}</h1>
             <p>{{ __('Manage lending groups, officers, membership, and portfolio context.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.groups.create') }}">+ {{ __('Create group') }}</a>
+        <a class="btn btn-primary" href="{{ route('admin.groups.create') }}"><span class="material-symbols-outlined" aria-hidden="true">add</span> {{ __('Create group') }}</a>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Search name or group code') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>

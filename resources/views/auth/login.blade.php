@@ -8,6 +8,8 @@
     <meta name="color-scheme" content="light">
     <title>Sign in | VATI Microfinance</title>
     <link rel="icon" type="image/png" href="{{ asset('images/vati_app_icon.png') }}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
     <style>
         :root {
             --forest-950: #052418;
@@ -432,6 +434,7 @@
             height: 18px;
             transform: translateY(-50%);
             color: #7a8a80;
+            font-size: 20px;
             pointer-events: none;
         }
 
@@ -489,15 +492,18 @@
             right: 8px;
             top: 50%;
             height: 34px;
-            padding: 0 10px;
+            width: 36px;
+            padding: 0;
             transform: translateY(-50%);
             border: 0;
             border-radius: 8px;
             color: #68766d;
             background: transparent;
-            font-size: 9px;
-            font-weight: 800;
             cursor: pointer;
+        }
+
+        .password-toggle .material-symbols-outlined {
+            font-size: 20px;
         }
 
         .password-toggle:hover,
@@ -586,24 +592,10 @@
             background: #f8fbf9;
         }
 
-        .shield {
-            position: relative;
+        .secure-note > .material-symbols-outlined {
             flex: 0 0 27px;
-            height: 30px;
-            background: var(--forest-100);
-            clip-path: polygon(50% 0, 95% 15%, 87% 72%, 50% 100%, 13% 72%, 5% 15%);
-        }
-
-        .shield::after {
-            content: "";
-            position: absolute;
-            left: 9px;
-            top: 8px;
-            width: 8px;
-            height: 5px;
-            border-left: 2px solid var(--forest-700);
-            border-bottom: 2px solid var(--forest-700);
-            transform: rotate(-45deg);
+            color: var(--forest-700);
+            font-size: 27px;
         }
 
         .secure-note strong,
@@ -865,11 +857,7 @@
                 <div class="field @error('email') invalid @enderror">
                     <div class="label-row"><label for="email">{{ __('Email address') }}</label></div>
                     <div class="control">
-                        <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.7" aria-hidden="true">
-                            <rect x="3" y="5" width="18" height="14" rx="3" />
-                            <path d="m4 7 8 6 8-6" />
-                        </svg>
+                        <span class="material-symbols-outlined control-icon" aria-hidden="true">mail</span>
                         <input id="email" type="email" name="email" value="{{ old('email') }}"
                             placeholder="name@vati.co.tz" autocomplete="username" inputmode="email" required autofocus>
                     </div>
@@ -886,16 +874,12 @@
                     <div class="label-row"><label for="password">{{ __('Password') }}</label><span id="caps-warning"
                             aria-live="polite">{{ __('Caps Lock is on') }}</span></div>
                     <div class="control">
-                        <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.7" aria-hidden="true">
-                            <rect x="4" y="10" width="16" height="11" rx="3" />
-                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                        </svg>
+                        <span class="material-symbols-outlined control-icon" aria-hidden="true">lock</span>
                         <input id="password" type="password" name="password"
                             placeholder="{{ __('Enter your password') }}" autocomplete="current-password" required>
                         <button class="password-toggle" type="button" id="password-toggle"
                             aria-label="{{ __('Show password') }}" aria-pressed="false"><span
-                                class="toggle-text">{{ __('SHOW') }}</span></button>
+                                class="material-symbols-outlined toggle-icon" aria-hidden="true">visibility</span></button>
                     </div>
                     <small class="field-help">
                         @error('password')
@@ -911,12 +895,12 @@
                 </div>
 
                 <button class="submit-button" type="submit" id="login-button">
-                    <span class="button-label">{{ __('Sign in to portal') }}</span><span class="submit-arrow"
-                        aria-hidden="true">→</span>
+                    <span class="button-label">{{ __('Sign in to portal') }}</span><span class="material-symbols-outlined submit-arrow"
+                        aria-hidden="true">arrow_forward</span>
                 </button>
 
                 <div class="secure-note">
-                    <span class="shield" aria-hidden="true"></span>
+                    <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
                     <span><strong>{{ __('Protected staff access') }}</strong><small>{{ __('Your session and account activity are secured and recorded.') }}</small></span>
                 </div>
 
@@ -942,8 +926,7 @@
                 toggle.setAttribute('aria-pressed', String(willShow));
                 toggle.setAttribute('aria-label', willShow ? @json(__('Hide password')) :
                     @json(__('Show password')));
-                toggle.querySelector('.toggle-text').textContent = willShow ? @json(__('HIDE')) :
-                    @json(__('SHOW'));
+                toggle.querySelector('.toggle-icon').textContent = willShow ? 'visibility_off' : 'visibility';
                 password.focus();
             });
 

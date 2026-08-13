@@ -7,7 +7,7 @@
             <h1>{{ __('Loan applications') }}</h1>
             <p>{{ __('Track applications from draft through approval and disbursement.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.loan-applications.create') }}">+ {{ __('New application') }}</a>
+        <a class="btn btn-primary" href="{{ route('admin.loan-applications.create') }}"><span class="material-symbols-outlined" aria-hidden="true">note_add</span> {{ __('New application') }}</a>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Application or member name') }}"><select name="status">

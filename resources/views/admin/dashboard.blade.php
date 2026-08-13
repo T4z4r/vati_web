@@ -66,7 +66,7 @@
         <div class="card">
             <div class="card-head">
                 <h2>{{ __('Recent collections') }}</h2><a class="table-link"
-                    href="{{ route('admin.loans.index') }}">{{ __('View loans') }} →</a>
+                    href="{{ route('admin.loans.index') }}">{{ __('View loans') }} <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
             <div class="table-wrap">
                 <table>

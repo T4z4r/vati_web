@@ -8,7 +8,7 @@
             <p>{{ $group->branch->branch_name }} &middot; {{ $group->location ?: __('Location not recorded') }}</p>
         </div>
         <div class="head-actions">
-            <a class="btn btn-primary" href="{{ route('admin.members.create', ['group_id' => $group->id]) }}">+
+            <a class="btn btn-primary" href="{{ route('admin.members.create', ['group_id' => $group->id]) }}"><span class="material-symbols-outlined" aria-hidden="true">person_add</span>
                 {{ __('Register member') }}</a>
             @can('edit-groups')
                 <a class="btn btn-secondary" href="{{ route('admin.groups.edit', $group) }}">{{ __('Edit') }}</a>

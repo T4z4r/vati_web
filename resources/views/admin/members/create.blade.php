@@ -244,7 +244,7 @@
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn btn-secondary" id="add-family-member" style="margin-top:10px">+ Add family member</button>
+            <button type="button" class="btn btn-secondary" id="add-family-member" style="margin-top:10px"><span class="material-symbols-outlined" aria-hidden="true">person_add</span> Add family member</button>
 
             <h3 id="family-assets" class="section-title" style="margin-top:25px">Family Assets / Taarifa ya Rasimali za Familia</h3>
             <p class="muted">Optional. Record household assets, quantities and their estimated values.</p>
@@ -268,7 +268,7 @@
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn btn-secondary" id="add-family-asset" style="margin-top:10px">+ Add family asset</button>
+            <button type="button" class="btn btn-secondary" id="add-family-asset" style="margin-top:10px"><span class="material-symbols-outlined" aria-hidden="true">add_home_work</span> Add family asset</button>
 
             <template id="family-member-row-template">
                 <tr><td><input name="family_members[__INDEX__][name]" placeholder="Full name"></td><td><select name="family_members[__INDEX__][gender]" data-select2="false"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></td><td><input type="number" min="0" max="150" name="family_members[__INDEX__][age]"></td><td><input name="family_members[__INDEX__][relationship]" placeholder="e.g. Child"></td><td><input name="family_members[__INDEX__][education]"></td><td><input name="family_members[__INDEX__][marital_status]"></td><td><input name="family_members[__INDEX__][occupation]"></td><td><input name="family_members[__INDEX__][secondary_occupation]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
@@ -277,7 +277,7 @@
                 <tr><td><input list="common-assets" name="assets[__INDEX__][name]" placeholder="Asset name"></td><td><input name="assets[__INDEX__][category]" placeholder="Household, livestock..."></td><td><input type="number" min="1" name="assets[__INDEX__][quantity]" placeholder="1"></td><td><input type="number" min="0" step="0.01" name="assets[__INDEX__][estimated_value]"></td><td><input name="assets[__INDEX__][description]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
             </template>
 
-            <h3 id="nominees" class="section-title" style="margin-top:25px">👥 Nominees / Wateule</h3>
+            <h3 id="nominees" class="section-title" style="margin-top:25px"><span class="material-symbols-outlined" aria-hidden="true">diversity_3</span> Nominees / Wateule</h3>
             <p class="muted">Optional. Leave all rows blank if no nominee is being recorded. If provided, percentage shares must total exactly 100%.</p>
             <div class="table-wrap">
                 <table>
@@ -295,7 +295,7 @@
             </div>
 
             <!-- DOCUMENTS & ATTACHMENTS -->
-            <h3 class="section-title" style="margin-top:25px">📎 Documents & Attachments (Hati na Nyaraka)</h3>
+            <h3 class="section-title" style="margin-top:25px"><span class="material-symbols-outlined" aria-hidden="true">attach_file</span> Documents & Attachments (Hati na Nyaraka)</h3>
             <div class="form-grid">
                 <label class="full">National ID Document<input type="file" name="attachments[national_id]"
                         accept=".pdf,.jpg,.jpeg,.png"

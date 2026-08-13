@@ -9,7 +9,7 @@
         </div>
         <div class="head-actions">
             <a class="btn btn-secondary" href="{{ route('admin.roles.permissions.index') }}">{{ __('Roles & Permissions') }}</a>
-            <a class="btn btn-primary" href="{{ route('admin.users.create') }}">+ {{ __('Add staff user') }}</a>
+            <a class="btn btn-primary" href="{{ route('admin.users.create') }}"><span class="material-symbols-outlined" aria-hidden="true">person_add</span> {{ __('Add staff user') }}</a>
         </div>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
