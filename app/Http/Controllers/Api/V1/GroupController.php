@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\GroupResource;
 use App\Models\MemberGroup;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
@@ -23,7 +24,20 @@ class GroupController extends ApiController
 
     public function show(MemberGroup $group)
     {
-        return response()->json(['success' => true, 'data' => $group->load('branch', 'loanOfficer')]);
+        $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
+
+        $group->setRelation('members', $group->members()
+            ->withCount([
+                'loans as current_loans_count' => fn ($q) => $q->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
+            ])
+            ->withSum([
+                'loans as outstanding_loan_balance' => fn ($q) => $q->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
+            ], 'total_balance')
+            ->latest()
+            ->limit(20)
+            ->get());
+
+        return response()->json(['success' => true, 'data' => new GroupResource($group)]);
     }
 
     public function update(Request $request, MemberGroup $group)
