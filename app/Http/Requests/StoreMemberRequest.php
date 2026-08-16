@@ -31,6 +31,40 @@ class StoreMemberRequest extends FormRequest
                 ]);
             }
         }
+
+        // Normalize web-format attachments (keyed by document type) to indexed API format
+        $attachmentFiles = $this->file('attachments');
+        if ($attachmentFiles && is_array($attachmentFiles)) {
+            $hasWebFormat = false;
+            foreach (array_keys($attachmentFiles) as $key) {
+                if (! is_numeric($key)) {
+                    $hasWebFormat = true;
+                    break;
+                }
+            }
+            if ($hasWebFormat) {
+                $normalized = [];
+                $normalizedFiles = [];
+                $idx = 0;
+                foreach ($attachmentFiles as $type => $fileOrFiles) {
+                    $items = is_array($fileOrFiles) ? $fileOrFiles : [$fileOrFiles];
+                    foreach ($items as $file) {
+                        if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                            $normalized[$idx] = ['document_type' => (string) $type];
+                            $normalizedFiles[$idx] = ['file' => $file];
+                            $idx++;
+                        }
+                    }
+                }
+                if (! empty($normalized)) {
+                    $this->merge(['attachments' => $normalized]);
+                    $this->files->set('attachments', $normalizedFiles);
+                } else {
+                    $this->request->remove('attachments');
+                    $this->files->remove('attachments');
+                }
+            }
+        }
     }
 
     public function authorize(): bool
@@ -104,6 +138,10 @@ class StoreMemberRequest extends FormRequest
             'assets.*.quantity' => ['required', 'integer', 'min:1'],
             'assets.*.estimated_value' => ['nullable', 'numeric', 'min:0'],
             'assets.*.description' => ['nullable', 'string', 'max:1000'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*.document_type' => ['required', Rule::in(['national_id', 'voter_id', 'address_proof', 'business_license', 'passbook_scan', 'signature_card', 'other'])],
+            'attachments.*.file' => ['required', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+            'attachments.*.description' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
