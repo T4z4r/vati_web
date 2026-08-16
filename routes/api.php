@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\LoanApplicationWorkflowController;
 use App\Http\Controllers\Api\V1\LoanCalculatorController;
 use App\Http\Controllers\Api\V1\LoanController;
 use App\Http\Controllers\Api\V1\LoanDisbursementController;
+use App\Http\Controllers\Api\V1\LoanExportController;
 use App\Http\Controllers\Api\V1\LoanGroupWitnessController;
 use App\Http\Controllers\Api\V1\LoanProductController;
 use App\Http\Controllers\Api\V1\LoanSettlementController;
@@ -110,6 +111,7 @@ Route::prefix('v1')->group(function () {
         Route::get('loans', [LoanController::class, 'index']);
         Route::get('loans/{loan}', [LoanController::class, 'show']);
         Route::get('loans/{loan}/schedule', [LoanController::class, 'schedule']);
+        Route::get('loans/{loan}/export', [LoanExportController::class, 'download']);
         Route::post('loans/{loan}/disburse', [LoanDisbursementController::class, 'store']);
         Route::post('loans/{loan}/payments', [PaymentController::class, 'store']);
         Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse']);

@@ -1154,7 +1154,8 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/members/{{member_id}}/export"
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/export",
+                        "description": "Downloads the member's passbook as a PDF containing personal details, family, assets, loan cycles, security ledger, installment collection, and clearance authorization."
                     },
                     "response": []
                 },
@@ -1506,6 +1507,16 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/loans/{{loan_id}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Export Loan PDF",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/loans/{{loan_id}}/export",
+                        "description": "Downloads a PDF summary of the loan including member info, repayment schedule, payment history, fees, disbursement, settlement, clearance, and default notices."
                     },
                     "response": []
                 },
