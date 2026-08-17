@@ -25,17 +25,6 @@ class LoanApprovalService
             }
 
             $to = $decision === 'approved' ? ApplicationStatus::APPROVED : ApplicationStatus::REJECTED;
-            if ($to === ApplicationStatus::APPROVED) {
-                $this->compliance->assertReadyForApproval($application);
-                $application->loadMissing(['member.activeGroupMembership', 'group', 'product']);
-                if ($application->member->status !== 'active' || ! $application->group->status || $application->member->activeGroupMembership?->group_id !== $application->group_id) {
-                    throw new DomainException('The borrower must still be an active member of the originating group.');
-                }
-                $confirmedWitnesses = $application->groupWitnesses()->whereNotNull('confirmed_at')->count();
-                if ($confirmedWitnesses < $application->product->required_group_witnesses) {
-                    throw new DomainException("At least {$application->product->required_group_witnesses} confirmed group witnesses are required.");
-                }
-            }
             LoanApproval::create([
                 'loan_application_id' => $application->id,
                 'user_id' => $user->id,

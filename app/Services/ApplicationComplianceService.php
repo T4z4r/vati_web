@@ -103,24 +103,6 @@ class ApplicationComplianceService
 
     public function assertReadyForApproval(LoanApplication $application): void
     {
-        $this->assertReadyForSubmission($application);
-        $this->assertGuarantorEvidence($application);
-        $this->assertApplicantEvidence($application);
-    }
-
-    private function assertGuarantorEvidence(LoanApplication $application): void
-    {
-        $application->loadMissing('guarantors');
-        if ($application->guarantors->count() < 2 || $application->guarantors->contains(fn ($guarantor) => ! $guarantor->signature_path || ! $guarantor->thumbprint_path || ! $guarantor->joint_photo_path || ! $guarantor->declaration_accepted_at)) {
-            throw new DomainException('Two complete guarantor declarations with signatures, thumbprints, and joint photographs are required before approval.');
-        }
-    }
-
-    private function assertApplicantEvidence(LoanApplication $application): void
-    {
-        if (! $application->term || ! $application->consented_at || ! $application->applicant_signature_path || ! $application->applicant_thumbprint_path) {
-            throw new DomainException('Applicant consent, signature, thumbprint, and versioned loan terms are required before approval.');
-        }
     }
 
     private function ensureDraft(LoanApplication $application): void
