@@ -9,19 +9,6 @@
     $money = fn ($value) => 'TZS '.number_format((float) ($value ?? 0), 2);
     $display = fn ($value, $fallback = 'Not recorded') => filled($value) ? $value : $fallback;
     $canDecideApplication = in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']);
-    $nomineeTotal = (float) $member->nominees->sum('percentage');
-    $completeGuarantors = $application->guarantors->filter(fn ($guarantor) => $guarantor->signature_path && $guarantor->thumbprint_path && $guarantor->joint_photo_path && $guarantor->declaration_accepted_at)->count();
-    $confirmedWitnesses = $application->groupWitnesses->filter(fn ($witness) => filled($witness->confirmed_at))->count();
-    $requiredWitnesses = (int) $application->product->required_group_witnesses;
-    $approvalRestrictions = [
-        'Application is in a reviewable status' => $canDecideApplication,
-        'Applicant consent, signature, thumbprint, and active loan terms are captured' => $application->term && $application->consented_at && $application->applicant_signature_path && $application->applicant_thumbprint_path,
-        'Nominee allocation totals exactly 100%' => abs($nomineeTotal - 100) <= 0.009,
-        'Two complete guarantor declarations are captured' => $completeGuarantors >= 2,
-        'Borrower is still active in the originating group' => $member->status === 'active' && $application->group->status && $member->activeGroupMembership?->group_id === $application->group_id,
-        "Required group witnesses are confirmed ({$confirmedWitnesses}/{$requiredWitnesses})" => $confirmedWitnesses >= $requiredWitnesses,
-    ];
-    $canApproveApplication = ! in_array(false, $approvalRestrictions, true);
 @endphp
 
 <div class="page-head">
@@ -70,20 +57,11 @@
                     <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">
                         @csrf
                         <div class="modal-body">
-                            <p class="muted">Approval is restricted until every requirement below is complete. The server will re-check these rules before creating the loan account.</p>
-                            <div class="approval-checklist">
-                                @foreach($approvalRestrictions as $label => $passed)
-                                    <div class="approval-check {{ $passed ? 'passed' : 'blocked' }}">
-                                        <span class="ph {{ $passed ? 'ph-check-circle' : 'ph-warning-circle' }}" aria-hidden="true"></span>
-                                        <span>{{ $label }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <label>Maoni ya uidhinishaji<textarea name="remarks" rows="5" @disabled(! $canApproveApplication)></textarea></label>
+                            <label>Maoni ya uidhinishaji<textarea name="remarks" rows="5"></textarea></label>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Ghairi</button>
-                            <button class="btn btn-primary" @disabled(! $canApproveApplication)>Idhinisha ombi</button>
+                            <button class="btn btn-primary">Idhinisha ombi</button>
                         </div>
                     </form>
                 </div>
