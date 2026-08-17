@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\CreditReviewController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\GroupPortfolioController;
+use App\Http\Controllers\Api\V1\GroupVisitController;
 use App\Http\Controllers\Api\V1\LoanAdministrationController;
 use App\Http\Controllers\Api\V1\LoanApplicationController;
 use App\Http\Controllers\Api\V1\LoanApplicationWorkflowController;
@@ -68,6 +69,7 @@ Route::prefix('v1')->group(function () {
         Route::get('groups/{group}/applications', [GroupPortfolioController::class, 'applications']);
         Route::get('groups/{group}/collections', [GroupPortfolioController::class, 'collections']);
         Route::get('groups/{group}/meetings', [GroupPortfolioController::class, 'meetings']);
+        Route::apiResource('group-visits', GroupVisitController::class);
         Route::apiResource('members', MemberController::class)->only(['index', 'show']);
         Route::apiResource('members', MemberController::class)->only('store');
         Route::apiResource('members', MemberController::class)->only('update');

@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ComplianceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GroupController;
+use App\Http\Controllers\Web\GroupVisitController;
 use App\Http\Controllers\Web\LoanApplicationController;
 use App\Http\Controllers\Web\LoanController;
 use App\Http\Controllers\Web\LoanProductController;
@@ -61,6 +62,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('members/{member}/documents/{document}/download', [MemberDocumentController::class, 'download'])->name('members.documents.download')->middleware('permission:view-members');
     Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-loan-products');
     Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('permission:view-loan-products');
+
+    Route::resource('group-visits', GroupVisitController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware('permission:view-group-visits');
 
     Route::resource('loan-applications', LoanApplicationController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:create-loan-applications');
     Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');

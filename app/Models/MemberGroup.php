@@ -52,4 +52,9 @@ class MemberGroup extends Model
     {
         return $this->hasMany(Loan::class, 'group_id');
     }
+
+    public function visits()
+    {
+        return $this->hasMany(GroupVisit::class, 'group_id');
+    }
 }

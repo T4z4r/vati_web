@@ -36,6 +36,11 @@
                     href="{{ route('admin.groups.index') }}"><span class="ph ph-users-four nav-icon"
                         aria-hidden="true"></span> {{ __('Groups') }}</a>
             @endcan
+            @can('view-group-visits')
+                <a class="{{ request()->routeIs('admin.group-visits.*') ? 'active' : '' }}"
+                    href="{{ route('admin.group-visits.index') }}"><span class="ph ph-map-pin nav-icon"
+                        aria-hidden="true"></span> {{ __('Group Visits') }}</a>
+            @endcan
             @can('view-loan-applications')
                 <a class="{{ request()->routeIs('admin.loan-applications.*') ? 'active' : '' }}"
                     href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-file-text nav-icon"

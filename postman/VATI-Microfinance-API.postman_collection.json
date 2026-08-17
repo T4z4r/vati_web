@@ -130,6 +130,11 @@
             "type": "string"
         },
         {
+            "key": "group_visit_id",
+            "value": "",
+            "type": "string"
+        },
+        {
             "key": "password_reset_token",
             "value": "",
             "type": "string"
@@ -1785,6 +1790,101 @@
                         "method": "DELETE",
                         "header": [],
                         "url": "{{base_url}}/api/v1/regions/{{region_id}}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Group Visits",
+            "description": "Log and track field visits to member groups. Requires `view-group-visits` permission.",
+            "item": [
+                {
+                    "name": "List Group Visits",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/group-visits?group_id=&from=&to=&per_page=20"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Record Group Visit",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const json = pm.response.json();",
+                                    "    if (json.data && json.data.id) pm.collectionVariables.set('group_visit_id', json.data.id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/group-visits",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"group_id\": \"{{group_id}}\",\n  \"visit_date\": \"{{$isoTimestamp}}\",\n  \"purpose\": \"Monthly monitoring visit\",\n  \"notes\": \"Group meeting attended by 12 of 15 members. Two members reported repayment challenges.\",\n  \"location\": \"Mbezi meeting hall\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Group Visit",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Group Visit",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"notes\": \"Updated notes: All issues resolved\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "[Destructive] Delete Group Visit",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}"
                     },
                     "response": []
                 }
