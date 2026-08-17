@@ -1346,9 +1346,10 @@
                             }
                         ],
                         "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}",
+                        "description": "Updates a draft loan application. Only draft applications can be edited. All fields are optional — send only the fields you want to change. Updating resets applicant compliance evidence (signature, thumbprint, consent, loan terms). Requires `create-loan-applications`.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"member_id\": \"{{member_id}}\",\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"application_type\": \"main\",\n  \"requested_amount\": 1000000,\n  \"duration_months\": 12,\n  \"loan_purpose\": \"Purchase additional retail stock and equipment\",\n  \"business_summary\": \"Established neighborhood retail shop\",\n  \"assessment\": {\n    \"core_business_income\": 850000,\n    \"other_income\": 100000,\n    \"business_expenses\": 250000,\n    \"household_expenses\": 100000\n  }\n}",
+                            "raw": "{\n  \"member_id\": \"{{member_id}}\",\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"application_type\": \"main\",\n  \"requested_amount\": 1000000,\n  \"duration_months\": 12,\n  \"loan_purpose\": \"Purchase additional retail stock and equipment\",\n  \"business_summary\": \"Established neighborhood retail shop\",\n  \"assessment\": {\n    \"core_business_income\": 850000,\n    \"other_income\": 100000,\n    \"business_expenses\": 250000,\n    \"household_expenses\": 100000\n  },\n  \"utilizations\": [\n    {\"purpose\": \"Stock purchase\", \"allocation_amount\": 700000},\n    {\"purpose\": \"Equipment\", \"allocation_amount\": 300000}\n  ],\n  \"guarantors\": [\n    {\n      \"guarantor_type\": \"family\",\n      \"name\": \"Jane Doe\",\n      \"relationship\": \"Spouse\",\n      \"phone\": \"+255712345678\"\n    }\n  ],\n  \"witness_member_ids\": [\"{{witness_member_id}}\"]\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"

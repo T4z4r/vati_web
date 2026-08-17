@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\OnboardLoanApplicationRequest;
+use App\Http\Requests\UpdateLoanApplicationRequest;
 use App\Http\Resources\LoanApplicationResource;
 use App\Models\LoanApplication;
 use App\Services\ApplicationDetailService;
@@ -30,7 +31,7 @@ class LoanApplicationController extends ApiController
         return response()->json(['success' => true, 'data' => $detail->build($loanApplication)]);
     }
 
-    public function update(OnboardLoanApplicationRequest $request, LoanApplication $loanApplication, OnboardingService $service)
+    public function update(UpdateLoanApplicationRequest $request, LoanApplication $loanApplication, OnboardingService $service)
     {
         $application = $service->updateLoanApplication($loanApplication, $request->validated(), $request->user());
 

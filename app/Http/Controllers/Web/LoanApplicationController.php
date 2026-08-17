@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OnboardLoanApplicationRequest;
+use App\Http\Requests\UpdateLoanApplicationRequest;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
@@ -51,7 +52,7 @@ class LoanApplicationController extends Controller
         return view('admin.loan-applications.form', $this->formData($request, $loanApplication, $loanApplication->member_id));
     }
 
-    public function update(OnboardLoanApplicationRequest $request, LoanApplication $loanApplication, OnboardingService $service)
+    public function update(UpdateLoanApplicationRequest $request, LoanApplication $loanApplication, OnboardingService $service)
     {
         try {
             $service->updateLoanApplication($loanApplication, $request->validated(), $request->user());
