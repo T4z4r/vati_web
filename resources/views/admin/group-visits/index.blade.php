@@ -1,36 +1,36 @@
 @extends('layouts.admin')
-@section('title', 'Group Visits')
+@section('title', __('Group Visits'))
 @section('content')
     <div class="page-head">
         <div>
-            <p class="eyebrow">FIELD OPERATIONS</p>
-            <h1>Group Visits</h1>
-            <p>Log and track field visits to member groups.</p>
+            <p class="eyebrow">{{ __('FIELD OPERATIONS') }}</p>
+            <h1>{{ __('Group Visits') }}</h1>
+            <p>{{ __('Log and track field visits to member groups.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.group-visits.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> Record visit</a>
+        <a class="btn btn-primary" href="{{ route('admin.group-visits.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> {{ __('Record visit') }}</a>
     </div>
     <form class="filters">
         <select name="group_id">
-            <option value="">All groups</option>
+            <option value="">{{ __('All groups') }}</option>
             @foreach($groups as $group)
                 <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>{{ $group->group_name }}</option>
             @endforeach
         </select>
-        <input type="date" name="from" value="{{ request('from') }}" placeholder="From">
-        <input type="date" name="to" value="{{ request('to') }}" placeholder="To">
-        <button class="btn btn-secondary">Filter</button>
+        <input type="date" name="from" value="{{ request('from') }}">
+        <input type="date" name="to" value="{{ request('to') }}">
+        <button class="btn btn-secondary">{{ __('Filter') }}</button>
     </form>
     <div class="card">
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Group</th>
-                        <th>Officer</th>
-                        <th>Purpose</th>
-                        <th>Location</th>
-                        <th class="actions-col">Actions</th>
+                        <th>{{ __('Date') }}</th>
+                        <th>{{ __('Group') }}</th>
+                        <th>{{ __('Officer') }}</th>
+                        <th>{{ __('Purpose') }}</th>
+                        <th>{{ __('Location') }}</th>
+                        <th class="actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,17 +43,17 @@
                             <td>{{ $visit->location ?: '-' }}</td>
                             <td>
                                 <div class="table-actions">
-                                    <a class="btn btn-sm btn-secondary" href="{{ route('admin.group-visits.show', $visit) }}">View</a>
+                                    <a class="btn btn-sm btn-secondary" href="{{ route('admin.group-visits.show', $visit) }}">{{ __('View') }}</a>
                                     <form method="POST" action="{{ route('admin.group-visits.destroy', $visit) }}">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" data-confirm="Delete this visit record?">Delete</button>
+                                        <button class="btn btn-sm btn-danger" data-confirm="{{ __('Delete this visit record?') }}">{{ __('Delete') }}</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="empty">No group visits recorded yet.</td>
+                            <td colspan="6" class="empty">{{ __('No group visits recorded yet.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
