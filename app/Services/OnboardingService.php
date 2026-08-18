@@ -176,7 +176,8 @@ class OnboardingService
                 'application_number' => $this->numbers->application(),
                 'group_id' => $member->group_id,
                 'branch_id' => $member->branch_id,
-                'status' => 'draft',
+                'status' => 'submitted',
+                'submitted_at' => now(),
                 'created_by' => $user->id,
             ]);
             $application->assessment()->create([

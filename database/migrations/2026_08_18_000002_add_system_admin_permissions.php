@@ -10,9 +10,9 @@ return new class extends Migration
         $now = now();
 
         $permissions = [
-            ['name' => 'manage-system-settings', 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'purge-system-data', 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'view-audit-trail', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'manage-system-settings', 'guard_name' => 'web', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'purge-system-data', 'guard_name' => 'web', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'view-audit-trail', 'guard_name' => 'web', 'created_at' => $now, 'updated_at' => $now],
         ];
 
         DB::table('permissions')->insertOrIgnore($permissions);
