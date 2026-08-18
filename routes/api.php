@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CreditReviewController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\GroupPortfolioController;
 use App\Http\Controllers\Api\V1\GroupVisitController;
@@ -46,6 +47,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('profile', [AuthController::class, 'profile']);
+        Route::get('dashboard', [DashboardController::class, 'index']);
         Route::get('portfolio/summary', [PortfolioController::class, 'summary']);
         Route::get('portfolio/branches', [PortfolioController::class, 'branches']);
         Route::get('notifications', [NotificationController::class, 'index']);
