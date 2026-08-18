@@ -18,7 +18,7 @@ class GroupVisitController extends ApiController
             ->when($request->to, fn ($q, $v) => $q->where('visit_date', '<=', $v))
             ->latest('visit_date');
 
-        return response()->json(['success' => true, 'data' => $query->paginate($this->perPage($request))]);
+        return response()->json(['success' => true, 'data' => $query->latest()->paginate($this->perPage($request))]);
     }
 
     public function store(Request $request)

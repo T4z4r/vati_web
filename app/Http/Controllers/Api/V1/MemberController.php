@@ -16,7 +16,7 @@ class MemberController extends ApiController
             ->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$s}%")->orWhere('first_name', 'like', "%{$s}%")->orWhere('last_name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%")))
             ->when($request->branch_id, fn ($q, $v) => $q->where('branch_id', $v))->when($request->group_id, fn ($q, $v) => $q->where('group_id', $v))->when($request->status, fn ($q, $v) => $q->where('status', $v));
 
-        return MemberResource::collection($query->paginate($this->perPage($request)));
+        return MemberResource::collection($query->latest()->paginate($this->perPage($request)));
     }
 
     public function store(StoreMemberRequest $request, OnboardingService $service)

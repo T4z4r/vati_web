@@ -10,7 +10,7 @@ class AreaController extends ApiController
 {
     public function index(Request $request)
     {
-        return Area::with('region')->when($request->region_id, fn ($q, $v) => $q->where('region_id', $v))->paginate($this->perPage($request));
+        return Area::with('region')->when($request->region_id, fn ($q, $v) => $q->where('region_id', $v))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)

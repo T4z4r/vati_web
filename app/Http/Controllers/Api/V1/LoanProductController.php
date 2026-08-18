@@ -11,7 +11,7 @@ class LoanProductController extends ApiController
 {
     public function index(Request $request)
     {
-        return LoanProduct::when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('name', 'like', "%{$s}%")->orWhere('code', 'like', "%{$s}%")))->paginate($this->perPage($request));
+        return LoanProduct::when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('name', 'like', "%{$s}%")->orWhere('code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)

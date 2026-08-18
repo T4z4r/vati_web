@@ -10,7 +10,7 @@ class BranchController extends ApiController
 {
     public function index(Request $request)
     {
-        return Branch::with('area.region')->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('branch_name', 'like', "%{$s}%")->orWhere('branch_code', 'like', "%{$s}%")))->paginate($this->perPage($request));
+        return Branch::with('area.region')->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('branch_name', 'like', "%{$s}%")->orWhere('branch_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)

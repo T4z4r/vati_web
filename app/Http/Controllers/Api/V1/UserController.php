@@ -12,7 +12,7 @@ class UserController extends ApiController
 {
     public function index(Request $request)
     {
-        return User::with('branch', 'roles')->when($request->branch_id, fn ($q, $v) => $q->where('branch_id', $v))->paginate($this->perPage($request));
+        return User::with('branch', 'roles')->when($request->branch_id, fn ($q, $v) => $q->where('branch_id', $v))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request)

@@ -12,7 +12,7 @@ class LoanController extends ApiController
     {
         $query = $this->branchScope(Loan::with('member', 'product'), $request)->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->member_id, fn ($q, $v) => $q->where('member_id', $v));
 
-        return LoanResource::collection($query->paginate($this->perPage($request)));
+        return LoanResource::collection($query->latest()->paginate($this->perPage($request)));
     }
 
     public function show(Loan $loan)

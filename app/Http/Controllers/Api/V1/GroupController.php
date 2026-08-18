@@ -12,7 +12,7 @@ class GroupController extends ApiController
 {
     public function index(Request $request)
     {
-        return $this->branchScope(MemberGroup::with('branch', 'loanOfficer'), $request)->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->paginate($this->perPage($request));
+        return $this->branchScope(MemberGroup::with('branch', 'loanOfficer'), $request)->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)
