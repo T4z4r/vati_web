@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CreditReviewController;
-use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\GroupPortfolioController;
 use App\Http\Controllers\Api\V1\GroupVisitController;
@@ -47,7 +46,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('profile', [AuthController::class, 'profile']);
-        Route::get('dashboard', [DashboardController::class, 'index']);
         Route::get('portfolio/summary', [PortfolioController::class, 'summary']);
         Route::get('portfolio/branches', [PortfolioController::class, 'branches']);
         Route::get('notifications', [NotificationController::class, 'index']);
@@ -125,7 +123,7 @@ Route::prefix('v1')->group(function () {
         Route::post('loans/{loan}/default-notices', [LoanAdministrationController::class, 'defaultNotice']);
         Route::post('loans/{loan}/clearance', [LoanAdministrationController::class, 'clearance']);
 
-        Route::middleware('role:super_admin|head_office_admin')->prefix('system')->group(function () {
+        Route::prefix('system')->group(function () {
             Route::get('settings', [SystemSettingsController::class, 'index'])->name('api.system.settings.index');
             Route::put('settings', [SystemSettingsController::class, 'update'])->name('api.system.settings.update');
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('api.system.audit-logs.index');
@@ -133,6 +131,6 @@ Route::prefix('v1')->group(function () {
             Route::get('data/summary', [DataPurgeController::class, 'summary'])->name('api.system.data.summary');
             Route::post('data/preview', [DataPurgeController::class, 'preview'])->name('api.system.data.preview');
         });
-        Route::middleware('role:super_admin')->post('system/data/purge', [DataPurgeController::class, 'purge'])->name('api.system.data.purge');
+        Route::post('system/data/purge', [DataPurgeController::class, 'purge'])->name('api.system.data.purge');
     });
 });

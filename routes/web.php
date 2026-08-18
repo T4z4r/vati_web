@@ -35,18 +35,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
 
-    Route::middleware('role:super_admin|head_office_admin')->group(function () {
-        Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index');
-        Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store');
-        Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store');
-        Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store');
-        Route::resource('users', UserController::class);
-        Route::get('roles/permissions', [UserController::class, 'rolePermissions'])
-            ->name('roles.permissions.index');
-    });
+    Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index');
+    Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store');
+    Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store');
+    Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store');
+    Route::resource('users', UserController::class);
+    Route::get('roles/permissions', [UserController::class, 'rolePermissions'])
+        ->name('roles.permissions.index');
+
     Route::put('roles/{role}/permissions', [UserController::class, 'updateRolePermissions'])
-        ->name('roles.permissions.update')
-        ->middleware('role:super_admin');
+        ->name('roles.permissions.update');
 
     Route::resource('groups', GroupController::class)->only(['create', 'store'])->middleware('permission:create-groups');
     Route::resource('groups', GroupController::class)->only(['edit', 'update'])->middleware('permission:edit-groups');
@@ -97,7 +95,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:view-reports');
 
-    Route::middleware('role:super_admin|head_office_admin')->prefix('system')->name('system.')->group(function () {
+    Route::prefix('system')->name('system.')->group(function () {
         Route::get('/', [SystemController::class, 'overview'])->name('overview');
         Route::get('audit', [SystemController::class, 'audit'])->name('audit');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
@@ -105,5 +103,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::get('data', [SystemController::class, 'data'])->name('data');
         Route::get('data/preview', [SystemController::class, 'preview'])->name('data.preview');
     });
-    Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge')->middleware('role:super_admin');
+    Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge');
 });
