@@ -77,6 +77,23 @@
                     href="{{ route('admin.roles.permissions.index') }}"><span class="ph ph-shield-check nav-icon"
                         aria-hidden="true"></span> {{ __('Roles & Permissions') }}</a>
             @endrole
+            @role('super_admin|head_office_admin')
+                <p class="nav-label">{{ __('SYSTEM') }}</p>
+                <a class="{{ request()->routeIs('admin.system.overview') ? 'active' : '' }}"
+                    href="{{ route('admin.system.overview') }}"><span class="ph ph-desktop nav-icon"
+                        aria-hidden="true"></span> {{ __('System Overview') }}</a>
+                <a class="{{ request()->routeIs('admin.system.audit') ? 'active' : '' }}"
+                    href="{{ route('admin.system.audit') }}"><span class="ph ph-clock-counter-clockwise nav-icon"
+                        aria-hidden="true"></span> {{ __('Audit Trail') }}</a>
+                <a class="{{ request()->routeIs('admin.system.settings') ? 'active' : '' }}"
+                    href="{{ route('admin.system.settings') }}"><span class="ph ph-gear nav-icon"
+                        aria-hidden="true"></span> {{ __('System Settings') }}</a>
+                @role('super_admin')
+                <a class="{{ request()->routeIs('admin.system.data') ? 'active' : '' }}"
+                    href="{{ route('admin.system.data') }}"><span class="ph ph-database nav-icon"
+                        aria-hidden="true"></span> {{ __('Data Management') }}</a>
+                @endrole
+            @endrole
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>
             <div><strong>{{ __('System online') }}</strong><small>{{ now()->format('d M Y') }}</small></div>

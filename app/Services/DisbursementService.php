@@ -22,9 +22,6 @@ class DisbursementService
             if ($loan->status !== LoanStatus::PENDING_DISBURSEMENT || $loan->application->status !== ApplicationStatus::APPROVED) {
                 throw new DomainException('Only an approved, pending loan can be disbursed.');
             }
-            if (! $loan->application->cancellation_deadline || now()->isBefore($loan->application->cancellation_deadline)) {
-                throw new DomainException('The three-day cooling-off period must expire before disbursement.');
-            }
             if ($loan->application->cancellation()->exists()) {
                 throw new DomainException('A cancelled application cannot be disbursed.');
             }

@@ -20,10 +20,11 @@ class RolePermissionSeeder extends Seeder
             'view-loan-applications', 'create-loan-applications', 'review-loan-applications',
             'approve-loan-applications', 'reject-loan-applications', 'view-loans', 'disburse-loans',
             'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security',
-            'settle-loans', 'view-reports', 'export-reports', 'view-audit-logs',
+            'settle-loans',             'view-reports', 'export-reports', 'view-audit-logs',
             'manage-loan-compliance', 'verify-loan-documents', 'replace-passbooks',
             'issue-default-notices', 'authorize-loan-clearances',
             'view-portfolio',
+            'manage-system-settings', 'purge-system-data', 'view-audit-trail',
         ];
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -43,6 +44,6 @@ class RolePermissionSeeder extends Seeder
         Role::findByName('cashier')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'view-security', 'manage-security']);
         Role::findByName('finance_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security', 'settle-loans', 'view-reports', 'export-reports']);
         Role::findByName('credit_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'view-loan-products', 'view-loan-applications', 'review-loan-applications', 'verify-loan-documents', 'view-loans', 'view-portfolio']);
-        Role::findByName('auditor')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-loan-products', 'view-loan-applications', 'view-loans', 'view-payments', 'view-security', 'view-reports', 'export-reports', 'view-audit-logs']);
+        Role::findByName('auditor')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-loan-products', 'view-loan-applications', 'view-loans', 'view-payments', 'view-security', 'view-reports', 'export-reports', 'view-audit-logs', 'view-audit-trail']);
     }
 }

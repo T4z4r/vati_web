@@ -14,6 +14,7 @@ use App\Http\Controllers\Web\OrganizationController;
 use App\Http\Controllers\Web\PaymentController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SecurityController;
+use App\Http\Controllers\Web\SystemController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
@@ -95,4 +96,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loans/{loan}/clearance', [ComplianceController::class, 'clearance'])->name('loans.clearance.store')->middleware('permission:authorize-loan-clearances');
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:view-reports');
+
+    Route::middleware('role:super_admin|head_office_admin')->prefix('system')->name('system.')->group(function () {
+        Route::get('/', [SystemController::class, 'overview'])->name('overview');
+        Route::get('audit', [SystemController::class, 'audit'])->name('audit');
+        Route::get('settings', [SystemController::class, 'settings'])->name('settings');
+        Route::put('settings', [SystemController::class, 'updateSettings'])->name('settings.update');
+        Route::get('data', [SystemController::class, 'data'])->name('data');
+    });
+    Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge')->middleware('role:super_admin');
 });

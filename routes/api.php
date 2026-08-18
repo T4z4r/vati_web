@@ -33,6 +33,9 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PortfolioController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\SecurityAccountController;
+use App\Http\Controllers\Api\V1\SystemSettingsController;
+use App\Http\Controllers\Api\V1\AuditLogController;
+use App\Http\Controllers\Api\V1\DataPurgeController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -121,5 +124,15 @@ Route::prefix('v1')->group(function () {
         Route::post('members/{member}/passbook-replacements', [LoanAdministrationController::class, 'replacePassbook']);
         Route::post('loans/{loan}/default-notices', [LoanAdministrationController::class, 'defaultNotice']);
         Route::post('loans/{loan}/clearance', [LoanAdministrationController::class, 'clearance']);
+
+        Route::middleware('role:super_admin|head_office_admin')->prefix('system')->group(function () {
+            Route::get('settings', [SystemSettingsController::class, 'index'])->name('api.system.settings.index');
+            Route::put('settings', [SystemSettingsController::class, 'update'])->name('api.system.settings.update');
+            Route::get('audit-logs', [AuditLogController::class, 'index'])->name('api.system.audit-logs.index');
+            Route::get('audit-logs/{id}', [AuditLogController::class, 'show'])->name('api.system.audit-logs.show');
+            Route::get('data/summary', [DataPurgeController::class, 'summary'])->name('api.system.data.summary');
+            Route::post('data/preview', [DataPurgeController::class, 'preview'])->name('api.system.data.preview');
+        });
+        Route::middleware('role:super_admin')->post('system/data/purge', [DataPurgeController::class, 'purge'])->name('api.system.data.purge');
     });
 });
