@@ -51,11 +51,11 @@
                                     <a class="btn btn-sm btn-secondary"
                                         href="{{ route('admin.loan-applications.show', $application) }}">{{ __('View') }}</a>
                                     @can('create-loan-applications')
-                                        @if ($status === 'draft')
+                                        @if (in_array($status, ['draft', 'submitted'], true))
                                             <a class="btn btn-sm btn-primary"
                                                 href="{{ route('admin.loan-applications.edit', $application) }}">{{ __('Edit') }}</a>
                                         @endif
-                                        @if (in_array($status, ['draft', 'rejected', 'cancelled'], true) && !$application->loan)
+                                        @if (in_array($status, ['draft', 'submitted', 'rejected', 'cancelled'], true) && !$application->loan)
                                             <form method="POST"
                                                 action="{{ route('admin.loan-applications.destroy', $application) }}">
                                                 @csrf @method('DELETE')

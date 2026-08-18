@@ -23,8 +23,10 @@
     <div class="head-actions">
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export', $application) }}">Pakua PDF ya ombi</a>
-        @if($status === 'draft')
+        @if(in_array($status, ['draft', 'submitted'], true))
             <a class="btn btn-secondary" href="{{ route('admin.loan-applications.edit', $application) }}">Hariri rasimu</a>
+        @endif
+        @if($status === 'draft')
             <form method="POST" action="{{ route('admin.loan-applications.submit', $application) }}">@csrf<button class="btn btn-primary">Wasilisha kwa ukaguzi</button></form>
         @endif
         @if($application->cancellation_deadline && !$application->cancellation && !$application->loan?->disbursement)

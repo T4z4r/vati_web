@@ -40,7 +40,7 @@ class LoanApplicationController extends ApiController
 
     public function destroy(LoanApplication $loanApplication)
     {
-        abort_unless($loanApplication->status->value === 'draft', 409, 'Only draft applications can be deleted.');
+        abort_unless(in_array($loanApplication->status->value, ['draft', 'submitted'], true), 409, 'Only draft or submitted applications can be deleted.');
         $loanApplication->delete();
 
         return response()->noContent();

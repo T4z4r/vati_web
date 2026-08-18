@@ -46,7 +46,7 @@ class LoanApplicationController extends Controller
 
     public function edit(Request $request, LoanApplication $loanApplication)
     {
-        abort_unless($loanApplication->status === ApplicationStatus::DRAFT, 409, 'Only draft applications can be edited.');
+        abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED], true), 409, 'Only draft or submitted applications can be edited.');
         $loanApplication->load('assessment', 'utilizations', 'guarantors', 'groupWitnesses');
 
         return view('admin.loan-applications.form', $this->formData($request, $loanApplication, $loanApplication->member_id));
@@ -162,8 +162,8 @@ class LoanApplicationController extends Controller
             return back()->with('error', 'This application already has a loan account and cannot be deleted.');
         }
 
-        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::REJECTED, ApplicationStatus::CANCELLED], true)) {
-            return back()->with('error', 'Only draft, rejected, or cancelled applications can be deleted.');
+        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED, ApplicationStatus::REJECTED, ApplicationStatus::CANCELLED], true)) {
+            return back()->with('error', 'Only draft, submitted, rejected, or cancelled applications can be deleted.');
         }
 
         $loanApplication->delete();
