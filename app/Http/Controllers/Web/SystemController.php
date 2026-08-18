@@ -94,6 +94,35 @@ class SystemController extends Controller
         return view('admin.system.data', compact('summary', 'branches'));
     }
 
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'entity' => 'required|in:members,groups,applications,loans,loan_products',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date|after_or_equal:from',
+            'branch_id' => 'nullable|integer|exists:branches,id',
+        ]);
+
+        $preview = $this->purgeService->preview(
+            $request->entity,
+            $request->input('from'),
+            $request->input('to'),
+            $request->integer('branch_id')
+        );
+
+        $validation = $this->purgeService->validate(
+            $request->entity,
+            $request->input('from'),
+            $request->input('to'),
+            $request->integer('branch_id')
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => array_merge($preview, $validation),
+        ]);
+    }
+
     public function purge(Request $request)
     {
         $request->validate([

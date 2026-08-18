@@ -103,6 +103,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
         Route::put('settings', [SystemController::class, 'updateSettings'])->name('settings.update');
         Route::get('data', [SystemController::class, 'data'])->name('data');
+        Route::get('data/preview', [SystemController::class, 'preview'])->name('data.preview');
     });
     Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge')->middleware('role:super_admin');
 });
