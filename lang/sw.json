@@ -472,5 +472,19 @@
     "Activity Today": "Shughuli za Leo",
     "No records found.": "Hakuna rekodi zilizopatikana.",
     "Yes": "Ndiyo",
-    "No": "Hapana"
+    "No": "Hapana",
+    "CREDIT REVIEW": "UKAGUZI WA MKOPO",
+    "Your credit review pipeline and daily targets.": "Mstari wako wa ukaguzi wa mkopo na malengo ya kila siku.",
+    "Pending review": "Inasubiri ukaguzi",
+    "Reviewed today": "Imekaguliwa leo",
+    "Returned cases": "Kesi zilizorudishwa",
+    "High risk": "Hatari kubwa",
+    "Requires action": "Inahitaji hatua",
+    "Review": "Kagua",
+    "Daily progress": "Maendeleo ya kila siku",
+    "Priority applications": "Maombi ya kipaumbele",
+    "Review applications": "Kagua maombi",
+    "All applications": "Maombi yote",
+    "No pending applications.": "Hakuna maombi yanayosubiri.",
+    "new": "mapya"
 }

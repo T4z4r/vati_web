@@ -56,6 +56,13 @@ class DashboardController extends ApiController
             'high_risk_cases' => $highRiskCases,
             'daily_target' => (int) config('vati.credit_daily_target', 10),
             'daily_completed' => $reviewedToday,
+            'gross_loan_portfolio' => $portfolio['gross_loan_portfolio'],
+            'active_loans' => $portfolio['active_loans'],
+            'collection_rate' => (float) $portfolio['collection_rate'],
+            'portfolio_at_risk' => (float) $portfolio['portfolio_at_risk'],
+            'performing_amount' => $portfolio['performing_amount'],
+            'at_risk_amount' => $portfolio['at_risk_amount'],
+            'overdue_amount' => $portfolio['overdue_amount'],
         ];
 
         $portfolio = $this->portfolio->summary($user, $branchId, $filters['from'] ?? null, $filters['to'] ?? null);

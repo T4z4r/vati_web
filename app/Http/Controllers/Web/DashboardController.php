@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\LoanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\CreditReview;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanInstallment;
@@ -18,6 +19,47 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->hasRole('credit_officer')) {
+            return $this->creditOfficerDashboard($request);
+        }
+
+        return $this->adminDashboard($request);
+    }
+
+    private function creditOfficerDashboard(Request $request)
+    {
+        $user = $request->user();
+        $assigned = LoanApplication::query()->where('assigned_credit_officer_id', $user->id);
+
+        $pendingReviewStatuses = [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RETURNED];
+        $pendingCreditReview = (clone $assigned)->whereIn('status', $pendingReviewStatuses)->count();
+
+        $todayStart = now()->startOfDay();
+        $newAssignments = (clone $assigned)->where('status', ApplicationStatus::SUBMITTED)->where('updated_at', '>=', $todayStart)->count();
+        $reviewedToday = (clone $assigned)->whereIn('status', [ApplicationStatus::RECOMMENDED, ApplicationStatus::APPROVED, ApplicationStatus::REJECTED])->where('updated_at', '>=', $todayStart)->count();
+        $returnedCases = (clone $assigned)->where('status', ApplicationStatus::RETURNED)->count();
+        $highRiskCases = (clone $assigned)->whereIn('risk_level', ['high', 'critical'])->whereIn('status', [ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RECOMMENDED])->count();
+        $dailyTarget = (int) config('vati.credit_daily_target', 10);
+
+        $priorityApplications = (clone $assigned)
+            ->whereIn('status', [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW])
+            ->with(['member', 'product'])
+            ->oldest('submitted_at')
+            ->limit(10)
+            ->get();
+
+        $portfolio = app(\App\Services\PortfolioAnalyticsService::class)->summary($user, $this->branchId($request));
+
+        return view('admin.dashboard-credit-officer', compact(
+            'pendingCreditReview', 'newAssignments', 'reviewedToday', 'returnedCases',
+            'highRiskCases', 'dailyTarget', 'priorityApplications', 'portfolio'
+        ));
+    }
+
+    private function adminDashboard(Request $request)
     {
         $branchId = $this->branchId($request);
         $members = Member::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
@@ -182,4 +224,3 @@ class DashboardController extends Controller
         return $request->integer('branch_id') ?: null;
     }
 }
-
