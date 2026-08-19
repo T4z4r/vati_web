@@ -48,6 +48,8 @@ class DashboardController extends ApiController
 
         $highRiskCases = (clone $assigned)->whereIn('risk_level', ['high', 'critical'])->whereIn('status', [ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RECOMMENDED])->count();
 
+        $portfolio = $this->portfolio->summary($user, $branchId, $filters['from'] ?? null, $filters['to'] ?? null);
+
         $data['credit_officer'] = [
             'pending_credit_review' => $pendingReview,
             'new_assignments' => $newAssignments,
@@ -64,8 +66,6 @@ class DashboardController extends ApiController
             'at_risk_amount' => $portfolio['at_risk_amount'],
             'overdue_amount' => $portfolio['overdue_amount'],
         ];
-
-        $portfolio = $this->portfolio->summary($user, $branchId, $filters['from'] ?? null, $filters['to'] ?? null);
 
         $data['admin'] = [
             'gross_loan_portfolio' => $portfolio['gross_loan_portfolio'],
