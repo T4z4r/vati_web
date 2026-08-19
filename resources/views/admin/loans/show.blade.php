@@ -87,7 +87,7 @@
                                         @if (in_array($status, ['active', 'overdue']) && $installmentBalance > 0)
                                             @can('collect-payments')
                                                 <form method="POST" action="{{ route('admin.payments.store', $loan) }}"
-                                                    style="display:flex;align-items:end;gap:6px;min-width:310px">@csrf<input
+                                                    class="repayment-form">@csrf<input
                                                         type="hidden" name="loan_installment_id"
                                                         value="{{ $item->id }}"><label
                                                         style="margin:0;min-width:115px"><small>{{ __('Amount') }}</small><input

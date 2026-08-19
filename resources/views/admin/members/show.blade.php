@@ -402,7 +402,7 @@
                         <td>
                             @if(in_array($loan->status->value, ['active', 'overdue']) && $installmentBalance > 0)
                                 @can('collect-payments')
-                                    <form method="POST" action="{{ route('admin.payments.store', $loan) }}" style="display:flex;align-items:end;gap:6px;min-width:310px">
+                                    <form method="POST" action="{{ route('admin.payments.store', $loan) }}" class="repayment-form">
                                         @csrf
                                         <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
                                         <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
@@ -462,8 +462,4 @@
     <div class="card" style="margin-top:20px"><div class="card-body empty">No loans found for this member.</div></div>
 @endforelse
 
-<style>
-    @media(max-width:1100px){.card .detail-grid[style*="repeat(4"]{grid-template-columns:repeat(2,1fr)!important}}
-    @media(max-width:760px){.card .detail-grid[style*="repeat(4"]{grid-template-columns:1fr!important}}
-</style>
 @endsection

@@ -14,7 +14,11 @@ class LoanApplicationController extends ApiController
 {
     public function index(Request $request)
     {
-        $query = $this->branchScope(LoanApplication::with(['member', 'product', 'assignedBy', 'creator']), $request)->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->member_id, fn ($q, $v) => $q->where('member_id', $v))->latest();
+        $query = $this->branchScope(LoanApplication::with(['member', 'product', 'assignedBy', 'creator']), $request)
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->when($request->member_id, fn ($q, $v) => $q->where('member_id', $v))
+            ->when($request->boolean('reviewed_today'), fn ($q) => $q->where('assigned_credit_officer_id', $request->user()->id)->whereDate('updated_at', today())->whereIn('status', ['recommended', 'approved', 'rejected']))
+            ->latest();
 
         return LoanApplicationResource::collection($query->paginate($this->perPage($request)));
     }

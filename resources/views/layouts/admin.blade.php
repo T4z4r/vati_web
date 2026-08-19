@@ -94,6 +94,7 @@
             <div><strong>{{ __('System online') }}</strong><small>{{ now()->format('d M Y') }}</small></div>
         </div>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="main-area">
         <header class="topbar">
             <button class="menu-btn" id="sidebarToggle" type="button" aria-label="{{ __('Toggle sidebar') }}"
@@ -167,11 +168,13 @@
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             const toggle = document.getElementById('sidebarToggle');
             const isMobile = window.innerWidth <= 760;
 
             if (isMobile) {
                 sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
                 return;
             }
 
@@ -192,16 +195,21 @@
             };
 
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             const toggle = document.getElementById('sidebarToggle');
             const syncSidebarState = () => {
                 if (window.innerWidth <= 760) {
                     sidebar.classList.remove('collapsed');
                     document.body.classList.remove('sidebar-collapsed');
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
                     toggle.setAttribute('aria-expanded', 'false');
                     toggle.setAttribute('title', @json(__('Toggle sidebar')));
                     return;
                 }
 
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
                 const collapsed = document.body.classList.contains('sidebar-collapsed');
                 toggle.setAttribute('aria-expanded', String(!collapsed));
                 toggle.setAttribute('title', collapsed ? @json(__('Expand sidebar')) :
@@ -209,6 +217,12 @@
             };
 
             toggle.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', () => {
+                if (window.innerWidth <= 760) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
             window.addEventListener('resize', syncSidebarState);
             syncSidebarState();
 

@@ -58,11 +58,19 @@ class PortfolioAnalyticsService
             $query->whereKey($forcedBranch);
         }
 
-        return $query->get()->map(fn (Branch $branch) => [
-            'branch_id' => $branch->id,
-            'branch_name' => $branch->branch_name,
-            ...$this->summary($user, $branch->id, $from, $to),
-        ])->all();
+        return $query->get()->map(function (Branch $branch) use ($user, $from, $to) {
+            $summary = $this->summary($user, $branch->id, $from, $to);
+
+            return [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->branch_name,
+                'portfolio_amount' => $summary['gross_loan_portfolio'],
+                'active_loans' => $summary['active_loans'],
+                'collection_rate' => $summary['collection_rate'],
+                'portfolio_at_risk' => $summary['portfolio_at_risk'],
+                'overdue_amount' => $summary['overdue_amount'],
+            ];
+        })->all();
     }
 
     public function authorizedBranch(User $user, ?int $requested): ?int
