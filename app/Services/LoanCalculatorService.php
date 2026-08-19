@@ -37,8 +37,9 @@ class LoanCalculatorService
             'membership_fee' => round($membershipFee, 2),
             'security_amount' => round($securityAmount, 2),
             'charges' => round($totalCharges, 2),
-            'amount_receivable' => round($principal - $securityAmount, 2),
+f            'amount_receivable' => round($principal - $securityAmount, 2),
             'total_repayment' => round($principal + $interest, 2),
         ];
     }
 }
+
