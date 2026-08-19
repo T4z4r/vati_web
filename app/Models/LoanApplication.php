@@ -103,4 +103,14 @@ class LoanApplication extends Model
     {
         return $this->belongsTo(User::class, 'assigned_credit_officer_id');
     }
+
+    public function assignedBy()
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

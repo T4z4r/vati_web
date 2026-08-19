@@ -19,7 +19,7 @@ class ApplicationDetailService
             'member.kyc', 'member.activeGroupMembership', 'member.nominees', 'member.familyMembers',
             'member.assets.assetType', 'member.branch.area.region', 'product', 'group.loanOfficer', 'branch.area.region',
             'assessment', 'utilizations', 'approvals.user', 'groupWitnesses.member', 'guarantors',
-            'documents.uploader', 'documents.verifier', 'latestCreditReview.reviewer', 'assignedCreditOfficer',
+            'documents.uploader', 'documents.verifier', 'latestCreditReview.reviewer', 'assignedCreditOfficer', 'assignedBy', 'creator',
             'loan.disbursement', 'term',
         ]);
         $amount = (float) ($application->recommended_amount ?: $application->requested_amount);
@@ -78,6 +78,8 @@ class ApplicationDetailService
             ],
             'loan_officer' => $application->group->loanOfficer ? ['id' => $application->group->loanOfficer->id, 'name' => $application->group->loanOfficer->name] : null,
             'assigned_credit_officer' => $application->assignedCreditOfficer ? ['id' => $application->assignedCreditOfficer->id, 'name' => $application->assignedCreditOfficer->name] : null,
+            'assigned_by' => $application->assignedBy ? ['id' => $application->assignedBy->id, 'name' => $application->assignedBy->name] : null,
+            'created_by' => $application->creator ? ['id' => $application->creator->id, 'name' => $application->creator->name] : null,
             'branch' => [
                 'id' => $application->branch->id,
                 'name' => $application->branch->branch_name,

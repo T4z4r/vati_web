@@ -23,7 +23,7 @@ class CreditReviewService
         if (! $officer->hasRole('credit_officer') || ! $officer->status || ($officer->branch_id && $officer->branch_id !== $application->branch_id)) {
             throw new DomainException('The selected credit officer is not eligible for this application.');
         }
-        $application->update(['assigned_credit_officer_id' => $officer->id, 'status' => ApplicationStatus::CREDIT_REVIEW]);
+        $application->update(['assigned_credit_officer_id' => $officer->id, 'assigned_by' => $actor->id, 'status' => ApplicationStatus::CREDIT_REVIEW]);
         activity()->causedBy($actor)->performedOn($application)->withProperties(['assigned_credit_officer_id' => $officer->id])->log('Application assigned for credit review');
         $this->notifications->send($officer, 'application_assigned', 'New application assigned', "{$application->application_number} requires credit review.", 'loan_application', $application->id);
 

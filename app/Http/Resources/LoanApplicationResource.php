@@ -23,6 +23,8 @@ class LoanApplicationResource extends JsonResource
             'recommended_duration_months' => $this->recommended_duration_months,
             'risk_level' => $this->risk_level,
             'assigned_credit_officer_id' => $this->assigned_credit_officer_id,
+            'assigned_by' => $this->whenLoaded('assignedBy', fn () => ['id' => $this->assignedBy->id, 'name' => $this->assignedBy->name]),
+            'created_by' => $this->whenLoaded('creator', fn () => ['id' => $this->creator->id, 'name' => $this->creator->name]),
             'existing_loan_balance' => $this->existing_loan_balance,
             'refinancing_amount' => $this->refinancing_amount,
             'increment_amount' => $this->increment_amount,

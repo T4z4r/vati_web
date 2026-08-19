@@ -36,7 +36,7 @@ class DashboardController extends ApiController
             $assigned->where('branch_id', $branchId);
         }
         $priority = (clone $assigned)->whereIn('status', [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW])
-            ->with(['member:id,first_name,last_name,membership_number', 'product:id,name'])
+            ->with(['member:id,first_name,last_name,membership_number', 'product:id,name', 'assignedBy:id,name', 'creator:id,name'])
             ->oldest('submitted_at')->limit(10)->get()->map(fn (LoanApplication $application) => [
                 'id' => $application->id,
                 'application_number' => $application->application_number,
