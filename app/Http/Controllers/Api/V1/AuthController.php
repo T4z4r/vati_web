@@ -61,4 +61,23 @@ class AuthController extends ApiController
 
         return response()->json(['success' => true, 'message' => 'Password reset successfully. Please sign in with your new password.']);
     }
+
+    public function changePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:10', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages(['current_password' => ['The current password is incorrect.']]);
+        }
+
+        $user->forceFill(['password' => Hash::make($data['password'])])->save();
+        $user->tokens()->delete();
+
+        return response()->json(['success' => true, 'message' => 'Password changed successfully. Please sign in again.']);
+    }
 }

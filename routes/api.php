@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/change-password', [AuthController::class, 'changePassword']);
         Route::get('profile', [AuthController::class, 'profile']);
         Route::get('dashboard', [DashboardController::class, 'index']);
         Route::get('portfolio/summary', [PortfolioController::class, 'summary']);
