@@ -39,17 +39,13 @@ class PortfolioAnalyticsService
             ->value('total');
 
         return [
-            'branch_id' => $branchId,
-            'from' => $fromDate->toDateString(),
-            'to' => $toDate->toDateString(),
+            'as_of' => now()->toDateString(),
             'gross_loan_portfolio' => $this->money($portfolio),
             'active_loans' => (clone $loans)->count(),
-            'expected_collection' => $this->money($expected),
-            'collected_amount' => $this->money($collected),
             'collection_rate' => $this->percent($expected > 0 ? $collected / $expected * 100 : 0),
+            'portfolio_at_risk' => $this->percent($portfolio > 0 ? $atRisk / $portfolio * 100 : 0),
             'performing_amount' => $this->money(max(0, $portfolio - $atRisk)),
             'at_risk_amount' => $this->money($atRisk),
-            'portfolio_at_risk' => $this->percent($portfolio > 0 ? $atRisk / $portfolio * 100 : 0),
             'overdue_amount' => $this->money($overdue),
         ];
     }
@@ -63,9 +59,8 @@ class PortfolioAnalyticsService
         }
 
         return $query->get()->map(fn (Branch $branch) => [
-            'id' => $branch->id,
-            'name' => $branch->branch_name,
-            'code' => $branch->branch_code,
+            'branch_id' => $branch->id,
+            'branch_name' => $branch->branch_name,
             ...$this->summary($user, $branch->id, $from, $to),
         ])->all();
     }

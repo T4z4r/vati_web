@@ -28,9 +28,16 @@ class PortfolioController extends ApiController
         $data = $request->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'search' => ['nullable', 'string', 'max:255'],
         ]);
 
         $items = collect($this->portfolio->branches($request->user(), $data['from'] ?? null, $data['to'] ?? null));
+
+        if (! empty($data['search'])) {
+            $search = $data['search'];
+            $items = $items->filter(fn ($branch) => str_contains(mb_strtolower($branch['branch_name']), mb_strlower($search)));
+        }
+
         $page = max(1, $request->integer('page', 1));
         $perPage = $this->perPage($request);
         $paginator = new LengthAwarePaginator(

@@ -6,10 +6,6 @@ use App\Enums\ApplicationStatus;
 use App\Models\CreditReview;
 use App\Models\Loan;
 use App\Models\LoanApplication;
-use App\Models\LoanInstallment;
-use App\Models\LoanSettlement;
-use App\Models\Payment;
-use App\Models\PaymentAllocation;
 use App\Services\PortfolioAnalyticsService;
 use Illuminate\Http\Request;
 
@@ -26,8 +22,12 @@ class DashboardController extends ApiController
         ]);
         $user = $request->user();
         $branchId = $this->portfolio->authorizedBranch($user, $filters['branch_id'] ?? null);
+        $role = $user->getRoleNames()->first() ?? 'user';
+        $fromDate = ($filters['from'] ?? null) ? \Carbon\Carbon::parse($filters['from'])->startOfDay() : now()->startOfMonth();
+        $toDate = ($filters['to'] ?? null) ? \Carbon\Carbon::parse($filters['to'])->endOfDay() : now()->endOfDay();
 
         $data = [
+            'role' => $role,
             'as_of' => now()->toIso8601String(),
         ];
 
@@ -35,69 +35,41 @@ class DashboardController extends ApiController
         if ($branchId) {
             $assigned->where('branch_id', $branchId);
         }
-        $priority = (clone $assigned)->whereIn('status', [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW])
-            ->with(['member:id,first_name,last_name,membership_number', 'product:id,name', 'assignedBy:id,name', 'creator:id,name'])
-            ->oldest('submitted_at')->limit(10)->get()->map(fn (LoanApplication $application) => [
-                'id' => $application->id,
-                'application_number' => $application->application_number,
-                'member_name' => trim($application->member->first_name.' '.$application->member->last_name),
-                'product' => $application->product->name,
-                'requested_amount' => (string) $application->requested_amount,
-                'status' => $application->status->value,
-                'submitted_at' => $application->submitted_at?->toIso8601String(),
-            ]);
+
+        $pendingReviewStatuses = [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RETURNED];
+        $pendingReview = (clone $assigned)->whereIn('status', $pendingReviewStatuses)->count();
+
+        $todayStart = now()->startOfDay();
+        $newAssignments = (clone $assigned)->where('status', ApplicationStatus::SUBMITTED)->where('updated_at', '>=', $todayStart)->count();
+
+        $reviewedToday = (clone $assigned)->whereIn('status', [ApplicationStatus::RECOMMENDED, ApplicationStatus::APPROVED, ApplicationStatus::REJECTED])->where('updated_at', '>=', $todayStart)->count();
+
+        $returnedCases = (clone $assigned)->where('status', ApplicationStatus::RETURNED)->count();
+
+        $highRiskCases = (clone $assigned)->whereIn('risk_level', ['high', 'critical'])->whereIn('status', [ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RECOMMENDED])->count();
 
         $data['credit_officer'] = [
-            'pending_credit_review' => (clone $assigned)->whereIn('status', [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW])->count(),
-            'new_assignments_today' => (clone $assigned)->whereDate('updated_at', today())->count(),
-            'reviewed_today' => CreditReview::query()->where('reviewed_by', $user->id)->whereDate('reviewed_at', today())->count(),
-            'returned_cases' => (clone $assigned)->where('status', ApplicationStatus::RETURNED)->count(),
-            'high_risk_cases' => (clone $assigned)->where('risk_level', 'high')->whereIn('status', [ApplicationStatus::CREDIT_REVIEW, ApplicationStatus::RECOMMENDED])->count(),
+            'pending_credit_review' => $pendingReview,
+            'new_assignments' => $newAssignments,
+            'reviewed_today' => $reviewedToday,
+            'returned_cases' => $returnedCases,
+            'high_risk_cases' => $highRiskCases,
             'daily_target' => (int) config('vati.credit_daily_target', 10),
-            'priority_applications' => $priority,
+            'daily_completed' => $reviewedToday,
         ];
 
-        $applications = LoanApplication::query();
-        if ($branchId) {
-            $applications->where('branch_id', $branchId);
-        }
-        $data['administration'] = [
-            'pending_final_approval' => (clone $applications)->where('status', ApplicationStatus::RECOMMENDED)->count(),
-            'returned_applications' => (clone $applications)->where('status', ApplicationStatus::RETURNED)->count(),
-            'portfolio' => $this->portfolio->summary($user, $branchId, $filters['from'] ?? null, $filters['to'] ?? null),
-        ];
+        $portfolio = $this->portfolio->summary($user, $branchId, $filters['from'] ?? null, $filters['to'] ?? null);
 
-        $data['management_financial_summary'] = $this->managementSummary($branchId);
+        $data['admin'] = [
+            'gross_loan_portfolio' => $portfolio['gross_loan_portfolio'],
+            'active_loans' => $portfolio['active_loans'],
+            'collection_rate' => (float) $portfolio['collection_rate'],
+            'portfolio_at_risk' => (float) $portfolio['portfolio_at_risk'],
+            'performing_amount' => $portfolio['performing_amount'],
+            'at_risk_amount' => $portfolio['at_risk_amount'],
+            'overdue_amount' => $portfolio['overdue_amount'],
+        ];
 
         return response()->json(['success' => true, 'data' => $data]);
-    }
-
-    private function managementSummary(?int $branchId): array
-    {
-        $loans = Loan::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId));
-        $applications = LoanApplication::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId));
-        $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
-        $postedPayments = Payment::query()->when($branchId, fn ($query) => $query->where('branch_id', $branchId))->where('status', 'posted');
-        $repaymentIncome = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
-            ->selectRaw('COALESCE(SUM(interest_amount + penalty_amount), 0) as total')->value('total');
-        $repaymentLoss = (float) LoanInstallment::whereIn('loan_id', (clone $loans)->select('id'))->sum('interest_exemption')
-            + (float) LoanSettlement::whereIn('loan_id', (clone $loans)->select('id'))->sum('interest_waived');
-
-        return [
-            'total_loan_portfolio' => $this->money((float) $activeLoans->sum('total_balance')),
-            'total_posted_payments' => $this->money((float) (clone $postedPayments)->sum('amount')),
-            'posted_payment_count' => (clone $postedPayments)->count(),
-            'repayment_income' => $this->money($repaymentIncome),
-            'repayment_loss' => $this->money($repaymentLoss),
-            'repayment_profit_or_loss' => $this->money($repaymentIncome - $repaymentLoss),
-            'total_loan_disbursement' => $this->money((float) (clone $loans)->whereNotNull('disbursement_date')->sum('principal_amount')),
-            'total_loan_applications' => (clone $applications)->count(),
-            'amount_requested_for_disbursement' => $this->money((float) (clone $applications)->whereNotIn('status', ['rejected', 'cancelled'])->sum('requested_amount')),
-        ];
-    }
-
-    private function money(float $value): string
-    {
-        return number_format($value, 2, '.', '');
     }
 }

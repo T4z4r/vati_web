@@ -57,8 +57,8 @@ class NotificationController extends ApiController
             'type' => $notification->data['type'] ?? class_basename($notification->type),
             'title' => $notification->data['title'] ?? null,
             'message' => $notification->data['message'] ?? null,
-            'data' => $notification->data,
-            'read' => $notification->read_at !== null,
+            'resource_type' => $notification->data['resource_type'] ?? null,
+            'resource_id' => $notification->data['resource_id'] ?? null,
             'read_at' => $notification->read_at?->toIso8601String(),
             'created_at' => $notification->created_at?->toIso8601String(),
         ];
