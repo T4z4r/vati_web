@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +14,16 @@ class LoanResource extends JsonResource
         $repaymentProgress = $this->total_repayment > 0
             ? max(0, 100 - ($this->total_balance / $this->total_repayment) * 100)
             : 0;
+
+        $calculator = app(LoanCalculatorService::class);
+        $breakdown = null;
+
+        if ($this->relationLoaded('product') && $this->product && $this->principal_amount && $this->number_of_installments) {
+            try {
+                $breakdown = collect($calculator->calculate($this->product, (float) $this->principal_amount, (int) $this->number_of_installments))
+                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
+            } catch (\Throwable) {}
+        }
 
         return [
             'id' => $this->id,
@@ -42,6 +53,7 @@ class LoanResource extends JsonResource
             'refinancing_amount' => $this->refinancing_amount,
             'increment_amount' => $this->increment_amount,
             'status' => $this->status->value,
+            'calculator_breakdown' => $breakdown,
             'repayment_progress' => round($repaymentProgress, 2),
             'paid_installments' => $paidInstallments,
             'disbursement_date' => $this->disbursement_date?->toDateString(),

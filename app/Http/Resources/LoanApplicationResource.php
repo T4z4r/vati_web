@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,6 +10,16 @@ class LoanApplicationResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $calculator = app(LoanCalculatorService::class);
+        $breakdown = null;
+
+        if ($this->relationLoaded('product') && $this->product && $this->requested_amount && $this->duration_months) {
+            try {
+                $breakdown = collect($calculator->calculate($this->product, (float) $this->requested_amount, (int) $this->duration_months))
+                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
+            } catch (\Throwable) {}
+        }
+
         return [
             'id' => $this->id,
             'application_number' => $this->application_number,
@@ -31,6 +42,7 @@ class LoanApplicationResource extends JsonResource
             'loan_purpose' => $this->loan_purpose,
             'business_summary' => $this->business_summary,
             'status' => $this->status?->value,
+            'calculator_breakdown' => $breakdown,
             'assessment' => $this->whenLoaded('assessment'),
             'utilizations' => $this->whenLoaded('utilizations'),
             'approvals' => $this->whenLoaded('approvals'),
