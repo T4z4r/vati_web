@@ -179,6 +179,16 @@ class OnboardingService
                 'status' => 'submitted',
                 'submitted_at' => now(),
                 'created_by' => $user->id,
+                'calc_interest' => $figures['interest'],
+                'calc_processing_fee' => $figures['processing_fee'],
+                'calc_processing_fee_vat' => $figures['processing_fee_vat'],
+                'calc_transaction_fee' => $figures['transaction_fee'],
+                'calc_transaction_fee_vat' => $figures['transaction_fee_vat'],
+                'calc_membership_fee' => $figures['membership_fee'],
+                'calc_security_amount' => $figures['security_amount'],
+                'calc_charges' => $figures['charges'],
+                'calc_amount_receivable' => $figures['amount_receivable'],
+                'calc_total_repayment' => $figures['total_repayment'],
             ]);
             $application->assessment()->create([
                 ...$assessment,

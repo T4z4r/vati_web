@@ -7,7 +7,7 @@
         <h1>{{ __('App Versions') }}</h1>
         <p>{{ __('Upload APK files and manage download links for field staff.') }}</p>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('uploadModal').style.display='flex'">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
         <span class="ph ph-upload-simple"></span> {{ __('Upload APK') }}
     </button>
 </div>
@@ -78,46 +78,48 @@
     </div>
 </div>
 
-<div id="uploadModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-content" style="max-width:520px">
-        <div class="modal-head">
-            <h2>{{ __('Upload APK') }}</h2>
-            <button class="modal-close" onclick="document.getElementById('uploadModal').style.display='none'">&times;</button>
-        </div>
-        <form method="POST" action="{{ route('admin.system.app-versions.store') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="modal-body">
-                <label>
-                    {{ __('APK File') }}
-                    <input type="file" name="apk" accept=".apk" required>
-                    @error('apk') <small class="error">{{ $message }}</small> @enderror
-                </label>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
-                    <label>
-                        {{ __('Version Name') }}
-                        <input type="text" name="version_name" value="{{ old('version_name') }}" placeholder="e.g. 1.2.0" required>
-                        @error('version_name') <small class="error">{{ $message }}</small> @enderror
-                    </label>
-                    <label>
-                        {{ __('Version Code') }}
-                        <input type="text" name="version_code" value="{{ old('version_code') }}" placeholder="e.g. 5" required>
-                        @error('version_code') <small class="error">{{ $message }}</small> @enderror
-                    </label>
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">{{ __('Upload APK') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.system.app-versions.store') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="apk" class="form-label">{{ __('APK File') }}</label>
+                        <input type="file" class="form-control" name="apk" id="apk" accept=".apk" required>
+                        @error('apk') <div class="text-danger small">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="version_name" class="form-label">{{ __('Version Name') }}</label>
+                            <input type="text" class="form-control" name="version_name" id="version_name" value="{{ old('version_name') }}" placeholder="e.g. 1.2.0" required>
+                            @error('version_name') <div class="text-danger small">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="version_code" class="form-label">{{ __('Version Code') }}</label>
+                            <input type="text" class="form-control" name="version_code" id="version_code" value="{{ old('version_code') }}" placeholder="e.g. 5" required>
+                            @error('version_code') <div class="text-danger small">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="release_notes" class="form-label">{{ __('Release Notes') }}</label>
+                        <textarea class="form-control" name="release_notes" id="release_notes" rows="3" placeholder="{{ __('What changed in this version...') }}">{{ old('release_notes') }}</textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_latest" id="is_latest" value="1" @checked(old('is_latest', true))>
+                        <label class="form-check-label" for="is_latest">{{ __('Set as latest version (shown to field staff automatically)') }}</label>
+                    </div>
                 </div>
-                <label>
-                    {{ __('Release Notes') }}
-                    <textarea name="release_notes" rows="3" placeholder="{{ __('What changed in this version...') }}">{{ old('release_notes') }}</textarea>
-                </label>
-                <label class="check-row">
-                    <input type="checkbox" name="is_latest" value="1" @checked(old('is_latest', true))>
-                    {{ __('Set as latest version (shown to field staff automatically)') }}
-                </label>
-            </div>
-            <div class="modal-foot">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('uploadModal').style.display='none'">{{ __('Cancel') }}</button>
-                <button class="btn btn-primary">{{ __('Upload') }}</button>
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button class="btn btn-primary">{{ __('Upload') }}</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

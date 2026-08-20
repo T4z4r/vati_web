@@ -59,6 +59,12 @@ class LoanApprovalService
                     'total_balance' => $figures['total_repayment'],
                     'number_of_installments' => $installments,
                     'installment_amount' => round($figures['total_repayment'] / $installments, 2),
+                    'processing_fee' => $figures['processing_fee'],
+                    'transaction_charges' => $figures['transaction_fee'],
+                    'other_charges' => $figures['membership_fee'],
+                    'total_fees_and_vat' => $figures['charges'],
+                    'calc_security_amount' => $figures['security_amount'],
+                    'calc_amount_receivable' => $figures['amount_receivable'],
                 ]);
             }
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,14 +14,19 @@ class LoanResource extends JsonResource
             ? max(0, 100 - ($this->total_balance / $this->total_repayment) * 100)
             : 0;
 
-        $calculator = app(LoanCalculatorService::class);
         $breakdown = null;
-
-        if ($this->relationLoaded('product') && $this->product && $this->principal_amount && $this->number_of_installments) {
-            try {
-                $breakdown = collect($calculator->calculate($this->product, (float) $this->principal_amount, (int) $this->number_of_installments))
-                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
-            } catch (\Throwable) {}
+        if ($this->total_fees_and_vat !== null || $this->calc_security_amount !== null) {
+            $breakdown = [
+                'principal' => number_format((float) $this->principal_amount, 2, '.', ''),
+                'interest' => number_format((float) $this->interest_amount, 2, '.', ''),
+                'processing_fee' => number_format((float) $this->processing_fee, 2, '.', ''),
+                'transaction_fee' => number_format((float) $this->transaction_charges, 2, '.', ''),
+                'membership_fee' => number_format((float) $this->other_charges, 2, '.', ''),
+                'security_amount' => number_format((float) ($this->calc_security_amount ?? 0), 2, '.', ''),
+                'charges' => number_format((float) $this->total_fees_and_vat, 2, '.', ''),
+                'amount_receivable' => number_format((float) ($this->calc_amount_receivable ?? 0), 2, '.', ''),
+                'total_repayment' => number_format((float) $this->total_repayment, 2, '.', ''),
+            ];
         }
 
         return [
