@@ -89,6 +89,9 @@
             <a class="{{ request()->routeIs('admin.system.data') ? 'active' : '' }}"
                 href="{{ route('admin.system.data') }}"><span class="ph ph-database nav-icon"
                     aria-hidden="true"></span> {{ __('Data Management') }}</a>
+            <a class="{{ request()->routeIs('admin.system.app-versions*') ? 'active' : '' }}"
+                href="{{ route('admin.system.app-versions') }}"><span class="ph ph-package nav-icon"
+                    aria-hidden="true"></span> {{ __('App Versions') }}</a>
         </nav>
         <div class="sidebar-foot"><span class="status-dot"></span>
             <div><strong>{{ __('System online') }}</strong><small>{{ now()->format('d M Y') }}</small></div>

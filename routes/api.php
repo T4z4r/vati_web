@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ApplicationComplianceController;
 use App\Http\Controllers\Api\V1\ApplicationDocumentController;
 use App\Http\Controllers\Api\V1\ApplicationExportController;
 use App\Http\Controllers\Api\V1\AreaController;
+use App\Http\Controllers\Api\V1\AppDownloadController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CreditReviewController;
@@ -43,6 +44,9 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
     Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+
+    Route::get('app/latest', [AppDownloadController::class, 'latest'])->name('app.latest');
+    Route::get('app/{appVersion}/download', [AppDownloadController::class, 'download'])->name('api.app.download');
 
     Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);

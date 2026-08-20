@@ -135,6 +135,11 @@
             "type": "string"
         },
         {
+            "key": "app_version_id",
+            "value": "",
+            "type": "string"
+        },
+        {
             "key": "password_reset_token",
             "value": "",
             "type": "string"
@@ -1910,6 +1915,32 @@
                         "method": "DELETE",
                         "header": [],
                         "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "App Download",
+            "description": "Public endpoints for checking and downloading the latest APK version. No authentication required.",
+            "item": [
+                {
+                    "name": "Check Latest Version",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/app/latest",
+                        "description": "Returns metadata for the latest published APK version. No authentication required."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download APK",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/app/{{app_version_id}}/download",
+                        "description": "Directly downloads the APK file for the specified version. No authentication required. Requires `app_version_id` from the latest version response or admin panel."
                     },
                     "response": []
                 }
