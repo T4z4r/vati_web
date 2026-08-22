@@ -219,14 +219,7 @@
 
 <div class="section">Attached documents checklist</div>
 <table>
-    @foreach([
-        'member_identity' => 'Copy of ID (Voter / National ID) of member',
-        'guarantor_identity' => 'Copy of ID of guarantor',
-        'local_government_letter' => 'Local Government Letter',
-        'business_license' => 'Copy of Business License',
-        'house_lease' => 'House lease agreement',
-        'other' => 'Other supporting document',
-    ] as $type => $label)
+    @foreach(\App\Services\ApplicationComplianceService::SUPPORT_DOCUMENT_LABELS as $type => $label)
         @if($loop->odd)<tr>@endif
         <td style="width:50%"><span class="check">{{ $documentTypes->has($type) ? '✓' : '' }}</span>{{ $label }} @if($documentTypes->has($type)) — {{ strtoupper($documentTypes->get($type)) }} @endif</td>
         @if($loop->even)</tr>@endif

@@ -38,6 +38,12 @@ class PortfolioAnalyticsService
             ->selectRaw('COALESCE(SUM(total_due - total_paid - interest_exemption), 0) as total')
             ->value('total');
 
+        $totalIssuedQuery = Loan::query()->where('status', '!=', 'cancelled');
+        if ($branchId) {
+            $totalIssuedQuery->where('branch_id', $branchId);
+        }
+        $totalIssuedAmount = (float) $totalIssuedQuery->sum('principal_amount');
+
         return [
             'as_of' => now()->toDateString(),
             'gross_loan_portfolio' => $this->money($portfolio),
@@ -47,6 +53,7 @@ class PortfolioAnalyticsService
             'performing_amount' => $this->money(max(0, $portfolio - $atRisk)),
             'at_risk_amount' => $this->money($atRisk),
             'overdue_amount' => $this->money($overdue),
+            'total_issued_amount' => $this->money($totalIssuedAmount),
         ];
     }
 

@@ -499,5 +499,7 @@
     "Release Notes": "Maelezo ya Kutolewa",
     "What changed in this version...": "Nini kilibadilika katika aina hii...",
     "Set as latest version (shown to field staff automatically)": "Weka kama aina ya mwisho (inaonyeshwa kwa wafanyakazi wa shamba kiotomatiki)",
-    "Upload APK files and manage download links for field staff.": "Pakia faili za APK na usimamize viungo vya kupakua kwa wafanyakazi wa shamba."
+    "Upload APK files and manage download links for field staff.": "Pakia faili za APK na usimamize viungo vya kupakua kwa wafanyakazi wa shamba.",
+    "Total issued": "Jumla iliyotolewa",
+    "All disbursed principal": "Mikopo yote iliyosambazwa"
 }

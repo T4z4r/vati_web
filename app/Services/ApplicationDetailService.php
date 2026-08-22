@@ -248,6 +248,7 @@ class ApplicationDetailService
     {
         return [
             'id' => $document->id, 'document_type' => $document->document_type,
+            'document_type_label' => $document->getDocumentTypeLabel(),
             'file_name' => $document->original_name ?: basename($document->file_path),
             'mime_type' => $document->mime_type, 'size_bytes' => $document->size_bytes,
             'status' => $document->verification_status, 'remarks' => $document->remarks,

@@ -60,6 +60,11 @@
             <small>{{ __('Portfolio at risk') }}</small>
             <strong>{{ number_format((float) $portfolio['portfolio_at_risk'], 1) }}%</strong>
         </div>
+        <div class="stat">
+            <span class="ph ph-bank stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Total issued') }}</small>
+            <strong>TZS {{ number_format((float) $portfolio['total_issued_amount']) }}</strong>
+        </div>
     </section>
 
     <section class="grid-2">

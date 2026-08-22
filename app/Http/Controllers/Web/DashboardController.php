@@ -91,6 +91,7 @@ class DashboardController extends Controller
             'collectionRate' => $expected > 0 ? round($collected / $expected * 100, 1) : 0,
             'overdueLoans' => (clone $loans)->where('status', 'overdue')->count(),
             'pendingApplications' => (clone $applications)->whereNotIn('status', ['approved', 'rejected', 'disbursed', 'cancelled'])->count(),
+            'totalIssuedAmount' => (clone $loans)->where('status', '!=', 'cancelled')->sum('principal_amount'),
         ];
 
         return view($isManagement ? 'admin.dashboard-management' : 'admin.dashboard', $data);

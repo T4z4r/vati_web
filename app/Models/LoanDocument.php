@@ -27,4 +27,9 @@ class LoanDocument extends Model
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
+
+    public function getDocumentTypeLabel(): string
+    {
+        return ApplicationComplianceService::supportDocumentLabel($this->document_type);
+    }
 }

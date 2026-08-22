@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class ApplicationDocumentController extends ApiController
 {
-    private const TYPES = ['member_identity', 'guarantor_identity', 'local_government_letter', 'business_license', 'house_lease', 'other'];
+    private const TYPES = ApplicationComplianceService::SUPPORT_DOCUMENT_TYPES;
 
     public function index(LoanApplication $loanApplication)
     {
@@ -63,6 +63,7 @@ class ApplicationDocumentController extends ApiController
         return [
             'id' => $document->id,
             'document_type' => $document->document_type,
+            'document_type_label' => $document->getDocumentTypeLabel(),
             'file_name' => $document->original_name ?: basename($document->file_path),
             'mime_type' => $document->mime_type,
             'size_bytes' => $document->size_bytes,

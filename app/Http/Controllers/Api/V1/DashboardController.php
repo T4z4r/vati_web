@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ApplicationStatus;
-use App\Models\CreditReview;
-use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Services\PortfolioAnalyticsService;
 use Illuminate\Http\Request;
@@ -65,6 +63,7 @@ class DashboardController extends ApiController
             'performing_amount' => $portfolio['performing_amount'],
             'at_risk_amount' => $portfolio['at_risk_amount'],
             'overdue_amount' => $portfolio['overdue_amount'],
+            'total_issued_amount' => $portfolio['total_issued_amount'],
         ];
 
         $data['admin'] = [
@@ -75,6 +74,7 @@ class DashboardController extends ApiController
             'performing_amount' => $portfolio['performing_amount'],
             'at_risk_amount' => $portfolio['at_risk_amount'],
             'overdue_amount' => $portfolio['overdue_amount'],
+            'total_issued_amount' => $portfolio['total_issued_amount'],
         ];
 
         return response()->json(['success' => true, 'data' => $data]);

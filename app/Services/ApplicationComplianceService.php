@@ -15,6 +15,22 @@ class ApplicationComplianceService
 {
     public const GUARANTOR_DECLARATION = 'I accept responsibility for repayment of this loan if the applicant defaults, subject to the signed loan agreement and applicable law.';
 
+    public const SUPPORT_DOCUMENT_TYPES = ['member_identity', 'guarantor_identity', 'local_government_letter', 'business_license', 'house_lease', 'other'];
+
+    public const SUPPORT_DOCUMENT_LABELS = [
+        'member_identity' => 'Copy of ID (Voter/National ID) of member',
+        'guarantor_identity' => 'Copy of ID of guarantor',
+        'local_government_letter' => 'Local Government Letter',
+        'business_license' => 'Copy of Business License',
+        'house_lease' => 'House Lease Agreement',
+        'other' => 'Other Supporting Document',
+    ];
+
+    public static function supportDocumentLabel(string $type): string
+    {
+        return self::SUPPORT_DOCUMENT_LABELS[$type] ?? ucfirst(str_replace('_', ' ', $type));
+    }
+
     public function captureApplicant(LoanApplication $application, array $data, ?UploadedFile $signature, ?UploadedFile $thumbprint, string $ip): LoanApplication
     {
         $this->ensureDraft($application);

@@ -47,7 +47,7 @@ class ApplicationComplianceController extends ApiController
 
     public function document(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $service)
     {
-        $data = $request->validate(['document_type' => ['required', Rule::in(['member_identity', 'guarantor_identity', 'local_government_letter', 'business_license', 'house_lease', 'other'])], 'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], 'is_required' => ['sometimes', 'boolean']]);
+        $data = $request->validate(['document_type' => ['required', Rule::in(ApplicationComplianceService::SUPPORT_DOCUMENT_TYPES)], 'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], 'is_required' => ['sometimes', 'boolean']]);
 
         return response()->json(['success' => true, 'data' => $service->addDocument($loanApplication, $data['document_type'], $request->file('document'), $request->user(), $request->boolean('is_required'))], 201);
     }

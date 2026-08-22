@@ -54,6 +54,10 @@
                 <span class="ph ph-file-text stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Open applications') }}</small><strong>{{ number_format($pendingApplications) }}</strong><em>{{ __('In the approval pipeline') }}</em>
             </div>
+            <div class="stat">
+                <span class="ph ph-bank stat-icon" aria-hidden="true"></span>
+                <small>{{ __('Total issued') }}</small><strong>TZS {{ number_format($totalIssuedAmount) }}</strong><em>{{ __('All disbursed principal') }}</em>
+            </div>
         </section>
         <section class="grid-2">
             <div class="card">
