@@ -22,8 +22,12 @@ return new class extends Migration
         });
 
         Schema::table('loans', function (Blueprint $table) {
-            $table->decimal('calc_security_amount', 18, 2)->nullable()->after('total_fees_and_vat');
+            $table->decimal('calc_processing_fee_vat', 18, 2)->nullable()->after('total_fees_and_vat');
+            $table->decimal('calc_transaction_fee_vat', 18, 2)->nullable()->after('calc_processing_fee_vat');
+            $table->decimal('calc_security_amount', 18, 2)->nullable()->after('calc_transaction_fee_vat');
             $table->decimal('calc_amount_receivable', 18, 2)->nullable()->after('calc_security_amount');
+            $table->decimal('calc_membership_fee', 18, 2)->nullable()->after('calc_amount_receivable');
+            $table->decimal('calc_charges', 18, 2)->nullable()->after('calc_membership_fee');
         });
     }
 
@@ -38,7 +42,7 @@ return new class extends Migration
         });
 
         Schema::table('loans', function (Blueprint $table) {
-            $table->dropColumn(['calc_security_amount', 'calc_amount_receivable']);
+            $table->dropColumn(['calc_security_amount', 'calc_amount_receivable', 'calc_processing_fee_vat', 'calc_transaction_fee_vat', 'calc_membership_fee', 'calc_charges']);
         });
     }
 };

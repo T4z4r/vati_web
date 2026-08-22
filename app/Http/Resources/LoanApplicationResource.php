@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,11 @@ class LoanApplicationResource extends JsonResource
                 'amount_receivable' => number_format((float) $this->calc_amount_receivable, 2, '.', ''),
                 'total_repayment' => number_format((float) $this->calc_total_repayment, 2, '.', ''),
             ];
+        } elseif ($this->relationLoaded('product') && $this->product && $this->requested_amount && $this->duration_months) {
+            try {
+                $breakdown = collect(app(LoanCalculatorService::class)->calculate($this->product, (float) $this->requested_amount, (int) $this->duration_months))
+                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
+            } catch (\Throwable) {}
         }
 
         return [

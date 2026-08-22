@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,18 +16,25 @@ class LoanResource extends JsonResource
             : 0;
 
         $breakdown = null;
-        if ($this->total_fees_and_vat !== null || $this->calc_security_amount !== null) {
+        if ($this->calc_charges !== null) {
             $breakdown = [
                 'principal' => number_format((float) $this->principal_amount, 2, '.', ''),
                 'interest' => number_format((float) $this->interest_amount, 2, '.', ''),
                 'processing_fee' => number_format((float) $this->processing_fee, 2, '.', ''),
+                'processing_fee_vat' => number_format((float) $this->calc_processing_fee_vat, 2, '.', ''),
                 'transaction_fee' => number_format((float) $this->transaction_charges, 2, '.', ''),
-                'membership_fee' => number_format((float) $this->other_charges, 2, '.', ''),
-                'security_amount' => number_format((float) ($this->calc_security_amount ?? 0), 2, '.', ''),
-                'charges' => number_format((float) $this->total_fees_and_vat, 2, '.', ''),
-                'amount_receivable' => number_format((float) ($this->calc_amount_receivable ?? 0), 2, '.', ''),
+                'transaction_fee_vat' => number_format((float) $this->calc_transaction_fee_vat, 2, '.', ''),
+                'membership_fee' => number_format((float) $this->calc_membership_fee ?? $this->other_charges, 2, '.', ''),
+                'security_amount' => number_format((float) $this->calc_security_amount ?? 0, 2, '.', ''),
+                'charges' => number_format((float) $this->calc_charges ?? $this->total_fees_and_vat, 2, '.', ''),
+                'amount_receivable' => number_format((float) $this->calc_amount_receivable ?? 0, 2, '.', ''),
                 'total_repayment' => number_format((float) $this->total_repayment, 2, '.', ''),
             ];
+        } elseif ($this->relationLoaded('product') && $this->product && $this->principal_amount && $this->number_of_installments) {
+            try {
+                $breakdown = collect(app(LoanCalculatorService::class)->calculate($this->product, (float) $this->principal_amount, (int) $this->number_of_installments))
+                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
+            } catch (\Throwable) {}
         }
 
         return [
@@ -41,17 +49,14 @@ class LoanResource extends JsonResource
             'interest_rate' => $this->interest_rate,
             'principal_amount' => $this->principal_amount,
             'adjusted_principal_amount' => $this->adjusted_principal_amount,
-            'interest_amount' => $this->interest_amount,
             'total_repayment' => $this->total_repayment,
             'principal_balance' => $this->principal_balance,
-            'interest_balance' => $this->interest_balance,
             'total_balance' => $this->total_balance,
             'number_of_installments' => $this->number_of_installments,
             'installment_amount' => $this->installment_amount,
             'weekly_installment' => $this->weekly_installment,
             'admission_fee' => $this->admission_fee,
             'processing_fee' => $this->processing_fee,
-            'transaction_charges' => $this->transaction_charges,
             'other_charges' => $this->other_charges,
             'total_fees_and_vat' => $this->total_fees_and_vat,
             'refinancing_amount' => $this->refinancing_amount,
