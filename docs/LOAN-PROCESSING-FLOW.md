@@ -300,7 +300,7 @@ PUT /api/v1/loan-applications/{id}/compliance/nominees
 POST /api/v1/loan-applications/{id}/compliance/documents
 ```
 
-Document types: `member_identity`, `guarantor_identity`, `local_government_letter`, `business_license`, `house_lease`, `other`
+Document types: `member_identity`, `guarantor_identity`, `local_government_letter`, `business_license`, `house_lease`, `member_signature`, `other`
 
 ### 5e. Verify Document
 
@@ -1319,7 +1319,7 @@ The system sends notifications at these lifecycle points:
 | Branch access (admin) | `super_admin` or `head_office_admin` | See all branches |
 | Branch access (others) | Scoped to `branch_id` | See own branch only |
 | Payment methods | `cash`, `mpesa`, `airtel_money`, `mixx`, `halopesa`, `bank_transfer` | Valid disbursement/payment methods |
-| Document types | `member_identity`, `guarantor_identity`, `local_government_letter`, `business_license`, `house_lease`, `other` | Loan document categories |
+| Document types | `member_identity`, `guarantor_identity`, `local_government_letter`, `business_license`, `house_lease`, `member_signature`, `other` | Loan document categories |
 
 ---
 
