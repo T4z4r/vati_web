@@ -441,8 +441,9 @@ POST /api/v1/loan-applications/{id}/reject
    - Weekly frequency: installments = `round(duration_months * 52 / 12)`
    - Monthly frequency: installments = `duration_months`
    - `installment_amount` = `total_repayment / number_of_installments`
-   - `principal_balance` = `principal_amount`
-   - `interest_balance` = `interest_amount`
+   - `interest_amount` = `0` (interest-free lending)
+   - `principal_balance` = `total_repayment` (the full factor-scheduled amount is the outstanding debt)
+   - `interest_balance` = `0`
    - `total_balance` = `total_repayment`
    - Status: `pending_disbursement`
 2. A `LoanApproval` audit record is created
@@ -771,9 +772,8 @@ weekly_payment  = principal × factor
   8 months  → factor 0.0360 (35 weekly installments)
  12 months  → factor 0.0295 (52 weekly installments)
 
-interest       = total_repayment - principal
-               = principal × factor × installment_count - principal   // when a factor applies
-               = principal × (annual_interest_rate / 100) × (duration_months / 12)   // otherwise
+// Interest-free lending: no interest is charged on any loan.
+interest       = 0
 
 processing_fee = principal × (processing_fee_percentage / 100)
 insurance_fee  = principal × (insurance_percentage / 100)
@@ -782,24 +782,23 @@ security_amount = principal × (security_percentage / 100)
 
 total_charges     = processing_fee + insurance_fee + vat
 amount_receivable = principal - security_amount
-total_repayment   = principal + interest = weekly_payment × installment_count   // when a factor applies
+total_repayment   = weekly_payment × installment_count   // when a factor applies
+                  = principal                            // otherwise
 ```
-
-> **Note:** Despite the product having `interest_method = "reducing_balance"`, the calculator currently uses **flat-rate simple interest** for durations without a fixed weekly factor.
 
 ### Response
 
 ```json
 {
   "principal": 500000,
-  "interest": 60000,
+  "interest": 0,
   "processing_fee": 5000,
   "insurance_fee": 7500,
   "vat": 900,
   "security_amount": 50000,
   "charges": 13400,
   "amount_receivable": 450000,
-  "total_repayment": 560000
+  "total_repayment": 500000
 }
 ```
 
@@ -813,13 +812,23 @@ Generated automatically at disbursement by `RepaymentScheduleService::generate()
 
 ```
 count = number_of_installments
-principal_per = principal_amount / count
-interest_per  = interest_amount / count
 
-for i = 1 to count:
-  principal_due = principal_per   (last installment absorbs rounding remainder)
-  interest_due  = interest_per    (last installment absorbs rounding remainder)
-  total_due     = principal_due + interest_due
+if interest_amount <= 0 (all new loans — interest-free):
+  per_installment = floor(total_repayment / count, 2)
+
+  for i = 1 to count:
+    total_due     = per_installment   (last installment absorbs rounding remainder)
+    principal_due = total_due         (every installment counts fully toward the balance)
+    interest_due  = 0
+
+else (legacy interest-bearing loans):
+  principal_per = principal_amount / count
+  interest_per  = interest_amount / count
+
+  for i = 1 to count:
+    principal_due = principal_per     (last installment absorbs rounding remainder)
+    interest_due  = interest_per      (last installment absorbs rounding remainder)
+    total_due     = principal_due + interest_due
 
   due_date:
     weekly  → first_payment_date + addWeeks(i - 1)
@@ -828,16 +837,16 @@ for i = 1 to count:
   outstanding_balance = total_repayment - (sum of all previous total_due)
 ```
 
-### Example (500K loan, 6 weeks, 40K interest)
+### Example (TZS 1M loan, 6 months / 26 weeks, factor 0.0445)
 
 | # | Due Date | Principal | Interest | Total | Balance |
 |---|---|---|---|---|---|
-| 1 | Aug 25 | 83,333.33 | 6,666.67 | 90,000.00 | 470,000.00 |
-| 2 | Sep 1 | 83,333.33 | 6,666.67 | 90,000.00 | 380,000.00 |
-| 3 | Sep 8 | 83,333.33 | 6,666.67 | 90,000.00 | 290,000.00 |
-| 4 | Sep 15 | 83,333.33 | 6,666.67 | 90,000.00 | 200,000.00 |
-| 5 | Sep 22 | 83,333.33 | 6,666.67 | 90,000.00 | 110,000.00 |
-| 6 | Sep 29 | 83,333.35 | 6,666.65 | 90,000.00 | 0.00 |
+| 1 | Aug 25 | 44,500.00 | 0.00 | 44,500.00 | 1,112,500.00 |
+| 2 | Sep 1 | 44,500.00 | 0.00 | 44,500.00 | 1,068,000.00 |
+| ... | ... | ... | ... | ... | ... |
+| 26 | Feb 16 | 44,500.00 | 0.00 | 44,500.00 | 0.00 |
+
+Total repayment: TZS 1,157,000.
 
 ---
 

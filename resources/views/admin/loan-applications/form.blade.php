@@ -411,15 +411,15 @@
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Fixed-factor weekly schedule: each weekly payment = principal x factor.
-        function interestFor(principal, duration, frequency) {
+        // Interest-free lending: weekly payments follow the fixed factors; otherwise only the principal is repayable.
+        function scheduledTotalFor(principal, duration, frequency) {
             if (frequency === 'weekly' && WEEKLY_PAYMENT_FACTORS[duration]) {
-                return Math.round((principal * WEEKLY_PAYMENT_FACTORS[duration] * weeklyInstallmentsFor(duration)) * 100) / 100 - principal;
+                return Math.round((principal * WEEKLY_PAYMENT_FACTORS[duration] * weeklyInstallmentsFor(duration)) * 100) / 100;
             }
-            return null;
+            return Math.round(principal * 100) / 100;
         }
 
-        function renderRepaymentSchedule(principal, interest, duration, frequency) {
+        function renderRepaymentSchedule(totalRepayment, duration, frequency) {
             const memberSelected = Boolean(memberProfiles[memberSelect.value]);
             const installmentCount = frequency === 'weekly'
                 ? weeklyInstallmentsFor(duration)
@@ -428,30 +428,26 @@
             repaymentSchedule.style.display = memberSelected ? '' : 'none';
             scheduleBody.innerHTML = '';
 
-            if (!memberSelected || !principal || !duration || !installmentCount) {
+            if (!memberSelected || !totalRepayment || !duration || !installmentCount) {
                 return;
             }
 
-            const principalPart = Math.round((principal / installmentCount) * 100) / 100;
-            const interestPart = Math.round((interest / installmentCount) * 100) / 100;
-            let allocatedPrincipal = 0;
-            let allocatedInterest = 0;
+            const perInstallment = Math.floor((totalRepayment / installmentCount) * 100) / 100;
+            let remaining = totalRepayment;
 
             for (let number = 1; number <= installmentCount; number++) {
                 const isLast = number === installmentCount;
-                const principalDue = isLast ? principal - allocatedPrincipal : principalPart;
-                const interestDue = isLast ? interest - allocatedInterest : interestPart;
-                allocatedPrincipal += principalDue;
-                allocatedInterest += interestDue;
-                const balance = Math.max(0, principal + interest - allocatedPrincipal - allocatedInterest);
+                const due = isLast ? remaining : perInstallment;
+                remaining = Math.round((remaining - due) * 100) / 100;
+                const balance = Math.round((totalRepayment - due * number) * 100) / 100;
                 const row = document.createElement('tr');
                 const values = [
                     number,
                     `${frequency === 'weekly' ? 'Week' : 'Month'} ${number}`,
-                    principalDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    interestDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    (principalDue + interestDue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    due.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    '0.00',
+                    due.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    Math.max(0, balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 ];
                 values.forEach(value => {
                     const cell = document.createElement('td');
@@ -464,9 +460,9 @@
             const frequencyLabel = frequency === 'weekly' ? 'Weekly' : 'Monthly';
             document.getElementById('schedule-frequency').textContent = `${installmentCount} ${frequencyLabel.toLowerCase()} installments`;
             document.getElementById('schedule-description').textContent = `${frequencyLabel} projection for the selected applicant and product`;
-            document.getElementById('schedule-principal-total').textContent = principal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('schedule-interest-total').textContent = interest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('schedule-repayment-total').textContent = (principal + interest).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('schedule-principal-total').textContent = totalRepayment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('schedule-interest-total').textContent = '0.00';
+            document.getElementById('schedule-repayment-total').textContent = totalRepayment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function calculate() {
@@ -478,19 +474,14 @@
                 amount.max = option.dataset.max;
                 months.min = option.dataset.minmonths;
                 months.max = option.dataset.maxmonths;
-                const rate = Number(option.dataset.rate) / 100;
                 const frequency = option.dataset.frequency || 'monthly';
-                const factorInterest = interestFor(principal, duration, frequency);
-                const interest = factorInterest !== null
-                    ? factorInterest
-                    : principal * rate * (duration / 12);
+                const totalRepayment = scheduledTotalFor(principal, duration, frequency);
                 const processingFee = principal * (Number(option.dataset.processingFee) / 100);
                 const insuranceFee = principal * (Number(option.dataset.insuranceFee) / 100);
                 const vat = principal * (Number(option.dataset.vat) / 100);
                 const securityAmount = principal * (Number(option.dataset.securityPercentage) / 100);
                 const totalCharges = processingFee + insuranceFee + vat;
                 const receivableAmount = principal - securityAmount;
-                const totalRepayment = principal + interest;
 
                 estimate.value = formatMoney(totalRepayment);
                 charges.value = formatMoney(totalCharges);
@@ -503,7 +494,7 @@
                 document.getElementById('summary-insurance-fee').textContent = formatMoney(insuranceFee);
                 document.getElementById('summary-vat').textContent = formatMoney(vat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
-                renderRepaymentSchedule(principal, interest, duration, frequency);
+                renderRepaymentSchedule(totalRepayment, duration, frequency);
             } else {
                 estimate.value = '';
                 charges.value = '';
