@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(UserAttachment::class);
+    }
 }

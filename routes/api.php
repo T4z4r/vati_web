@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\V1\SystemSettingsController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\DataPurgeController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\UserAttachmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -68,6 +69,10 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('branches', BranchController::class);
         Route::get('roles', [UserController::class, 'roles']);
         Route::apiResource('users', UserController::class);
+        Route::get('users/{user}/attachments', [UserAttachmentController::class, 'index']);
+        Route::post('users/{user}/attachments', [UserAttachmentController::class, 'store']);
+        Route::get('users/{user}/attachments/{userAttachment}/download', [UserAttachmentController::class, 'download'])->name('api.users.attachments.download');
+        Route::delete('users/{user}/attachments/{userAttachment}', [UserAttachmentController::class, 'destroy']);
         Route::apiResource('groups', GroupController::class)->only(['index', 'show']);
         Route::apiResource('groups', GroupController::class)->only('store');
         Route::apiResource('groups', GroupController::class)->only(['update', 'destroy']);

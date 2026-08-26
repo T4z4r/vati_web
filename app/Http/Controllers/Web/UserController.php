@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -42,6 +43,7 @@ class UserController extends Controller
         unset($data['role']);
         $user = User::create($data);
         $user->assignRole($role);
+        activity()->causedBy($request->user())->performedOn($user)->withProperties(['email' => $user->email, 'role' => $role])->log('User account created');
 
         return redirect()->route('admin.users.show', $user)->with('success', 'Staff account created.');
     }
@@ -79,6 +81,7 @@ class UserController extends Controller
 
         $user->update($data);
         $user->syncRoles($role);
+        activity()->causedBy($request->user())->performedOn($user)->withProperties(['changed_fields' => array_values(Arr::except(array_keys($data), ['password'])), 'password_changed' => isset($data['password']), 'role' => $role])->log('User account updated');
 
         return redirect()->route('admin.users.show', $user)->with('success', 'Staff account updated.');
     }
@@ -89,6 +92,7 @@ class UserController extends Controller
             return back()->with('error', 'You cannot delete your own signed-in account.');
         }
 
+        activity()->causedBy($request->user())->withProperties(['deleted_user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email]])->log('User account deleted');
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Staff account deleted.');
