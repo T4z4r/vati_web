@@ -39,12 +39,12 @@ class LoanCalculatorService
             // Fixed weekly payment schedule: each weekly payment = principal x factor.
             $weeklyInstallment = round($principal * $factor, 2);
             $totalRepayment = round($weeklyInstallment * $installmentCount, 2);
-            $interest = round($totalRepayment - round($principal, 2), 2);
         } else {
-            $interest = $principal * ((float) $product->annual_interest_rate / 100) * ($durationMonths / 12);
-            $totalRepayment = round($principal + $interest, 2);
+            // Interest-free lending: only the principal is repayable.
+            $totalRepayment = round($principal, 2);
             $weeklyInstallment = null;
         }
+        $interest = 0.0;
 
         $processingFee = $principal * ((float) $product->processing_fee_percentage / 100);
         $insuranceFee = $principal * ((float) $product->insurance_percentage / 100);
