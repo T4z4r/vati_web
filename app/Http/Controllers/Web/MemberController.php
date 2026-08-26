@@ -303,15 +303,18 @@ class MemberController extends Controller
         return redirect()->route('admin.members.show', $member)->with('success', 'Member updated successfully.');
     }
 
-    public function destroy(Member $member)
+    public function destroy(Request $request, Member $member)
     {
         if ($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists()) {
             return back()->with('error', 'This member has loan history and cannot be deleted.');
         }
 
-        $member->delete();
+        $force = $request->boolean('_force');
+        $force ? $member->forceDelete() : $member->delete();
 
-        return redirect()->route('admin.members.index')->with('success', 'Member deleted.');
+        activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force])->log($force ? 'Member permanently deleted' : 'Member deleted');
+
+        return redirect()->route('admin.members.index')->with('success', $force ? 'Member permanently deleted.' : 'Member deleted.');
     }
 
     public function updateKyc(Request $request, Member $member)

@@ -156,7 +156,7 @@ class LoanApplicationController extends Controller
         return back()->with('success', 'Application rejected.');
     }
 
-    public function destroy(LoanApplication $loanApplication)
+    public function destroy(Request $request, LoanApplication $loanApplication)
     {
         if ($loanApplication->loan()->exists()) {
             return back()->with('error', 'This application already has a loan account and cannot be deleted.');
@@ -166,9 +166,12 @@ class LoanApplicationController extends Controller
             return back()->with('error', 'Only draft, submitted, rejected, or cancelled applications can be deleted.');
         }
 
-        $loanApplication->delete();
+        $force = $request->boolean('_force');
+        $force ? $loanApplication->forceDelete() : $loanApplication->delete();
 
-        return redirect()->route('admin.loan-applications.index')->with('success', 'Loan application deleted.');
+        activity()->causedBy($request->user())->performedOn($loanApplication)->withProperties(['forced' => $force])->log($force ? 'Loan application permanently deleted' : 'Loan application deleted');
+
+        return redirect()->route('admin.loan-applications.index')->with('success', $force ? 'Loan application permanently deleted.' : 'Loan application deleted.');
     }
 
     private function branchId(Request $request): ?int

@@ -26,7 +26,7 @@
         @can('delete-members')
             <form method="POST" action="{{ route('admin.members.destroy', $member) }}">
                 @csrf @method('DELETE')
-                <button class="btn btn-danger" data-confirm="Ufute mwanachama huyu? Mwanachama mwenye historia ya mikopo hawezi kufutwa.">Futa</button>
+                <button class="btn btn-danger" data-confirm="Ufute mwanachama huyu? Mwanachama mwenye historia ya mikopo hawezi kufutwa." data-force-text="Futa kudumu (hakiwezi kurejeshwa)" data-trash-text="Hamishia taka">Futa</button>
             </form>
         @endcan
     </div>
@@ -109,7 +109,7 @@
                                 @can('delete-members')
                                     <form method="POST" action="{{ route('admin.members.documents.destroy', [$member, $document]) }}" style="display:inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" data-confirm="Ufute waraka huu?">Futa</button>
+                                        <button class="btn btn-sm btn-danger" data-confirm="Ufute waraka huu?" data-force-text="Futa kudumu" data-trash-text="Hamishia taka">Futa</button>
                                     </form>
                                 @endcan
                             </td>

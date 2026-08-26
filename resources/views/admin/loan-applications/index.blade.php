@@ -60,7 +60,8 @@
                                                 action="{{ route('admin.loan-applications.destroy', $application) }}">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-sm btn-danger"
-                                                    data-confirm="{{ __('Delete this loan application?') }}">{{ __('Delete') }}</button>
+                                                    data-confirm="{{ __('Delete this loan application?') }}"
+                                                    data-force-text="{{ __('Delete forever') }}">{{ __('Delete') }}</button>
                                             </form>
                                         @endif
                                     @endcan

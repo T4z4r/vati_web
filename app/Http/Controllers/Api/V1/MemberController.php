@@ -38,10 +38,12 @@ class MemberController extends ApiController
         return response()->json(['success' => true, 'message' => 'Member updated successfully.', 'data' => new MemberResource($this->loadDetail($member))]);
     }
 
-    public function destroy(Member $member)
+    public function destroy(Request $request, Member $member)
     {
         abort_if($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists(), 409, 'This member has loan history and cannot be deleted.');
-        $member->delete();
+        $force = $request->boolean('force');
+        $force ? $member->forceDelete() : $member->delete();
+        activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force])->log($force ? 'Member permanently deleted' : 'Member deleted');
 
         return response()->noContent();
     }

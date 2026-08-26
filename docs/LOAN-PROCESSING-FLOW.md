@@ -1024,6 +1024,25 @@ GET /api/v1/portfolio/summary?from=2026-08-01&to=2026-08-31
 | `PUT` | `loan-products/{id}` | Update |
 | `DELETE` | `loan-products/{id}` | Delete |
 
+### Users, Attachments & Audit Trail
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `roles` | List roles with permissions |
+| `GET` | `users` | List users (filter by `branch_id`) |
+| `POST` | `users` | Create user (audited) |
+| `GET` | `users/{id}` | Full detail incl. `attachments` + `audit_trail` |
+| `PUT` | `users/{id}` | Update user (audited) |
+| `DELETE` | `users/{id}` | Delete user (audited) |
+| `GET` | `users/{id}/attachments` | List attachments |
+| `POST` | `users/{id}/attachments` | Upload attachment (PDF/JPG/JPEG/PNG/DOC/DOCX, max 5 MB) |
+| `GET` | `users/{id}/attachments/{attId}/download` | Download attachment |
+| `DELETE` | `users/{id}/attachments/{attId}` | Delete attachment (audited) |
+| `GET` | `system/audit-logs` | Global audit log (filter by `user_id`, date range, `log_name`, search) |
+| `GET` | `system/audit-logs/{id}` | Single audit entry |
+
+**User details audit trail:** `GET users/{id}` returns `audit_trail` — the latest 100 activities where the user is the actor (`direction: "performed"`) or the subject (`direction: "on_account"`). Each entry: `description`, `log_name`, `subject_type`, `subject_id`, `properties`, `performed_by`, `created_at`.
+
 ### Supporting
 
 | Method | Endpoint | Description |
@@ -1298,6 +1317,35 @@ id, old_loan_id (FK), new_loan_id (FK)
 old_outstanding_balance, new_principal_amount, net_disbursement_amount (decimal 18,2)
 processed_by (FK), processed_at (timestamp)
 ```
+
+#### `user_attachments`
+```
+id, user_id (FK cascade)
+title (nullable), file_name, file_path
+mime_type (nullable), file_size (bigint nullable)
+description (text nullable), uploaded_by (nullable FK)
+timestamps + soft deletes
+index: (user_id, created_at)
+```
+
+---
+
+## 21a. Audit Trail
+
+Every significant action is written to `activity_log` (spatie/laravel-activitylog) with the acting user as causer. Viewable via `GET system/audit-logs` and per-user in `GET users/{id} → audit_trail`.
+
+| Log name | Audited events |
+|---|---|
+| `auth` | User logged in, Failed login attempt, User logged out, Password reset link requested, Password reset completed, Password changed |
+| `default` | All loan lifecycle events (application submit/approve/reject, credit review, disbursement, payments, settlement, clearance), onboarding, KYC/photo/document changes, group visits, data purge |
+| `groups` | Group created / updated / deleted |
+| `users` | User account created / updated / deleted, attachment uploaded / deleted, role permissions updated |
+
+Master-data CRUD is audited too: branches, regions, areas, loan products and system settings log create/update/delete with the changed fields.
+
+Notes:
+- Passwords are never stored in audit properties — only `password_changed: true/false`.
+- Failed login attempts are recorded without a causer (email + IP only).
 
 ---
 

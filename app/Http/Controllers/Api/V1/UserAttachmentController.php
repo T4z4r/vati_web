@@ -49,9 +49,10 @@ class UserAttachmentController extends ApiController
         $this->belongsTo($user, $userAttachment);
         $path = $userAttachment->file_path;
         $fileName = $userAttachment->file_name;
-        $userAttachment->delete();
+        $force = $request->boolean('force');
+        $force ? $userAttachment->forceDelete() : $userAttachment->delete();
         Storage::disk('public')->delete($path);
-        activity()->useLog('users')->causedBy($request->user())->performedOn($user)->withProperties(['file_name' => $fileName])->log('User attachment deleted');
+        activity()->useLog('users')->causedBy($request->user())->performedOn($user)->withProperties(['forced' => $force, 'file_name' => $fileName])->log('User attachment ' . ($force ? 'permanently ' : '') . 'deleted');
 
         return response()->noContent();
     }

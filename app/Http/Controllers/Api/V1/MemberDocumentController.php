@@ -51,9 +51,10 @@ class MemberDocumentController extends ApiController
     {
         $this->belongsTo($member, $memberDocument);
         $path = $memberDocument->file_path;
-        $memberDocument->delete();
+        $force = $request->boolean('force');
+        $force ? $memberDocument->forceDelete() : $memberDocument->delete();
         Storage::disk('public')->delete($path);
-        activity()->causedBy($request->user())->performedOn($member)->log('Member document deleted');
+        activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force, 'file_name' => $memberDocument->file_name])->log('Member document ' . ($force ? 'permanently ' : '') . 'deleted');
 
         return response()->noContent();
     }

@@ -42,10 +42,12 @@ class LoanApplicationController extends ApiController
         return response()->json(['success' => true, 'message' => 'Loan application updated.', 'data' => new LoanApplicationResource($application)]);
     }
 
-    public function destroy(LoanApplication $loanApplication)
+    public function destroy(Request $request, LoanApplication $loanApplication)
     {
         abort_unless(in_array($loanApplication->status->value, ['draft', 'submitted'], true), 409, 'Only draft or submitted applications can be deleted.');
-        $loanApplication->delete();
+        $force = $request->boolean('force');
+        $force ? $loanApplication->forceDelete() : $loanApplication->delete();
+        activity()->causedBy($request->user())->performedOn($loanApplication)->withProperties(['forced' => $force])->log($force ? 'Loan application permanently deleted' : 'Loan application deleted');
 
         return response()->noContent();
     }

@@ -150,20 +150,28 @@
         document.querySelectorAll('[data-confirm]').forEach(el => el.addEventListener('click', e => {
             e.preventDefault();
             const danger = el.classList.contains('btn-danger');
+            const forceText = el.dataset.forceText || '';
             Swal.fire({
                 title: @json(__('Please confirm')),
                 text: el.dataset.confirm,
                 icon: danger ? 'warning' : 'question',
                 showCancelButton: true,
-                confirmButtonText: @json(__('Yes, continue')),
+                showDenyButton: Boolean(forceText),
+                denyButtonText: forceText,
+                confirmButtonText: forceText ? (el.dataset.trashText || @json(__('Move to trash'))) : @json(__('Yes, continue')),
                 cancelButtonText: @json(__('Cancel')),
                 confirmButtonColor: danger ? '#c62828' : '#005c2d',
+                denyButtonColor: '#b71c1c',
                 cancelButtonColor: '#68736b',
                 reverseButtons: true,
             }).then(result => {
-                if (result.isConfirmed) {
-                    el.closest('form')?.requestSubmit();
+                if (!result.isConfirmed && !result.isDenied) return;
+                const form = el.closest('form');
+                if (!form) return;
+                if (result.isDenied) {
+                    form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_force" value="1">');
                 }
+                form.requestSubmit();
             });
         }));
     </script>

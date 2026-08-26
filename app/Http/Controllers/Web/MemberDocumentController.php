@@ -56,7 +56,8 @@ class MemberDocumentController extends Controller
         }
 
         $filePath = $document->file_path;
-        $document->delete();
+        $force = $request->boolean('_force');
+        $force ? $document->forceDelete() : $document->delete();
 
         // Delete the file from storage
         if ($filePath && Storage::disk('public')->exists($filePath)) {
@@ -66,9 +67,10 @@ class MemberDocumentController extends Controller
         activity()
             ->causedBy($request->user())
             ->performedOn($member)
-            ->log('Document deleted: ' . $document->document_type);
+            ->withProperties(['forced' => $force])
+            ->log('Document ' . ($force ? 'permanently ' : '') . 'deleted: ' . $document->document_type);
 
-        return back()->with('success', 'Document deleted successfully.');
+        return back()->with('success', $force ? 'Document permanently deleted.' : 'Document deleted successfully.');
     }
 
     /**
