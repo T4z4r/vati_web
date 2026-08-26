@@ -974,7 +974,7 @@ GET /api/v1/portfolio/summary?from=2026-08-01&to=2026-08-31
 | `POST` | `loan-applications` | Create application |
 | `GET` | `loan-applications/{id}` | Full detail |
 | `PUT` | `loan-applications/{id}` | Update draft |
-| `DELETE` | `loan-applications/{id}` | Delete draft |
+| `DELETE` | `loan-applications/{id}` | Delete draft (add `force=1` to permanently delete) |
 | `POST` | `loan-applications/{id}/submit` | Submit for review |
 | `POST` | `loan-applications/{id}/approve` | Approve |
 | `POST` | `loan-applications/{id}/reject` | Reject (requires remarks) |
@@ -1037,11 +1037,13 @@ GET /api/v1/portfolio/summary?from=2026-08-01&to=2026-08-31
 | `GET` | `users/{id}/attachments` | List attachments |
 | `POST` | `users/{id}/attachments` | Upload attachment (PDF/JPG/JPEG/PNG/DOC/DOCX, max 5 MB) |
 | `GET` | `users/{id}/attachments/{attId}/download` | Download attachment |
-| `DELETE` | `users/{id}/attachments/{attId}` | Delete attachment (audited) |
+| `DELETE` | `users/{id}/attachments/{attId}` | Delete attachment (audited; `force=1` permanently deletes) |
 | `GET` | `system/audit-logs` | Global audit log (filter by `user_id`, date range, `log_name`, search) |
 | `GET` | `system/audit-logs/{id}` | Single audit entry |
 
 **User details audit trail:** `GET users/{id}` returns `audit_trail` — the latest 100 activities where the user is the actor (`direction: "performed"`) or the subject (`direction: "on_account"`). Each entry: `description`, `log_name`, `subject_type`, `subject_id`, `properties`, `performed_by`, `created_at`.
+
+**Force delete:** soft-deletable records (members, loan applications, member documents, user attachments) accept a permanent-delete flag — web forms send `_force=1` (chosen via the SweetAlert "Delete forever" button), APIs pass `?force=1`. Force deletes bypass the trash, remove stored files where applicable, and are logged with `forced: true`.
 
 ### Supporting
 
@@ -1337,7 +1339,7 @@ Every significant action is written to `activity_log` (spatie/laravel-activitylo
 | Log name | Audited events |
 |---|---|
 | `auth` | User logged in, Failed login attempt, User logged out, Password reset link requested, Password reset completed, Password changed |
-| `default` | All loan lifecycle events (application submit/approve/reject, credit review, disbursement, payments, settlement, clearance), onboarding, KYC/photo/document changes, group visits, data purge |
+| `default` | All loan lifecycle events (application submit/approve/reject, credit review, disbursement, payments, settlement, clearance), onboarding, KYC/photo/document changes, group visits, data purge, member & application deletions (with `forced: true` when permanent) |
 | `groups` | Group created / updated / deleted |
 | `users` | User account created / updated / deleted, attachment uploaded / deleted, role permissions updated |
 
