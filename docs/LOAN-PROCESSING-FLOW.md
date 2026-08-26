@@ -117,9 +117,10 @@ interest_method                          ("reducing_balance" — note: calculato
 repayment_frequency                      ("weekly" or "monthly")
 security_percentage                      (% of principal held as collateral)
 processing_fee_percentage                (% of principal)
-transaction_fee_percentage               (% of principal)
-membership_fee                           (flat TZS amount)
-vat_percentage                           (default 18%)
+insurance_percentage                     (% of principal, e.g. 1.5%)
+transaction_fee_percentage               (legacy, unused — always 0)
+membership_fee                           (legacy, unused — always 0)
+vat_percentage                           (% of principal, e.g. 0.18 = 0.18%)
 required_group_witnesses                 (default 2)
 status                                   (active/inactive boolean)
 ```
@@ -766,14 +767,12 @@ POST /api/v1/loan-calculator
 ```
 interest       = principal × (annual_interest_rate / 100) × (duration_months / 12)
 processing_fee = principal × (processing_fee_percentage / 100)
-transaction_fee = principal × (transaction_fee_percentage / 100)
+insurance_fee  = principal × (insurance_percentage / 100)
+vat            = principal × (vat_percentage / 100)          // flat % of principal (0.18%)
 security_amount = principal × (security_percentage / 100)
 
-processing_fee_vat  = processing_fee × (vat_percentage / 100)
-transaction_fee_vat = transaction_fee × (vat_percentage / 100)
-
-total_charges     = processing_fee + processing_fee_vat + transaction_fee + transaction_fee_vat + membership_fee
-amount_receivable = principal - total_charges - security_amount
+total_charges     = processing_fee + insurance_fee + vat
+amount_receivable = principal - security_amount
 total_repayment   = principal + interest
 ```
 
@@ -785,14 +784,12 @@ total_repayment   = principal + interest
 {
   "principal": 500000,
   "interest": 60000,
-  "processing_fee": 12500,
-  "processing_fee_vat": 2250,
-  "transaction_fee": 7500,
-  "transaction_fee_vat": 1350,
-  "membership_fee": 5000,
+  "processing_fee": 5000,
+  "insurance_fee": 7500,
+  "vat": 900,
   "security_amount": 50000,
-  "total_charges": 80600,
-  "amount_receivable": 369400,
+  "charges": 13400,
+  "amount_receivable": 450000,
   "total_repayment": 560000
 }
 ```
@@ -1035,9 +1032,9 @@ minimum_duration_months, maximum_duration_months (unsigned int)
 annual_interest_rate (decimal 8,4)
 interest_method (default "reducing_balance")
 repayment_frequency (default "weekly")
-security_percentage, processing_fee_percentage, transaction_fee_percentage (decimal 8,4)
-membership_fee (decimal 18,2)
-vat_percentage (decimal 8,4, default 18)
+security_percentage, processing_fee_percentage, insurance_percentage, transaction_fee_percentage (decimal 8,4; transaction fee is legacy/unused)
+membership_fee (decimal 18,2, legacy/unused)
+vat_percentage (decimal 8,4, % of principal, e.g. 0.18)
 required_group_witnesses (unsigned int, default 2)
 status (boolean, default true)
 ```

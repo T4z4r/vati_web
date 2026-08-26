@@ -68,9 +68,8 @@
                                 data-minmonths="{{ $product->minimum_duration_months }}"
                                 data-maxmonths="{{ $product->maximum_duration_months }}"
                                 data-processing-fee="{{ $product->processing_fee_percentage }}"
-                                data-transaction-fee="{{ $product->transaction_fee_percentage }}"
+                                data-insurance-fee="{{ $product->insurance_percentage }}"
                                 data-security-percentage="{{ $product->security_percentage }}"
-                                data-membership-fee="{{ $product->membership_fee }}"
                                 data-vat="{{ $product->vat_percentage }}"
                                 data-frequency="{{ $product->repayment_frequency }}"
                                 data-interest-method="{{ $product->interest_method }}" @selected((int) old('loan_product_id', $application->loan_product_id) === $product->id)>
@@ -179,7 +178,9 @@
                             0.00</strong></div>
                     <div class="detail"><small>Ada ya uchakataji</small><strong id="summary-processing-fee">TZS 0.00</strong>
                     </div>
-                    <div class="detail"><small>Ada ya muamala</small><strong id="summary-transaction-fee">TZS 0.00</strong>
+                    <div class="detail"><small>Bima (Insurance)</small><strong id="summary-insurance-fee">TZS 0.00</strong>
+                    </div>
+                    <div class="detail"><small>VAT</small><strong id="summary-vat">TZS 0.00</strong>
                     </div>
                     <div class="detail"><small>Dhamana iliyoshikiliwa</small><strong id="summary-security">TZS 0.00</strong></div>
                 </div>
@@ -466,14 +467,11 @@
                 const rate = Number(option.dataset.rate) / 100;
                 const interest = principal * rate * (duration / 12);
                 const processingFee = principal * (Number(option.dataset.processingFee) / 100);
-                const transactionFee = principal * (Number(option.dataset.transactionFee) / 100);
+                const insuranceFee = principal * (Number(option.dataset.insuranceFee) / 100);
+                const vat = principal * (Number(option.dataset.vat) / 100);
                 const securityAmount = principal * (Number(option.dataset.securityPercentage) / 100);
-                const membershipFee = Number(option.dataset.membershipFee) || 0;
-                const vatRate = Number(option.dataset.vat) / 100;
-                const processingFeeVat = processingFee * vatRate;
-                const transactionFeeVat = transactionFee * vatRate;
-                const totalCharges = processingFee + processingFeeVat + transactionFee + transactionFeeVat + membershipFee;
-                const receivableAmount = principal - (totalCharges + securityAmount);
+                const totalCharges = processingFee + insuranceFee + vat;
+                const receivableAmount = principal - securityAmount;
                 const totalRepayment = principal + interest;
 
                 estimate.value = formatMoney(totalRepayment);
@@ -483,10 +481,9 @@
                 document.getElementById('summary-estimate').textContent = formatMoney(totalRepayment);
                 document.getElementById('summary-charges').textContent = formatMoney(totalCharges);
                 document.getElementById('summary-receivable').textContent = formatMoney(receivableAmount);
-                document.getElementById('summary-processing-fee').textContent = formatMoney(processingFee +
-                    processingFeeVat);
-                document.getElementById('summary-transaction-fee').textContent = formatMoney(transactionFee +
-                    transactionFeeVat);
+                document.getElementById('summary-processing-fee').textContent = formatMoney(processingFee);
+                document.getElementById('summary-insurance-fee').textContent = formatMoney(insuranceFee);
+                document.getElementById('summary-vat').textContent = formatMoney(vat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
                 renderRepaymentSchedule(principal, interest, duration, option.dataset.frequency || 'monthly');
             } else {
@@ -497,7 +494,8 @@
                 document.getElementById('summary-charges').textContent = 'TZS 0.00';
                 document.getElementById('summary-receivable').textContent = 'TZS 0.00';
                 document.getElementById('summary-processing-fee').textContent = 'TZS 0.00';
-                document.getElementById('summary-transaction-fee').textContent = 'TZS 0.00';
+                document.getElementById('summary-insurance-fee').textContent = 'TZS 0.00';
+                document.getElementById('summary-vat').textContent = 'TZS 0.00';
                 document.getElementById('summary-security').textContent = 'TZS 0.00';
                 repaymentSchedule.style.display = memberProfiles[memberSelect.value] ? '' : 'none';
                 scheduleBody.innerHTML = '<tr><td colspan="6" class="muted">Select a loan product and enter a valid amount and duration to generate the schedule.</td></tr>';

@@ -61,13 +61,12 @@ class LoanApprovalService
                     'installment_amount' => round($figures['principal'] / $installments, 2),
                     'processing_fee' => $figures['processing_fee'],
                     'transaction_charges' => 0,
-                    'other_charges' => $figures['membership_fee'],
+                    'other_charges' => 0,
                     'total_fees_and_vat' => $figures['charges'],
-                    'calc_processing_fee_vat' => $figures['processing_fee_vat'],
-                    'calc_transaction_fee_vat' => $figures['transaction_fee_vat'],
+                    'calc_insurance_fee' => $figures['insurance_fee'],
+                    'calc_vat' => $figures['vat'],
                     'calc_security_amount' => $figures['security_amount'],
                     'calc_amount_receivable' => $figures['amount_receivable'],
-                    'calc_membership_fee' => $figures['membership_fee'],
                     'calc_charges' => $figures['charges'],
                 ]);
             }

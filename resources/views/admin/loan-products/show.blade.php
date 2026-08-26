@@ -30,8 +30,10 @@
                 <small>{{ __('Security') }}</small><strong>{{ number_format($product->security_percentage, 2) }}%</strong>
             </div>
             <div class="detail">
-                <small>{{ __('Processing / transaction') }}</small><strong>{{ number_format($product->processing_fee_percentage, 2) }}%
-                    / {{ number_format($product->transaction_fee_percentage, 2) }}%</strong></div>
+                <small>{{ __('Processing / insurance') }}</small><strong>{{ number_format($product->processing_fee_percentage, 2) }}%
+                    / {{ number_format($product->insurance_percentage, 2) }}%</strong></div>
+            <div class="detail">
+                <small>{{ __('VAT') }}</small><strong>{{ number_format($product->vat_percentage, 2) }}%</strong></div>
             <div class="detail"><small>{{ __('Group witnesses') }}</small><strong>{{ $product->required_group_witnesses }}
                     {{ __('required') }}</strong></div>
         </div>

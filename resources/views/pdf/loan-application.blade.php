@@ -76,9 +76,9 @@
 <table>
     <tr><td class="label">Tarehe ya maombi</td><td>{{ $date($data['application_date']) }}</td><td class="label">Tarehe ya utoaji</td><td>{{ $date($data['disbursement_date']) }}</td></tr>
     <tr><td class="label">Kiasi cha mkopo kilichoombwa</td><td class="money">{{ $money($data['requested_amount']) }}</td><td class="label">Kiasi kilichopendekezwa</td><td class="money">{{ $data['recommended_amount'] ? $money($data['recommended_amount']) : $blank }}</td></tr>
-    <tr><td>Kiasi cha mkopo unaoendelea (bila riba)</td><td class="money">{{ $money($data['existing_loan_balance']) }}</td><td>Gharama ya mkopo / Processing fee</td><td class="money">{{ $money($data['processing_fee']) }} + VAT {{ $money($data['processing_fee_vat']) }}</td></tr>
-    <tr><td>Kiasi kinachofutwa / Refinancing amount</td><td class="money">{{ $money($data['refinancing_amount']) }}</td><td>Gharama ya miamala / Transaction fee</td><td class="money">{{ $money($data['transaction_fee']) }} + VAT {{ $money($data['transaction_fee_vat']) }}</td></tr>
-    <tr><td>Kiasi cha nyongeza / Top-up increment</td><td class="money">{{ $money($data['increment_amount']) }}</td><td>Ada ya uanachama / Membership fee</td><td class="money">{{ $money($data['membership_fee']) }}</td></tr>
+    <tr><td>Kiasi cha mkopo unaoendelea (bila riba)</td><td class="money">{{ $money($data['existing_loan_balance']) }}</td><td>Gharama ya mkopo / Processing fee</td><td class="money">{{ $money($data['processing_fee']) }}</td></tr>
+    <tr><td>Kiasi kinachofutwa / Refinancing amount</td><td class="money">{{ $money($data['refinancing_amount']) }}</td><td>Bima / Insurance</td><td class="money">{{ $money($data['insurance_fee']) }}</td></tr>
+    <tr><td>Kiasi cha nyongeza / Top-up increment</td><td class="money">{{ $money($data['increment_amount']) }}</td><td>VAT</td><td class="money">{{ $money($data['vat']) }}</td></tr>
     <tr><td>Muda wa mkopo</td><td>{{ $data['duration_months'] }} months</td><td>Riba kwa mwaka / Annual interest</td><td>{{ number_format($data['loan_product']['annual_interest_rate'], 2) }}%</td></tr>
     <tr><td>Idadi ya marejesho</td><td>{{ $data['installment_count'] }} {{ $data['loan_product']['repayment_frequency'] }} installments</td><td>Kiasi cha kila rejesho</td><td class="money">{{ $money($data['expected_installment']) }}</td></tr>
     <tr><td>Jumla ya riba</td><td class="money">{{ $money($data['interest_amount']) }}</td><td>Jumla ya mkopo na riba</td><td class="money">{{ $money($data['total_repayment']) }}</td></tr>

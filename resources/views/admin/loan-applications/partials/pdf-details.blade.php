@@ -60,10 +60,8 @@
         <div class="detail"><small>Annual interest rate</small><strong>{{ number_format((float) $application->product->annual_interest_rate, 2) }}%</strong></div>
         <div class="detail"><small>Interest amount</small><strong>{{ $money($figures['interest']) }}</strong></div>
         <div class="detail"><small>Processing fee</small><strong>{{ $money($figures['processing_fee']) }}</strong></div>
-        <div class="detail"><small>Processing fee VAT</small><strong>{{ $money($figures['processing_fee_vat']) }}</strong></div>
-        <div class="detail"><small>Transaction fee</small><strong>{{ $money($figures['transaction_fee']) }}</strong></div>
-        <div class="detail"><small>Transaction fee VAT</small><strong>{{ $money($figures['transaction_fee_vat']) }}</strong></div>
-        <div class="detail"><small>Membership fee</small><strong>{{ $money($figures['membership_fee']) }}</strong></div>
+        <div class="detail"><small>Insurance</small><strong>{{ $money($figures['insurance_fee']) }}</strong></div>
+        <div class="detail"><small>VAT</small><strong>{{ $money($figures['vat']) }}</strong></div>
         <div class="detail"><small>Total charges and VAT</small><strong>{{ $money($figures['charges']) }}</strong></div>
         <div class="detail"><small>Security amount</small><strong>{{ $money($figures['security_amount']) }} ({{ number_format((float) $application->product->security_percentage, 2) }}%)</strong></div>
         <div class="detail"><small>Amount receivable</small><strong>{{ $money($figures['amount_receivable']) }}</strong></div>
