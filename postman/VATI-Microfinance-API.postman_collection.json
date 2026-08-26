@@ -782,7 +782,65 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/users/{{user_id}}"
+                        "url": "{{base_url}}/api/v1/users/{{user_id}}",
+                        "description": "Returns full user details including branch, roles, permissions, `attachments` (uploaded files with download URLs) and `audit_trail` — the latest 100 recorded activities performed by this user (`direction: \"performed\"`) or affecting this account (`direction: \"on_account\"`)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload User Attachment",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/users/{{user_id}}/attachments",
+                        "description": "Uploads a file attached to a staff user record (e.g. contract, staff ID). Accepted files: PDF, JPG, JPEG, PNG, DOC or DOCX up to 5 MB. Optional `title` and `description` fields. The upload is recorded in the user's audit trail."
+                    },
+                    "body": {
+                        "mode": "formdata",
+                        "formdata": [
+                            { "key": "file", "type": "file", "src": [] },
+                            { "key": "title", "value": "Employment contract", "type": "text" },
+                            { "key": "description", "value": "Signed 2026 contract", "type": "text" }
+                        ]
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "if (json.data.id) pm.collectionVariables.set(\"user_attachment_id\", json.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List User Attachments",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/users/{{user_id}}/attachments"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download User Attachment",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/users/{{user_id}}/attachments/{{user_attachment_id}}/download"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User Attachment",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/users/{{user_id}}/attachments/{{user_attachment_id}}"
                     },
                     "response": []
                 },
