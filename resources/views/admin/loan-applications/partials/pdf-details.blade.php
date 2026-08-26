@@ -66,7 +66,7 @@
         <div class="detail"><small>Security amount</small><strong>{{ $money($figures['security_amount']) }} ({{ number_format((float) $application->product->security_percentage, 2) }}%)</strong></div>
         <div class="detail"><small>Amount receivable</small><strong>{{ $money($figures['amount_receivable']) }}</strong></div>
         <div class="detail"><small>Principal plus interest</small><strong>{{ $money($figures['total_repayment']) }}</strong></div>
-        <div class="detail"><small>Repayment plan</small><strong>{{ $installmentCount }} {{ $application->product->repayment_frequency }} installments · {{ $money($figures['total_repayment'] / $installmentCount) }}</strong></div>
+        <div class="detail"><small>Repayment plan</small><strong>{{ $installmentCount }} {{ $application->product->repayment_frequency }} installments · {{ $money($figures['installment_amount']) }}</strong></div>
         <div class="detail"><small>Current loan cycle</small><strong>{{ str($application->application_type)->replace('_', ' ')->title() }}</strong></div>
         <div class="detail"><small>Loan purpose</small><strong>{{ $display($application->loan_purpose) }}</strong></div>
         <div class="detail"><small>Business summary</small><strong>{{ $display($application->business_summary) }}</strong></div>

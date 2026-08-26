@@ -41,9 +41,12 @@ class LoanApprovalService
                 $approvedAmount = (float) ($application->recommended_amount ?: $application->requested_amount);
                 $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
                 $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
-                $installments = $application->product->repayment_frequency === 'weekly'
-                    ? max(1, (int) round($approvedDuration * 52 / 12))
-                    : $approvedDuration;
+                $installments = $this->calculator->installmentCount($application->product, $approvedDuration);
+                $factorApplies = $application->product->repayment_frequency === 'weekly'
+                    && LoanCalculatorService::weeklyPaymentFactor($approvedDuration) !== null;
+                // Fixed-factor weekly products accrue the implied interest; other durations keep zero-interest booking.
+                $interestAmount = $factorApplies ? $figures['interest'] : 0.0;
+                $totalRepayment = round($figures['principal'] + $interestAmount, 2);
                 Loan::create([
                     'loan_number' => $this->numbers->loan(),
                     'loan_application_id' => $application->id,
@@ -52,13 +55,15 @@ class LoanApprovalService
                     'loan_product_id' => $application->loan_product_id,
                     'branch_id' => $application->branch_id,
                     'principal_amount' => $figures['principal'],
-                    'interest_amount' => 0,
-                    'total_repayment' => $figures['principal'],
+                    'interest_amount' => $interestAmount,
+                    'total_repayment' => $totalRepayment,
                     'principal_balance' => $figures['principal'],
-                    'interest_balance' => 0,
-                    'total_balance' => $figures['principal'],
+                    'interest_balance' => $interestAmount,
+                    'total_balance' => $totalRepayment,
                     'number_of_installments' => $installments,
-                    'installment_amount' => round($figures['principal'] / $installments, 2),
+                    'installment_amount' => $factorApplies
+                        ? $figures['installment_amount']
+                        : round($figures['principal'] / $installments, 2),
                     'processing_fee' => $figures['processing_fee'],
                     'transaction_charges' => 0,
                     'other_charges' => 0,

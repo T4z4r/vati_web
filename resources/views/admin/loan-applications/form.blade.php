@@ -405,10 +405,24 @@
             }
         }
 
+        const WEEKLY_PAYMENT_FACTORS = { 6: 0.0445, 8: 0.036, 12: 0.0295 };
+
+        function weeklyInstallmentsFor(duration) {
+            return Math.max(1, Math.round(duration * 52 / 12));
+        }
+
+        // Fixed-factor weekly schedule: each weekly payment = principal x factor.
+        function interestFor(principal, duration, frequency) {
+            if (frequency === 'weekly' && WEEKLY_PAYMENT_FACTORS[duration]) {
+                return Math.round((principal * WEEKLY_PAYMENT_FACTORS[duration] * weeklyInstallmentsFor(duration)) * 100) / 100 - principal;
+            }
+            return null;
+        }
+
         function renderRepaymentSchedule(principal, interest, duration, frequency) {
             const memberSelected = Boolean(memberProfiles[memberSelect.value]);
             const installmentCount = frequency === 'weekly'
-                ? Math.max(1, Math.round(duration * 52 / 12))
+                ? weeklyInstallmentsFor(duration)
                 : Math.max(1, duration);
 
             repaymentSchedule.style.display = memberSelected ? '' : 'none';
@@ -465,7 +479,11 @@
                 months.min = option.dataset.minmonths;
                 months.max = option.dataset.maxmonths;
                 const rate = Number(option.dataset.rate) / 100;
-                const interest = principal * rate * (duration / 12);
+                const frequency = option.dataset.frequency || 'monthly';
+                const factorInterest = interestFor(principal, duration, frequency);
+                const interest = factorInterest !== null
+                    ? factorInterest
+                    : principal * rate * (duration / 12);
                 const processingFee = principal * (Number(option.dataset.processingFee) / 100);
                 const insuranceFee = principal * (Number(option.dataset.insuranceFee) / 100);
                 const vat = principal * (Number(option.dataset.vat) / 100);
@@ -485,7 +503,7 @@
                 document.getElementById('summary-insurance-fee').textContent = formatMoney(insuranceFee);
                 document.getElementById('summary-vat').textContent = formatMoney(vat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
-                renderRepaymentSchedule(principal, interest, duration, option.dataset.frequency || 'monthly');
+                renderRepaymentSchedule(principal, interest, duration, frequency);
             } else {
                 estimate.value = '';
                 charges.value = '';

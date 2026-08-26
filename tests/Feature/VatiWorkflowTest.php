@@ -149,8 +149,10 @@ class VatiWorkflowTest extends TestCase
         $calculator = app(LoanCalculatorService::class);
         $figures = $calculator->calculate($this->product, 1000000, 6);
 
-        $this->assertSame(120000.0, $figures['interest']);
-        $this->assertSame(1120000.0, $figures['total_repayment']);
+        $this->assertSame(26, $figures['installment_count']);
+        $this->assertSame(44500.0, $figures['installment_amount']);
+        $this->assertSame(157000.0, $figures['interest']);
+        $this->assertSame(1157000.0, $figures['total_repayment']);
         $this->expectException(\DomainException::class);
         $calculator->calculate($this->product, 50000, 6);
     }

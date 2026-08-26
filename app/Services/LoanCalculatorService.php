@@ -7,6 +7,21 @@ use DomainException;
 
 class LoanCalculatorService
 {
+    /** Fixed weekly payment factors per loan duration in months (weekly payment = principal x factor). */
+    public const WEEKLY_PAYMENT_FACTORS = [6 => 0.0445, 8 => 0.0360, 12 => 0.0295];
+
+    public static function weeklyPaymentFactor(int $durationMonths): ?float
+    {
+        return self::WEEKLY_PAYMENT_FACTORS[$durationMonths] ?? null;
+    }
+
+    public function installmentCount(LoanProduct $product, int $durationMonths): int
+    {
+        return $product->repayment_frequency === 'weekly'
+            ? max(1, (int) round($durationMonths * 52 / 12))
+            : max(1, $durationMonths);
+    }
+
     public function calculate(LoanProduct $product, float $principal, int $durationMonths): array
     {
         if ($principal < (float) $product->minimum_amount || $principal > (float) $product->maximum_amount) {
@@ -17,7 +32,20 @@ class LoanCalculatorService
             throw new DomainException('Loan duration is outside the product limits.');
         }
 
-        $interest = $principal * ((float) $product->annual_interest_rate / 100) * ($durationMonths / 12);
+        $installmentCount = $this->installmentCount($product, $durationMonths);
+        $factor = $product->repayment_frequency === 'weekly' ? self::weeklyPaymentFactor($durationMonths) : null;
+
+        if ($factor !== null) {
+            // Fixed weekly payment schedule: each weekly payment = principal x factor.
+            $weeklyInstallment = round($principal * $factor, 2);
+            $totalRepayment = round($weeklyInstallment * $installmentCount, 2);
+            $interest = round($totalRepayment - round($principal, 2), 2);
+        } else {
+            $interest = $principal * ((float) $product->annual_interest_rate / 100) * ($durationMonths / 12);
+            $totalRepayment = round($principal + $interest, 2);
+            $weeklyInstallment = null;
+        }
+
         $processingFee = $principal * ((float) $product->processing_fee_percentage / 100);
         $insuranceFee = $principal * ((float) $product->insurance_percentage / 100);
         $vat = $principal * ((float) $product->vat_percentage / 100);
@@ -33,7 +61,11 @@ class LoanCalculatorService
             'security_amount' => round($securityAmount, 2),
             'charges' => round($totalCharges, 2),
             'amount_receivable' => round($principal - $securityAmount, 2),
-            'total_repayment' => round($principal + $interest, 2),
+            'total_repayment' => round($totalRepayment, 2),
+            'installment_count' => $installmentCount,
+            'installment_amount' => $factor !== null
+                ? $weeklyInstallment
+                : round(round($principal, 2) / $installmentCount, 2),
         ];
     }
 }

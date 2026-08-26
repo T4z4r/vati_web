@@ -765,7 +765,16 @@ POST /api/v1/loan-calculator
 ### Formulas
 
 ```
-interest       = principal × (annual_interest_rate / 100) × (duration_months / 12)
+// Fixed weekly payment factors (weekly products only)
+weekly_payment  = principal × factor
+  6 months  → factor 0.0445 (26 weekly installments)
+  8 months  → factor 0.0360 (35 weekly installments)
+ 12 months  → factor 0.0295 (52 weekly installments)
+
+interest       = total_repayment - principal
+               = principal × factor × installment_count - principal   // when a factor applies
+               = principal × (annual_interest_rate / 100) × (duration_months / 12)   // otherwise
+
 processing_fee = principal × (processing_fee_percentage / 100)
 insurance_fee  = principal × (insurance_percentage / 100)
 vat            = principal × (vat_percentage / 100)          // flat % of principal (0.18%)
@@ -773,10 +782,10 @@ security_amount = principal × (security_percentage / 100)
 
 total_charges     = processing_fee + insurance_fee + vat
 amount_receivable = principal - security_amount
-total_repayment   = principal + interest
+total_repayment   = principal + interest = weekly_payment × installment_count   // when a factor applies
 ```
 
-> **Note:** Despite the product having `interest_method = "reducing_balance"`, the calculator currently uses **flat-rate simple interest**.
+> **Note:** Despite the product having `interest_method = "reducing_balance"`, the calculator currently uses **flat-rate simple interest** for durations without a fixed weekly factor.
 
 ### Response
 

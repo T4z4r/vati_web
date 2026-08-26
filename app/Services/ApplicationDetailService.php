@@ -25,7 +25,7 @@ class ApplicationDetailService
         $amount = (float) ($application->recommended_amount ?: $application->requested_amount);
         $duration = (int) ($application->recommended_duration_months ?: $application->duration_months);
         $figures = $this->calculator->calculate($application->product, $amount, $duration);
-        $installmentCount = $application->product->repayment_frequency === 'weekly' ? max(1, (int) round($duration * 52 / 12)) : $duration;
+        $installmentCount = $figures['installment_count'];
         $groupMetrics = $this->groupMetrics($application);
 
         return [
@@ -44,7 +44,7 @@ class ApplicationDetailService
             'duration_months' => $application->duration_months,
             'recommended_duration_months' => $application->recommended_duration_months,
             'installment_count' => $installmentCount,
-            'expected_installment' => number_format($figures['total_repayment'] / $installmentCount, 2, '.', ''),
+            'expected_installment' => number_format((float) $figures['installment_amount'], 2, '.', ''),
             'interest_amount' => $this->money($figures['interest']),
             'total_repayment' => $this->money($figures['total_repayment']),
             'security_amount' => number_format($figures['security_amount'], 2, '.', ''),

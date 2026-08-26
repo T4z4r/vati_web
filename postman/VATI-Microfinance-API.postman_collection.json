@@ -211,6 +211,7 @@
                     "name": "Upload Application Document",
                     "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('loan_document_id', pm.response.json().data.id); }"]}}],
                     "request": {"method": "POST", "header": [], "body": {"mode": "formdata", "formdata": [{"key": "document_type", "value": "member_identity", "type": "text"}, {"key": "file", "type": "file", "src": []}, {"key": "remarks", "value": "Original identity evidence", "type": "text"}]}, "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents"},
+                    "description": "Uploads a supporting document for a loan application. Allowed `document_type` values: `member_identity` (Copy of ID (Voter/National ID) of member), `guarantor_identity` (Copy of ID of guarantor), `local_government_letter`, `business_license`, `house_lease`, `member_signature` (Member's Signature), and `other`. Accepted files: PDF, JPG, JPEG, or PNG up to 10 MB.",
                     "response": []
                 },
                 {
@@ -1231,7 +1232,7 @@
                         "url": "{{base_url}}/api/v1/loan-products",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"insurance_percentage\": 1.5,\n  \"vat_percentage\": 0.18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1276,7 +1277,7 @@
                         "url": "{{base_url}}/api/v1/loan-products/{{loan_product_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"transaction_fee_percentage\": 0,\n  \"membership_fee\": 0,\n  \"vat_percentage\": 18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
+                            "raw": "{\n  \"name\": \"Postman Group Business Loan\",\n  \"minimum_amount\": 100000,\n  \"maximum_amount\": 5000000,\n  \"minimum_duration_months\": 3,\n  \"maximum_duration_months\": 24,\n  \"annual_interest_rate\": 18,\n  \"interest_method\": \"flat\",\n  \"repayment_frequency\": \"weekly\",\n  \"security_percentage\": 10,\n  \"processing_fee_percentage\": 1,\n  \"insurance_percentage\": 1.5,\n  \"vat_percentage\": 0.18,\n  \"required_group_witnesses\": 2,\n  \"status\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1298,6 +1299,7 @@
                             }
                         ],
                         "url": "{{base_url}}/api/v1/loan-calculator",
+                        "description": "Returns the full loan computation. Fees: processing fee (1% of principal), insurance (1.5% of principal), VAT (0.18% of principal); security (10% of principal) is held as collateral and deducted from the amount receivable, not charged. Weekly repayment installments use fixed factors per duration — 6 months: 0.0445, 8 months: 0.0360, 12 months: 0.0295 — so each weekly payment = principal x factor (e.g. TZS 1,000,000 over 6 months = 26 weekly payments of TZS 44,500, total repayment TZS 1,157,000). Response keys include `installment_count` and `installment_amount`.",
                         "body": {
                             "mode": "raw",
                             "raw": "{\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"amount\": 1000000,\n  \"duration_months\": 12\n}",
