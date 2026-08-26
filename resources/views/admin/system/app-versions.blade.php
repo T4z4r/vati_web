@@ -57,9 +57,9 @@
                                     <button class="btn btn-sm btn-secondary">{{ __('Set Latest') }}</button>
                                 </form>
                             @endif
-                            <form method="POST" action="{{ route('admin.system.app-versions.destroy', $v) }}" style="display:inline" onsubmit="return confirm('{{ __('Delete this version?') }}')">
+                            <form method="POST" action="{{ route('admin.system.app-versions.destroy', $v) }}" style="display:inline">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger">{{ __('Delete') }}</button>
+                                <button class="btn btn-sm btn-danger" data-confirm="{{ __('Delete this version?') }}">{{ __('Delete') }}</button>
                             </form>
                         </td>
                     </tr>

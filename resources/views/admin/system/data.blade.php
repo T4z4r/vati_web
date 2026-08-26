@@ -196,8 +196,19 @@ previewBtn.addEventListener('click', async () => {
 });
 
 purgeBtn.addEventListener('click', () => {
-    if (!confirm('{{ __("Are you absolutely sure? This cannot be undone.") }}')) return;
-    form.submit();
+    Swal.fire({
+        title: '{{ __("Are you absolutely sure?") }}',
+        text: '{{ __("This cannot be undone.") }}',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '{{ __("Yes, continue") }}',
+        cancelButtonText: '{{ __("Cancel") }}',
+        confirmButtonColor: '#c62828',
+        cancelButtonColor: '#68736b',
+        reverseButtons: true,
+    }).then(result => {
+        if (result.isConfirmed) form.submit();
+    });
 });
 </script>
 @endpush
