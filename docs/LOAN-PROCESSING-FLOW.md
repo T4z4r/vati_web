@@ -1345,6 +1345,8 @@ Every significant action is written to `activity_log` (spatie/laravel-activitylo
 
 Master-data CRUD is audited too: branches, regions, areas, loan products and system settings log create/update/delete with the changed fields.
 
+**Web audits window:** `GET /admin/system/audit` renders the audit trail for staff with system access — filter by search text, log type (`auth`, `default`, `groups`, `users`), entity type, user, and date range. Each row shows timestamp, actor, action, and a link to the related record (application, member, loan, group or user); a details modal reveals the stored properties (IP address, device name, changed fields, `forced` flag, etc.).
+
 Notes:
 - Passwords are never stored in audit properties — only `password_changed: true/false`.
 - Failed login attempts are recorded without a causer (email + IP only).
