@@ -15,7 +15,10 @@ class AreaController extends ApiController
 
     public function store(Request $request, NumberGeneratorService $numbers)
     {
-        return response()->json(['success' => true, 'data' => Area::create([...$this->data($request), 'code' => $numbers->area()])], 201);
+        $area = Area::create([...$this->data($request), 'code' => $numbers->area()]);
+        activity()->causedBy($request->user())->performedOn($area)->log('Area created');
+
+        return response()->json(['success' => true, 'data' => $area], 201);
     }
 
     public function show(Area $area)
@@ -26,12 +29,14 @@ class AreaController extends ApiController
     public function update(Request $request, Area $area)
     {
         $area->update($this->data($request, $area));
+        activity()->causedBy($request->user())->performedOn($area)->withProperties(['changed_fields' => array_keys($area->getChanges())])->log('Area updated');
 
         return response()->json(['success' => true, 'data' => $area->refresh()]);
     }
 
-    public function destroy(Area $area)
+    public function destroy(Request $request, Area $area)
     {
+        activity()->causedBy($request->user())->withProperties(['deleted_area' => ['id' => $area->id, 'name' => $area->name]])->log('Area deleted');
         $area->delete();
 
         return response()->noContent();

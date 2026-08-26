@@ -17,6 +17,7 @@ class LoanProductController extends ApiController
     public function store(Request $request, NumberGeneratorService $numbers)
     {
         $product = LoanProduct::create([...$this->validated($request), 'code' => $numbers->loanProduct()]);
+        activity()->causedBy($request->user())->performedOn($product)->withProperties(['name' => $product->name, 'code' => $product->code])->log('Loan product created');
 
         return response()->json(['success' => true, 'message' => 'Loan product created.', 'data' => $product], 201);
     }
@@ -29,12 +30,14 @@ class LoanProductController extends ApiController
     public function update(Request $request, LoanProduct $loanProduct)
     {
         $loanProduct->update($this->validated($request, $loanProduct));
+        activity()->causedBy($request->user())->performedOn($loanProduct)->withProperties(['changed_fields' => array_keys($loanProduct->getChanges())])->log('Loan product updated');
 
         return response()->json(['success' => true, 'data' => $loanProduct->refresh()]);
     }
 
-    public function destroy(LoanProduct $loanProduct)
+    public function destroy(Request $request, LoanProduct $loanProduct)
     {
+        activity()->causedBy($request->user())->withProperties(['deleted_product' => ['id' => $loanProduct->id, 'name' => $loanProduct->name]])->log('Loan product deleted');
         $loanProduct->delete();
 
         return response()->noContent();

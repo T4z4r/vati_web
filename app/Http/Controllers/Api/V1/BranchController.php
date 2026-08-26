@@ -16,6 +16,7 @@ class BranchController extends ApiController
     public function store(Request $request, NumberGeneratorService $numbers)
     {
         $branch = Branch::create([...$this->validated($request), 'branch_code' => $numbers->branch()]);
+        activity()->causedBy($request->user())->performedOn($branch)->withProperties(['branch_code' => $branch->branch_code])->log('Branch created');
 
         return response()->json(['success' => true, 'message' => 'Branch created successfully.', 'data' => $branch], 201);
     }
@@ -28,12 +29,14 @@ class BranchController extends ApiController
     public function update(Request $request, Branch $branch)
     {
         $branch->update($this->validated($request, $branch));
+        activity()->causedBy($request->user())->performedOn($branch)->withProperties(['changed_fields' => array_keys($branch->getChanges())])->log('Branch updated');
 
         return response()->json(['success' => true, 'data' => $branch->refresh()]);
     }
 
-    public function destroy(Branch $branch)
+    public function destroy(Request $request, Branch $branch)
     {
+        activity()->causedBy($request->user())->withProperties(['deleted_branch' => ['id' => $branch->id, 'name' => $branch->branch_name]])->log('Branch deleted');
         $branch->delete();
 
         return response()->noContent();

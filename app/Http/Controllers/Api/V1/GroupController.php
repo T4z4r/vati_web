@@ -18,6 +18,7 @@ class GroupController extends ApiController
     public function store(Request $request, NumberGeneratorService $numbers)
     {
         $group = MemberGroup::create([...$this->validated($request), 'group_code' => $numbers->group()]);
+        activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['group_code' => $group->group_code])->log('Group created');
 
         return response()->json(['success' => true, 'message' => 'Group created successfully.', 'data' => $group], 201);
     }
@@ -43,12 +44,14 @@ class GroupController extends ApiController
     public function update(Request $request, MemberGroup $group)
     {
         $group->update($this->validated($request, $group));
+        activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['changed_fields' => array_keys($group->getChanges())])->log('Group updated');
 
         return response()->json(['success' => true, 'data' => $group->refresh()]);
     }
 
-    public function destroy(MemberGroup $group)
+    public function destroy(Request $request, MemberGroup $group)
     {
+        activity()->useLog('groups')->causedBy($request->user())->withProperties(['deleted_group' => ['id' => $group->id, 'name' => $group->group_name]])->log('Group deleted');
         $group->delete();
 
         return response()->noContent();

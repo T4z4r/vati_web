@@ -25,6 +25,7 @@ class SystemSettingsController extends Controller
         ]);
 
         SystemSetting::setMany($request->settings);
+        activity()->causedBy($request->user())->withProperties(['updated_keys' => array_keys($request->settings)])->log('System settings updated');
 
         return response()->json([
             'success' => true,
