@@ -53,10 +53,10 @@ class RolePermissionSeeder extends Seeder
             'view-payments', 'collect-payments', 'reverse-payments',
             'view-security', 'manage-security',
         ];
-        Role::findByName('loan_officer')->syncPermissions(array_merge(['view-dashboard'], $fieldPermissions));
+        Role::findByName('loan_officer')->syncPermissions(array_merge(['view-dashboard', 'view-management-dashboard'], $fieldPermissions));
         Role::findByName('cashier')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'view-security', 'manage-security']);
         Role::findByName('finance_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security', 'settle-loans', 'view-reports', 'export-reports']);
-        Role::findByName('credit_officer')->syncPermissions(array_merge(['view-dashboard'], $fieldPermissions));
+        Role::findByName('credit_officer')->syncPermissions(array_merge(['view-dashboard', 'view-management-dashboard'], $fieldPermissions));
         Role::findByName('auditor')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-loan-products', 'view-loan-applications', 'view-loans', 'view-payments', 'view-security', 'view-reports', 'export-reports', 'view-audit-logs', 'view-audit-trail']);
     }
 }
