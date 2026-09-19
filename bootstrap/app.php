@@ -6,9 +6,11 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -40,6 +42,23 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => $exception->getMessage(),
+                ], 422);
+            }
+        });
+        $exceptions->render(function (HttpException $exception, $request) {
+            if ($request->is('api/*') && in_array($exception->getStatusCode(), [403, 404], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getMessage() ?: ($exception->getStatusCode() === 403 ? 'You are not allowed to perform this action.' : 'Resource not found.'),
+                ], $exception->getStatusCode());
+            }
+        });
+        $exceptions->render(function (ValidationException $exception, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->validator->errors()->first(),
+                    'errors' => $exception->errors(),
                 ], 422);
             }
         });

@@ -270,6 +270,23 @@ class FlutterApiRequirementsTest extends TestCase
         $this->getJson("/api/v1/groups/{$groupB->id}")->assertOk();
     }
 
+    public function test_group_update_returns_specific_errors_on_failure(): void
+    {
+        $otherBranch = Branch::create(['area_id' => $this->branch->area_id, 'branch_code' => 'ILA-01', 'branch_name' => 'Ilala']);
+        $otherGroup = MemberGroup::create(['branch_id' => $otherBranch->id, 'group_code' => 'ILA-G1', 'group_name' => 'Ilala Group', 'loan_officer_id' => $this->creditOfficer->id]);
+
+        Sanctum::actingAs($this->creditOfficer);
+        $this->putJson("/api/v1/groups/{$otherGroup->id}", ['branch_id' => $otherBranch->id, 'group_name' => 'Ilala Renamed'])
+            ->assertStatus(403)
+            ->assertJson(['success' => false, 'message' => 'You cannot access another branch.']);
+
+        $this->putJson("/api/v1/groups/{$this->group->id}", ['branch_id' => $this->branch->id, 'group_name' => ''])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'The group name field is required.')
+            ->assertJsonStructure(['errors' => ['group_name']]);
+    }
+
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication
     {
         return LoanApplication::create([
