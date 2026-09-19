@@ -7,7 +7,11 @@
             <h1>{{ __('Group Visits') }}</h1>
             <p>{{ __('Log and track field visits to member groups.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.group-visits.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> {{ __('Record visit') }}</a>
+        <div class="head-actions">
+            <a class="btn btn-primary" href="{{ route('admin.group-visits.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> {{ __('Record visit') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.group-visits.export.list', ['format' => 'pdf'] + request()->query()) }}" title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.group-visits.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
+        </div>
     </div>
     <form class="filters">
         <select name="group_id">

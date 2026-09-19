@@ -40,6 +40,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::put('account/password', [AccountController::class, 'updatePassword'])->name('account.password');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
 
+    Route::get('members/export/{format}', [MemberController::class, 'exportList'])->whereIn('format', ['pdf', 'xlsx'])->name('members.export.list')->middleware('permission:view-members');
+    Route::get('groups/export/{format}', [GroupController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('groups.export.list')->middleware('permission:view-groups');
+    Route::get('group-visits/export/{format}', [GroupVisitController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('group-visits.export.list')->middleware('permission:view-group-visits');
+    Route::get('loan-applications/export/{format}', [LoanApplicationController::class, 'exportList'])->whereIn('format', ['pdf', 'xlsx'])->name('loan-applications.export.list')->middleware('permission:view-loan-applications');
+    Route::get('loans/export/{format}', [LoanController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('loans.export.list')->middleware('permission:view-loans');
+
     Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index')->middleware('role:super_admin|head_office_admin');
     Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store')->middleware('role:super_admin|head_office_admin');
     Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store')->middleware('role:super_admin|head_office_admin');

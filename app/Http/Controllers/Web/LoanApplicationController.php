@@ -11,6 +11,7 @@ use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Services\ApplicationComplianceService;
 use App\Services\ApplicationDetailService;
+use App\Services\ExportService;
 use App\Services\LoanApprovalService;
 use App\Services\LoanCalculatorService;
 use App\Services\OnboardingService;
@@ -23,9 +24,36 @@ class LoanApplicationController extends Controller
 {
     public function index(Request $request)
     {
-        $applications = LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))))->latest()->paginate(20)->withQueryString();
+        $applications = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
         return view('admin.loan-applications.index', compact('applications'));
+    }
+
+    private function filteredQuery(Request $request)
+    {
+        return LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    public function exportList(Request $request, ExportService $exporter, string $format)
+    {
+        $rows = $this->filteredQuery($request)->latest()->get()->map(fn (LoanApplication $application) => [
+            'application_number' => $application->application_number,
+            'member' => trim("{$application->member?->first_name} {$application->member?->last_name}"),
+            'group' => $application->group?->group_name,
+            'product' => $application->product?->name,
+            'requested_amount' => 'TZS '.number_format((float) $application->requested_amount),
+            'duration' => $application->duration_months.' months',
+            'created' => $application->created_at->format('d M Y'),
+            'status' => str_replace('_', ' ', $application->status->value ?? $application->status),
+        ])->values()->all();
+
+        return $exporter->export(
+            'VATI Loan Applications List',
+            ['Application No', 'Member', 'Group', 'Product', 'Requested Amount', 'Duration', 'Created', 'Status'],
+            $rows,
+            'VATI-loan-applications-'.now()->format('Ymd-His'),
+            $format
+        );
     }
 
     public function create(Request $request)

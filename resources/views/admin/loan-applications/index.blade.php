@@ -7,7 +7,11 @@
             <h1>{{ __('Loan applications') }}</h1>
             <p>{{ __('Track applications from draft through approval and disbursement.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.loan-applications.create') }}"><span class="ph ph-note-pencil" aria-hidden="true"></span> {{ __('New application') }}</a>
+        <div class="head-actions">
+            <a class="btn btn-primary" href="{{ route('admin.loan-applications.create') }}"><span class="ph ph-note-pencil" aria-hidden="true"></span> {{ __('New application') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export.list', ['format' => 'pdf'] + request()->query()) }}" title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
+        </div>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Application or member name') }}"><select name="status">

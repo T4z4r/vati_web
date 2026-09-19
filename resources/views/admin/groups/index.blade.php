@@ -7,7 +7,11 @@
             <h1>{{ __('Member groups') }}</h1>
             <p>{{ __('Manage lending groups, officers, membership, and portfolio context.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.groups.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> {{ __('Create group') }}</a>
+        <div class="head-actions">
+            <a class="btn btn-primary" href="{{ route('admin.groups.create') }}"><span class="ph ph-plus" aria-hidden="true"></span> {{ __('Create group') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.groups.export.list', ['format' => 'pdf'] + request()->query()) }}" title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.groups.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
+        </div>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Search name or group code') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>

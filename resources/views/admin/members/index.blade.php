@@ -7,7 +7,11 @@
             <h1>{{ __('Members') }}</h1>
             <p>{{ __('Search and manage registered VATI members.') }}</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="ph ph-user-plus" aria-hidden="true"></span> {{ __('Register member') }}</a>
+        <div class="head-actions">
+            <a class="btn btn-primary" href="{{ route('admin.members.create') }}"><span class="ph ph-user-plus" aria-hidden="true"></span> {{ __('Register member') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.members.export.list', ['format' => 'pdf'] + request()->query()) }}" title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>
+            <a class="btn btn-secondary" href="{{ route('admin.members.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
+        </div>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">

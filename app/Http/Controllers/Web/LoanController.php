@@ -8,6 +8,7 @@ use App\Models\LoanCycle;
 use App\Models\LoanInstallmentRecord;
 use App\Models\LoanSecurityTransaction;
 use App\Services\DisbursementService;
+use App\Services\ExportService;
 use App\Services\SettlementService;
 use DomainException;
 use Illuminate\Http\Request;
@@ -16,9 +17,37 @@ class LoanController extends Controller
 {
     public function index(Request $request)
     {
-        $loans = Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))))->latest()->paginate(20)->withQueryString();
+        $loans = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
         return view('admin.loans.index', compact('loans'));
+    }
+
+    private function filteredQuery(Request $request)
+    {
+        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    public function export(Request $request, ExportService $exporter, string $format)
+    {
+        $rows = $this->filteredQuery($request)->latest()->get()->map(fn (Loan $loan) => [
+            'loan_number' => $loan->loan_number,
+            'product' => $loan->product?->name,
+            'member' => trim("{$loan->member?->first_name} {$loan->member?->last_name}"),
+            'group' => $loan->group?->group_name,
+            'principal' => 'TZS '.number_format((float) $loan->principal_amount),
+            'outstanding' => 'TZS '.number_format((float) $loan->total_balance),
+            'installment' => 'TZS '.number_format((float) $loan->installment_amount),
+            'maturity' => $loan->maturity_date?->format('d M Y') ?? '-',
+            'status' => str_replace('_', ' ', $loan->status->value ?? $loan->status),
+        ])->values()->all();
+
+        return $exporter->export(
+            'VATI Loans List',
+            ['Loan No', 'Product', 'Member', 'Group', 'Principal', 'Outstanding', 'Installment', 'Maturity', 'Status'],
+            $rows,
+            'VATI-loans-'.now()->format('Ymd-His'),
+            $format
+        );
     }
 
     public function show(Loan $loan)

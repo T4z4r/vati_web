@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Services\GroupMembershipService;
+use App\Services\ExportService;
 use App\Services\NumberGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -22,9 +23,35 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        $members = Member::with(['branch', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$v}%")->orWhere('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")))->latest()->paginate(20)->withQueryString();
+        $members = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
         return view('admin.members.index', ['members' => $members, 'groups' => MemberGroup::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get()]);
+    }
+
+    private function filteredQuery(Request $request)
+    {
+        return Member::with(['branch', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$v}%")->orWhere('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")));
+    }
+
+    public function exportList(Request $request, ExportService $exporter, string $format)
+    {
+        $rows = $this->filteredQuery($request)->latest()->get()->map(fn (Member $member) => [
+            'membership_number' => $member->membership_number,
+            'name' => trim("{$member->first_name} {$member->middle_name} {$member->last_name}"),
+            'phone' => $member->phone,
+            'group' => $member->group?->group_name,
+            'branch' => $member->branch?->branch_name,
+            'joined' => $member->admission_date?->format('d M Y') ?? $member->created_at->format('d M Y'),
+            'status' => ucfirst($member->status),
+        ])->values()->all();
+
+        return $exporter->export(
+            'VATI Members List',
+            ['Membership No', 'Name', 'Phone', 'Group', 'Branch', 'Joined', 'Status'],
+            $rows,
+            'VATI-members-'.now()->format('Ymd-His'),
+            $format
+        );
     }
 
     public function create(Request $request)

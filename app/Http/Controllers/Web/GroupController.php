@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\MemberGroup;
 use App\Models\User;
+use App\Services\ExportService;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,12 +15,38 @@ class GroupController extends Controller
 {
     public function index(Request $request)
     {
-        $groups = MemberGroup::with(['branch', 'loanOfficer'])->withCount(['members', 'loans'])
-            ->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))
-            ->when($request->search, fn ($q, $value) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$value}%")->orWhere('group_code', 'like', "%{$value}%")))
-            ->latest()->paginate(20)->withQueryString();
+        $groups = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
         return view('admin.groups.index', compact('groups'));
+    }
+
+    private function filteredQuery(Request $request)
+    {
+        return MemberGroup::with(['branch', 'loanOfficer'])->withCount(['members', 'loans'])
+            ->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))
+            ->when($request->search, fn ($q, $value) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$value}%")->orWhere('group_code', 'like', "%{$value}%")));
+    }
+
+    public function export(Request $request, ExportService $exporter, string $format)
+    {
+        $rows = $this->filteredQuery($request)->latest()->get()->map(fn (MemberGroup $group) => [
+            'group_code' => $group->group_code,
+            'group_name' => $group->group_name,
+            'branch' => $group->branch?->branch_name,
+            'meeting' => $group->meeting_day ? trim($group->meeting_day.($group->meeting_time ? ' '.substr($group->meeting_time, 0, 5) : '')) : '-',
+            'loan_officer' => $group->loanOfficer?->name ?? '-',
+            'members_count' => $group->members_count,
+            'loans_count' => $group->loans_count,
+            'status' => $group->status ? 'Active' : 'Inactive',
+        ])->values()->all();
+
+        return $exporter->export(
+            'VATI Member Groups List',
+            ['Group Code', 'Group Name', 'Branch', 'Meeting', 'Loan Officer', 'Members', 'Loans', 'Status'],
+            $rows,
+            'VATI-groups-'.now()->format('Ymd-His'),
+            $format
+        );
     }
 
     public function create(Request $request)
