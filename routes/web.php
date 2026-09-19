@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\ComplianceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GroupController;
@@ -34,6 +35,9 @@ Route::middleware('guest')->group(function () {
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->group(function () {
     Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
+    Route::get('account', [AccountController::class, 'show'])->name('account.show');
+    Route::put('account', [AccountController::class, 'updateProfile'])->name('account.update');
+    Route::put('account/password', [AccountController::class, 'updatePassword'])->name('account.password');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
 
     Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index')->middleware('role:super_admin|head_office_admin');

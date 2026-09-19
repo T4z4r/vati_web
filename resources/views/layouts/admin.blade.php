@@ -25,6 +25,9 @@
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
                 href="{{ route('admin.dashboard') }}"><span class="ph ph-squares-four nav-icon"
                     aria-hidden="true"></span> {{ __('Dashboard') }}</a>
+            <a class="{{ request()->routeIs('admin.account.*') ? 'active' : '' }}"
+                href="{{ route('admin.account.show') }}"><span class="ph ph-user-circle nav-icon"
+                    aria-hidden="true"></span> {{ __('My Account') }}</a>
             <p class="nav-label">{{ __('Operations') }}</p>
             @can('view-members')
                 <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
