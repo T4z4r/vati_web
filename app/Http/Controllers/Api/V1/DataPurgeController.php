@@ -52,8 +52,6 @@ class DataPurgeController extends Controller
 
     public function purge(Request $request): JsonResponse
     {
-        $this->authorize('purge-system-data');
-
         $request->validate([
             'entity' => 'required|in:members,groups,applications,loans,loan_products',
             'confirmation_phrase' => 'required|string',

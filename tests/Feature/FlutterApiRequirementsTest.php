@@ -219,6 +219,27 @@ class FlutterApiRequirementsTest extends TestCase
         $this->assertDatabaseHas('member_groups', ['group_name' => 'Officer Led Group', 'loan_officer_id' => $officer->id]);
     }
 
+    public function test_loan_officer_can_access_all_dashboard_read_apis(): void
+    {
+        $officer = User::factory()->create(['branch_id' => $this->branch->id]);
+        $officer->assignRole('loan_officer');
+        Sanctum::actingAs($officer);
+
+        $this->getJson('/api/v1/dashboard')->assertOk();
+        $this->getJson('/api/v1/portfolio/summary')->assertOk();
+        $this->getJson('/api/v1/portfolio/branches')->assertOk();
+        $this->getJson('/api/v1/groups')->assertOk();
+        $this->getJson("/api/v1/groups/{$this->group->id}")->assertOk();
+        $this->getJson("/api/v1/groups/{$this->group->id}/members")->assertOk();
+        $this->getJson("/api/v1/groups/{$this->group->id}/dashboard")->assertOk();
+        $this->getJson('/api/v1/members')->assertOk();
+        $this->getJson("/api/v1/members/{$this->member->id}")->assertOk();
+        $this->getJson('/api/v1/loan-applications')->assertOk();
+        $this->getJson('/api/v1/loans')->assertOk();
+        $this->getJson('/api/v1/loan-products')->assertOk();
+        $this->getJson("/api/v1/loan-products/{$this->product->id}")->assertOk();
+    }
+
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication
     {
         return LoanApplication::create([
