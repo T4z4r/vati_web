@@ -72,6 +72,6 @@ class GroupController extends ApiController
 
     private function validated(Request $request, ?MemberGroup $group = null): array
     {
-        return $request->validate(['branch_id' => ['required', 'exists:branches,id'], 'group_name' => ['required', 'max:150'], 'meeting_day' => ['nullable', Rule::in(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])], 'meeting_time' => ['nullable', 'date_format:H:i'], 'region' => ['nullable', 'max:100'], 'district' => ['nullable', 'max:100'], 'ward' => ['nullable', 'max:100'], 'location' => ['nullable', 'max:255'], 'loan_officer_id' => ['nullable', 'exists:users,id'], 'status' => ['sometimes', 'boolean']]);
+        return $request->validate(['branch_id' => ['required', 'exists:branches,id'], 'group_name' => ['required', 'max:150'], 'meeting_day' => ['nullable', Rule::in(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])], 'meeting_time' => ['nullable', 'date_format:H:i'], 'meeting_location' => ['nullable', 'max:255'], 'region' => ['nullable', 'max:100'], 'district' => ['nullable', 'max:100'], 'ward' => ['nullable', 'max:100'], 'location' => ['nullable', 'max:255'], 'loan_officer_id' => ['nullable', 'exists:users,id'], 'status' => ['sometimes', 'boolean']]);
     }
 }

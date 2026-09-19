@@ -214,10 +214,16 @@ class FlutterApiRequirementsTest extends TestCase
         $officer->assignRole('loan_officer');
         Sanctum::actingAs($officer);
 
-        $this->postJson('/api/v1/groups', ['branch_id' => $this->branch->id, 'group_name' => 'Officer Led Group'])
+        $create = $this->postJson('/api/v1/groups', ['branch_id' => $this->branch->id, 'group_name' => 'Officer Led Group', 'meeting_location' => 'Kinondoni Primary School'])
             ->assertCreated()
-            ->assertJsonPath('data.loan_officer_id', $officer->id);
-        $this->assertDatabaseHas('member_groups', ['group_name' => 'Officer Led Group', 'loan_officer_id' => $officer->id]);
+            ->assertJsonPath('data.loan_officer_id', $officer->id)
+            ->assertJsonPath('data.meeting_location', 'Kinondoni Primary School');
+        $groupId = $create->json('data.id');
+        $this->assertDatabaseHas('member_groups', ['group_name' => 'Officer Led Group', 'loan_officer_id' => $officer->id, 'meeting_location' => 'Kinondoni Primary School']);
+
+        $this->putJson("/api/v1/groups/{$groupId}", ['branch_id' => $this->branch->id, 'group_name' => 'Officer Led Group', 'meeting_location' => 'Mpakani Ground'])
+            ->assertOk()
+            ->assertJsonPath('data.meeting_location', 'Mpakani Ground');
     }
 
     public function test_loan_officer_can_access_all_dashboard_read_apis(): void

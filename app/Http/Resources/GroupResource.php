@@ -15,6 +15,7 @@ class GroupResource extends JsonResource
             'group_name' => $this->group_name,
             'meeting_day' => $this->meeting_day,
             'meeting_time' => $this->meeting_time ? substr($this->meeting_time, 0, 5) : null,
+            'meeting_location' => $this->meeting_location,
             'region' => $this->region,
             'district' => $this->district,
             'ward' => $this->ward,
