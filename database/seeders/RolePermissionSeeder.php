@@ -40,10 +40,23 @@ class RolePermissionSeeder extends Seeder
         Role::findByName('regional_manager')->syncPermissions(Role::findByName('branch_manager')->permissions);
         Role::findByName('area_manager')->syncPermissions(Role::findByName('branch_manager')->permissions);
         Role::findByName('assistant_branch_manager')->syncPermissions(Role::findByName('branch_manager')->permissions->whereNotIn('name', ['approve-loan-applications', 'disburse-loans', 'settle-loans', 'authorize-loan-clearances']));
-        Role::findByName('loan_officer')->syncPermissions(['view-dashboard', 'view-members', 'create-members', 'edit-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'manage-group-witnesses', 'view-group-visits', 'view-loan-products', 'view-loan-applications', 'create-loan-applications', 'manage-loan-compliance', 'replace-passbooks', 'issue-default-notices', 'view-loans', 'view-payments', 'collect-payments', 'view-security']);
+        $fieldPermissions = [
+            'view-members', 'create-members', 'edit-members', 'delete-members',
+            'view-groups', 'create-groups', 'edit-groups', 'view-group-portfolio',
+            'view-group-witnesses', 'manage-group-witnesses', 'view-group-visits',
+            'view-loan-products', 'manage-loan-products',
+            'view-loan-applications', 'create-loan-applications', 'review-loan-applications',
+            'approve-loan-applications', 'reject-loan-applications',
+            'view-loans', 'disburse-loans', 'settle-loans',
+            'manage-loan-compliance', 'verify-loan-documents', 'issue-default-notices',
+            'authorize-loan-clearances', 'replace-passbooks', 'view-portfolio',
+            'view-payments', 'collect-payments', 'reverse-payments',
+            'view-security', 'manage-security',
+        ];
+        Role::findByName('loan_officer')->syncPermissions(array_merge(['view-dashboard'], $fieldPermissions));
         Role::findByName('cashier')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'view-security', 'manage-security']);
         Role::findByName('finance_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-loans', 'view-payments', 'collect-payments', 'reverse-payments', 'view-security', 'manage-security', 'settle-loans', 'view-reports', 'export-reports']);
-        Role::findByName('credit_officer')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-group-portfolio', 'view-group-witnesses', 'view-loan-products', 'view-loan-applications', 'review-loan-applications', 'verify-loan-documents', 'view-loans', 'view-portfolio']);
+        Role::findByName('credit_officer')->syncPermissions(array_merge(['view-dashboard'], $fieldPermissions));
         Role::findByName('auditor')->syncPermissions(['view-dashboard', 'view-members', 'view-groups', 'view-loan-products', 'view-loan-applications', 'view-loans', 'view-payments', 'view-security', 'view-reports', 'export-reports', 'view-audit-logs', 'view-audit-trail']);
     }
 }
