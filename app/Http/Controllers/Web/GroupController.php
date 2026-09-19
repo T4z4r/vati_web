@@ -23,6 +23,7 @@ class GroupController extends Controller
     private function filteredQuery(Request $request)
     {
         return MemberGroup::with(['branch', 'loanOfficer'])->withCount(['members', 'loans'])
+            ->officerAssigned($request->user())
             ->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))
             ->when($request->search, fn ($q, $value) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$value}%")->orWhere('group_code', 'like', "%{$value}%")));
     }
@@ -62,8 +63,10 @@ class GroupController extends Controller
         return redirect()->route('admin.groups.show', $group)->with('success', 'Group created successfully.');
     }
 
-    public function show(MemberGroup $group)
+    public function show(Request $request, MemberGroup $group)
     {
+        abort_unless($group->isOfficerAssigned($request->user()), 404);
+
         $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
         $members = $group->members()
             ->withCount([

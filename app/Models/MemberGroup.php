@@ -57,4 +57,22 @@ class MemberGroup extends Model
     {
         return $this->hasMany(GroupVisit::class, 'group_id');
     }
+
+    public function scopeOfficerAssigned($query, ?User $user)
+    {
+        if ($user && $user->hasRole('loan_officer') && ! $user->hasAnyRole(['super_admin', 'head_office_admin']) && (bool) SystemSetting::get('restrict_loan_officer_groups', true)) {
+            $query->where('loan_officer_id', $user->id);
+        }
+
+        return $query;
+    }
+
+    public function isOfficerAssigned(?User $user): bool
+    {
+        if (! $user || ! $user->hasRole('loan_officer') || $user->hasAnyRole(['super_admin', 'head_office_admin']) || ! (bool) SystemSetting::get('restrict_loan_officer_groups', true)) {
+            return true;
+        }
+
+        return $this->loan_officer_id !== null && (int) $this->loan_officer_id === (int) $user->id;
+    }
 }

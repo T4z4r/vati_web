@@ -12,7 +12,7 @@ class GroupController extends ApiController
 {
     public function index(Request $request)
     {
-        return $this->branchScope(MemberGroup::with('branch', 'loanOfficer'), $request)->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
+        return $this->branchScope(MemberGroup::with('branch', 'loanOfficer'), $request)->officerAssigned($request->user())->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)
@@ -27,8 +27,10 @@ class GroupController extends ApiController
         return response()->json(['success' => true, 'message' => 'Group created successfully.', 'data' => $group], 201);
     }
 
-    public function show(MemberGroup $group)
+    public function show(Request $request, MemberGroup $group)
     {
+        abort_unless($group->isOfficerAssigned($request->user()), 404);
+
         $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
 
         $group->setRelation('members', $group->members()
@@ -63,6 +65,8 @@ class GroupController extends ApiController
 
     public function members(Request $request, MemberGroup $group)
     {
+        abort_unless($group->isOfficerAssigned($request->user()), 404);
+
         return $group->members()->paginate($this->perPage($request));
     }
 

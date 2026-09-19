@@ -34,6 +34,8 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'cooling_off_days', 'value' => '3', 'type' => 'number', 'group' => 'business_rules', 'description' => 'Days after consent during which applicant can cancel.'],
             ['key' => 'default_notice_days', 'value' => '14', 'type' => 'number', 'group' => 'business_rules', 'description' => 'Days given in default notice before escalation.'],
             ['key' => 'installment_tolerance', 'value' => '0.009', 'type' => 'number', 'group' => 'business_rules', 'description' => 'Floating-point tolerance for installment balance comparisons.'],
+
+            ['key' => 'restrict_loan_officer_groups', 'value' => '1', 'type' => 'boolean', 'group' => 'access', 'description' => 'Restrict loan officers to view only groups assigned to them.'],
         ];
 
         foreach ($settings as $setting) {

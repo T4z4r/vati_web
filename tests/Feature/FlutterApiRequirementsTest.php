@@ -11,6 +11,7 @@ use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Region;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Notifications\VatiDatabaseNotification;
 use Database\Seeders\RolePermissionSeeder;
@@ -223,6 +224,7 @@ class FlutterApiRequirementsTest extends TestCase
     {
         $officer = User::factory()->create(['branch_id' => $this->branch->id]);
         $officer->assignRole('loan_officer');
+        $this->group->update(['loan_officer_id' => $officer->id]);
         Sanctum::actingAs($officer);
 
         $this->getJson('/api/v1/dashboard')->assertOk();
@@ -238,6 +240,28 @@ class FlutterApiRequirementsTest extends TestCase
         $this->getJson('/api/v1/loans')->assertOk();
         $this->getJson('/api/v1/loan-products')->assertOk();
         $this->getJson("/api/v1/loan-products/{$this->product->id}")->assertOk();
+    }
+
+    public function test_loan_officer_group_scoping_follows_the_setting(): void
+    {
+        $officerA = User::factory()->create(['branch_id' => $this->branch->id]);
+        $officerA->assignRole('loan_officer');
+        $officerB = User::factory()->create(['branch_id' => $this->branch->id]);
+        $officerB->assignRole('loan_officer');
+
+        $groupA = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G2', 'group_name' => 'Officer A Group', 'loan_officer_id' => $officerA->id]);
+        $groupB = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G3', 'group_name' => 'Officer B Group', 'loan_officer_id' => $officerB->id]);
+
+        Sanctum::actingAs($officerA);
+        $this->getJson('/api/v1/groups')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $groupA->id);
+        $this->getJson("/api/v1/groups/{$groupA->id}")->assertOk();
+        $this->getJson("/api/v1/groups/{$groupA->id}/dashboard")->assertOk();
+        $this->getJson("/api/v1/groups/{$groupB->id}")->assertNotFound();
+        $this->getJson("/api/v1/groups/{$groupB->id}/dashboard")->assertNotFound();
+
+        SystemSetting::set('restrict_loan_officer_groups', false);
+        $this->getJson('/api/v1/groups')->assertOk()->assertJsonCount(3, 'data');
+        $this->getJson("/api/v1/groups/{$groupB->id}")->assertOk();
     }
 
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication

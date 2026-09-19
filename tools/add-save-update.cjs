@@ -1,126 +1,105 @@
 const fs = require('fs');
 const FILE = 'postman/VATI-Microfinance-API.postman_collection.json';
-const L = fs.readFileSync(FILE, 'utf8').split(/\r?\n/);
-const bUrl = '{{base_url}}/api/v1';
+const source = fs.readFileSync(FILE, 'utf8');
+const L = source.split(/\r?\n/);
+const B = '{{base_url}}/api/v1';
 
-// Build a request item block at folder base indent (16 spaces for folder items)
-function block(name, method, url, raw) {
-    const lines = [];
-    const push = (indent, s) => lines.push(' '.repeat(indent) + s);
-    push(16, '{');
-    push(20, '"name": ' + JSON.stringify(name) + ',');
-    push(20, '"request": {');
-    push(24, '"method": ' + JSON.stringify(method) + ',');
-    push(24, '"header": [');
-    push(28, '{');
-    push(32, '"key": "Content-Type",');
-    push(32, '"value": "application/json",');
-    push(32, '"type": "text"');
-    push(28, '}');
-    push(24, '],');
-    push(24, '"url": ' + JSON.stringify(url) + ',');
-    push(24, '"description": "",');
-    push(24, '"body": {');
-    push(28, '"mode": "raw",');
-    push(28, '"raw": ' + JSON.stringify(raw) + ',');
-    push(28, '"options": {');
-    push(32, '"raw": {');
-    push(36, '"language": "json"');
-    push(32, '}');
-    push(28, '}');
-    push(24, '}');
-    push(20, '}');
-    push(16, '},');
-    return lines;
+// Build ONE item object with Postman's exact shape (method/header/url/description/body),
+// then serialize as 4-space JSON re-indented to 16 spaces = matches existing folder items.
+function itemobj(name, method, url, raw, description) {
+    return {
+        name,
+        request: {
+            method,
+            header: [{ key: 'Content-Type', value: 'application/json', type: 'text' }],
+            url,
+            description: description || '',
+            body: {
+                mode: 'raw',
+                raw,
+                options: { raw: { language: 'json' } },
+            },
+        },
+        response: [],
+    };
 }
 
-// Find the line index of a folder's "request" (item) by name inside folder item array.
-// We locate the folder object start ( { after "name": "..."), then its "item": [ ... ]
-function findItemArrayClose(idxNameLine) {
-    // Folder structure (4-space): folder "name" at 12, "item": [ at 12, entries at 16.
-    // Find this folder's item-array close: the first `            ],` (12 indent) at the same object level,
-    // i.e. after the "item": [ at 12 indent. We track nesting to be safe.
-    let i = idxNameLine;
-    const depth = [];
-    let set = 0; // nesting inside this folder obj
-    let inArr = false; // encountered "item": [
-    while (i < L.length) {
-        const line = L[i];
-        const t = line.trim();
-        const ind = line.length - line.replace(/^\s+/, '').length;
-        if (t === '"item": [') inArr = true;
-        if (inArr && ind === 12 && t === '],') { inArr = false; return i; }
-        i++;
-    }
-    return -1;
+// serialize an item to lines at indent 16 (folder item level), each followed by ','
+// except the last line (the closing '}').
+function ser(item, last) {
+    const body = JSON.stringify(item, null, 4)
+        .split('\n')
+        .map(l => (l.trim() === '' ? l : ' '.repeat(16) + l));
+    if (!last) body[body.length - 1] = body[body.length - 1].replace(/}$/, '},');
+    return body;
 }
 
-// Locate a folder by name: lines with exactly `            "name": "X",` (12 indent) followed by `            "item": [`
-function folderStartIdx(name) {
-    for (let i = 0; i < L.length; i++) {
-        const t = L[i].trim();
-        const ind = L[i].length - L[i].replace(/^\s+/, '').length;
-        if (ind === 12 && t === '"name": ' + JSON.stringify(name) + ',') {
-            // confirm next non empty is "item": [
-            for (let k = i + 1; k < L.length && k < i + 6; k++) {
-                if (L[k].trim() === '"item": [') return i;
-            }
+const complianceSan = [];
+const appUrl = '{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/compliance';
+const mkSave = (nm, m, url, raw, desc) => complianceSan.push({ nm, m, url, raw, desc });
+
+mkSave('Save Applicant Compliance', 'PUT', appUrl + '/applicant',
+    '{\n  "accept_declaration": true,\n  "applicant_signature": "{{applicant_signature}}",\n  "applicant_thumbprint": "{{applicant_thumbprint}}"\n}',
+    'Saves the applicant declaration acceptance with signature and thumbprint.');
+mkSave('Save Guarantor Compliance', 'POST', appUrl + '/guarantors',
+    '{\n  "guarantor_type": "family",\n  "name": "Jane Doe",\n  "relationship": "Sister",\n  "phone": "0712345678",\n  "national_id": "{{guarantor_national_id}}",\n  "signature": "{{guarantor_signature}}",\n  "thumbprint": "{{guarantor_thumbprint}}",\n  "accept_declaration": true\n}',
+    'Saves a guarantor with their compliance signature and thumbprint.');
+mkSave('Save Nominees Compliance', 'PUT', appUrl + '/nominees',
+    '{\n  "nominees": [\n    {\n      "name": "Grace Nominee",\n      "relationship": "Daughter",\n      "percentage": 100\n    }\n  ]\n}',
+    'Saves the nominee (beneficiary) distribution for the application.');
+
+const loanAdminSave = [];
+const mkAdm = (nm, m, url, raw, desc) => loanAdminSave.push({ nm, m, url, raw, desc });
+mkAdm('Replace Member Passbook', 'POST', '{{base_url}}/api/v1/members/{{member_id}}/passbook-replacements',
+    '{\n  "reason": "damaged",\n  "payment_reference": "{{payment_reference}}"\n}',
+    'Saves a passbook replacement arranged for a member.');
+mkAdm('Issue Default Notice', 'POST', '{{base_url}}/api/v1/loans/{{loan_id}}/default-notices',
+    '{\n  "delivery_method": "hand",\n  "delivery_reference": "{{delivery_reference}}"\n}',
+    'Saves a default notice issued against an overdue loan.');
+mkAdm('Authorize Loan Clearance', 'POST', '{{base_url}}/api/v1/loans/{{loan_id}}/clearance',
+    '{\n  "comments": "All dues settled, collateral released."\n}',
+    'Saves the clearance authorization after full settlement.');
+
+// Find the line holding the folder's item-array close: after the last request item
+// of each target folder. We reposition by finding the folder item-array open then its close.
+function folderItemClose(folderName) {
+    const open = L.findIndex(x => x.includes('"name": "' + folderName + '"'));
+    // after open, find the item-array opening '[' line with 12-space indent
+    let arrOpen = -1, depth = 0, started = false;
+    for (let i = open + 1; i < L.length; i++) {
+        const t = L[i];
+        const lead = t.length - t.replace(/^\s+/, '').length;
+        if (!started && t === '            "item": [') { started = true; arrOpen = i; }
+        if (started) {
+            const o = (t.match(/{/g) || []).length, c = (t.match(/}/g) || []).length;
+            depth += o - c;
+            // item-array closes on a line ending with '],' at 12-space indent after depth returns to 0
+            if (depth === 0 && /^            \],$/.test(t)) return i;
         }
     }
     return -1;
 }
 
-// compliance saves for Loan Applications and Witnesses
-const waUrl = bUrl + '/loan-applications/{{loan_application_id}}/compliance';
-const compliance = [
-    { n: 'Update Applicant Compliance', m: 'PUT', u: waUrl + '/applicant',
-        r: '{\n  "accept_declaration": true,\n  "applicant_signature": "{{applicant_signature}}",\n  "applicant_thumbnail": "{{applicant_thumbnail}}"\n}' },
-    { n: 'Add Compliance Guarantor', m: 'POST', u: waUrl + '/guarantors',
-        r: '{\n  "guarantor_type": "family",\n  "name": "Jane Doe",\n  "relationship": "Sister",\n  "phone": "0712345678",\n  "national_id": "{{guarantor_national_id}}",\n  "signature": "{{guarantor_signature}}",\n  "thumbnail": "{{guarantor_thumbnail}}",\n  "accept_declaration": true\n}' },
-    { n: 'Update Nominees Compliance', m: 'PUT', u: waUrl + '/nominees',
-        r: '{\n  "nominees": [\n    {\n      "name": "Grace Nominee",\n      "relationship": "Daughter",\n      "percentage": 100\n    }\n  ]\n}' },
-    { n: 'Cancel Application', m: 'POST', u: bUrl + '/loan-applications/{{loan_application_id}}/cancel',
-        r: '{\n  "reason": "Applicant requested withdrawal"\n}' },
-];
+const waClose = folderItemClose('Loan Applications and Witnesses');
+const adClose = folderItemClose('Loans, Disbursement and Collections');
 
-// loan clearance / notices / passbook for Loans, Disbursement and Collections
-const admin = [
-    { n: 'Replace Member Passbook', m: 'POST', u: bUrl + '/members/{{member_id}}/passbook-replacements',
-        r: '{\n  "reason": "damaged",\n  "payment_reference": "{{payment_reference}}"\n}' },
-    { n: 'Issue Default Notice', m: 'POST', u: bUrl + '/loans/{{loan_id}}/default-notices',
-        r: '{\n  "delivery_method": "hand",\n  "delivery_reference": "{{delivery_reference}}"\n}' },
-    { n: 'Authorize Loan Clearance', m: 'POST', u: bUrl + '/loans/{{loan_id}}/clearance',
-        r: '{\n  "comments": "All dues settled, collateral released."\n}' },
-];
-
-const waStart = folderStartIdx('Loan Applications and Witnesses');
-const adStart = folderStartIdx('Loans, Disbursement and Collections');
-const waClose = findItemArrayClose(waStart);
-const adClose = findItemArrayClose(adStartese);
-
-let addedWa = 0, addedAd = 0, err = [];
-if (waClose < 0) err.push('waClose not found');
-if (adClose < 0) err.push('adClose not found');
-
-if (waClose > 0) {
-    const ins = compliance.map(c => block(c.n, c.m, c.u, c.r)).flat();
-    L.splice(waClose, 0, ...ins);
-    addedWa = compliance.length;
-}
-if (adClose > 0) {
-    // recompute: indices shifted by addedWa lines
-    const ins = admin.map(c => block(c.n, c.m, c.u, c.r)).flat();
-    L.splice(adClose + addedWa * 14, 0, ...ins);
-    addedAd = admin.length;
+function splice(folderName, items, closeLine) {
+    if (closeLine < 0) { console.log('MISS folder ' + folderName); return; }
+    const lines = [];
+    items.forEach((o, idx) => lines.push(...ser(itemobj(o.nm, o.m, o.url, o.raw, o.desc), idx === items.length - 1)));
+    L.splice(closeLine, 0, ...lines);
+    console.log('inserted ' + items.length + ' into folder ' + folderName + ' (close L' + (closeLine + 1) + ')');
 }
 
-const out = L.join('\n');
+splice('Loan Applications and Witnesses', complianceSan, waClose);
+// recompute admin close after the earlier splice shifted lines
+const adClose2 = folderItemClose('Loans, Disbursement and Collections');
+splice('Loans, Disbursement and Collections', loanAdminSave, adClose2);
+
+fs.writeFileSync(FILE, L.join('\n') + '\n');
 try {
-    JSON.parse(out);
-    fs.writeFileSync(FILE, out);
-    console.log('OK wa=' + waStart + '->' + waClose + ' ad=' + adStart + '->' + adClose +
-        ' addedCompliance=' + addedWa + ' addedAdmin=' + addedAd + (err.length ? ' ERR:' + err.join(',') : ''));
+    const check = JSON.parse(L.join('\n'));
+    console.log('VALID JSON ok; folders=' + check.item.length + '; total requests now present:');
 } catch (e) {
-    console.log('INVALID after splice: ' + e.message);
-    fs.writeFileSync(FILE + '.pre', out);
+    console.log('INVALID JSON: ' + e.message);
 }
