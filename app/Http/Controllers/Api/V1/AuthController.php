@@ -27,7 +27,13 @@ class AuthController extends ApiController
 
     public function profile(Request $request)
     {
-        return response()->json(['success' => true, 'data' => $request->user()->load('branch')]);
+        $user = $request->user()->load('branch');
+
+        return response()->json(['success' => true, 'data' => [
+            'user' => $user,
+            'roles' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ]]);
     }
 
     public function logout(Request $request)
