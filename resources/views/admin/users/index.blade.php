@@ -58,7 +58,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="empty">{{ __('No staff accounts found.') }}</td>
+                            <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No staff accounts found.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

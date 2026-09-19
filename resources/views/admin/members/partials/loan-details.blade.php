@@ -83,7 +83,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No loan cycles recorded
+                                <td colspan="7" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan cycles recorded
                                 </td>
                             </tr>
                         @endforelse
@@ -220,7 +220,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No installment records
+                                <td colspan="7" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No installment records
                                 </td>
                             </tr>
                         @endforelse
@@ -271,7 +271,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">No security
+                                <td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No security
                                     transactions</td>
                             </tr>
                         @endforelse
@@ -281,7 +281,8 @@
         </div>
 
     @empty
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+        <div class="empty bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+            <span class="ph ph-tray empty-icon" aria-hidden="true"></span>
             <p class="text-gray-600">No loans found for this member</p>
         </div>
     @endforelse

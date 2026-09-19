@@ -975,6 +975,17 @@ tbody tr:hover {
     padding: 42px;
     color: var(--muted);
 }
+.empty > .empty-icon {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 12px;
+    padding: 14px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: var(--muted);
+    font-size: 32px;
+    line-height: 1;
+}
 .filters {
     display: flex;
     gap: 10px;

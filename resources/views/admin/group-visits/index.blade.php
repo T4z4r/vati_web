@@ -53,7 +53,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="empty">{{ __('No group visits recorded yet.') }}</td>
+                            <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No group visits recorded yet.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

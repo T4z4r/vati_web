@@ -80,7 +80,7 @@
         <div class="table-wrap"><table><thead><tr><th>Name</th><th>Sex</th><th>Age</th><th>Relationship</th><th>Education</th><th>Marital status</th><th>Occupation</th><th>Secondary occupation</th></tr></thead><tbody>
             @forelse($member->familyMembers as $family)
                 <tr><td>{{ $family->name }}</td><td>{{ $display($family->gender) }}</td><td>{{ $family->age ?? '—' }}</td><td>{{ $display($family->relationship) }}</td><td>{{ $display($family->education) }}</td><td>{{ $display($family->marital_status) }}</td><td>{{ $display($family->occupation) }}</td><td>{{ $display($family->secondary_occupation) }}</td></tr>
-            @empty<tr><td colspan="8" class="empty">No family-member information recorded.</td></tr>@endforelse
+            @empty<tr><td colspan="8" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No family-member information recorded.</td></tr>@endforelse
         </tbody></table></div>
     </div>
     <div class="card">
@@ -88,7 +88,7 @@
         <div class="table-wrap"><table><thead><tr><th>Asset</th><th>Category</th><th>Quantity</th><th>Estimated value</th><th>Description</th></tr></thead><tbody>
             @forelse($member->assets as $asset)
                 <tr><td>{{ $display($asset->assetType?->name) }}</td><td>{{ $display($asset->assetType?->category) }}</td><td>{{ $asset->quantity }}</td><td class="money">{{ $money($asset->estimated_value) }}</td><td>{{ $display($asset->description) }}</td></tr>
-            @empty<tr><td colspan="5" class="empty">No family assets recorded.</td></tr>@endforelse
+            @empty<tr><td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No family assets recorded.</td></tr>@endforelse
         </tbody></table></div>
     </div>
 </div>
@@ -117,7 +117,7 @@
         <div class="table-wrap"><table><thead><tr><th>Use</th><th>Allocation</th><th>Present item value</th></tr></thead><tbody>
             @forelse($application->utilizations as $utilization)
                 <tr><td>{{ $utilization->purpose }}</td><td class="money">{{ $money($utilization->allocation_amount) }}</td><td class="money">{{ $money($utilization->current_asset_value) }}</td></tr>
-            @empty<tr><td colspan="3" class="empty">No utilization plan recorded.</td></tr>@endforelse
+            @empty<tr><td colspan="3" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No utilization plan recorded.</td></tr>@endforelse
         </tbody></table></div>
     </div>
 </div>

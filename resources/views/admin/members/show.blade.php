@@ -115,7 +115,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="empty">Hakuna nyaraka zilizopakiwa.</td></tr>
+                        <tr><td colspan="4" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>Hakuna nyaraka zilizopakiwa.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -188,7 +188,7 @@
                 @forelse($member->nominees as $nominee)
                     <tr><td>{{ $nominee->name }}</td><td>{{ $display($nominee->relationship) }}</td><td>{{ number_format((float) $nominee->percentage, 2) }}%</td><td>{{ $nominee->attested_at?->format('d M Y') ?? '—' }}</td></tr>
                 @empty
-                    <tr><td colspan="4" class="empty">No nominees recorded.</td></tr>
+                    <tr><td colspan="4" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No nominees recorded.</td></tr>
                 @endforelse
             </tbody></table></div>
         </div>
@@ -200,7 +200,7 @@
                 @forelse($member->familyMembers as $family)
                     <tr><td>{{ $family->name }}</td><td>{{ $display($family->gender) }}</td><td>{{ $family->age ?? '—' }}</td><td>{{ $display($family->relationship) }}</td><td>{{ $display($family->education) }}</td><td>{{ $display($family->marital_status) }}</td><td>{{ $display($family->occupation) }}</td><td>{{ $display($family->secondary_occupation) }}</td></tr>
                 @empty
-                    <tr><td colspan="8" class="empty">No family members recorded.</td></tr>
+                    <tr><td colspan="8" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No family members recorded.</td></tr>
                 @endforelse
             </tbody></table></div>
         </div>
@@ -212,7 +212,7 @@
                 @forelse($member->assets as $asset)
                     <tr><td>{{ $display($asset->assetType?->name) }}</td><td>{{ $display($asset->assetType?->category) }}</td><td>{{ $asset->quantity }}</td><td class="money">{{ $money($asset->estimated_value) }}</td><td>{{ $display($asset->description) }}</td></tr>
                 @empty
-                    <tr><td colspan="5" class="empty">No family assets recorded.</td></tr>
+                    <tr><td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No family assets recorded.</td></tr>
                 @endforelse
             </tbody></table></div>
         </div>
@@ -300,7 +300,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="10" class="empty">No loan applications yet.</td></tr>
+            <tr><td colspan="10" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan applications yet.</td></tr>
         @endforelse
     </tbody></table></div>
 </div>
@@ -388,7 +388,7 @@
             @forelse($loan->securityTransactions->sortByDesc('transaction_date') as $transaction)
                 <tr><td>{{ $transaction->transaction_date?->format('d M Y') }}</td><td class="money">{{ $money($transaction->security_amount) }}</td><td class="money">{{ $money($transaction->withdrawal_amount) }}</td><td class="money">{{ $money($transaction->balance) }}</td><td>{{ $display($transaction->collectedBy?->name) }}</td><td>{{ $display($transaction->approvedBy?->name) }}</td></tr>
             @empty
-                <tr><td colspan="6" class="empty">No loan-security transactions recorded.</td></tr>
+                <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan-security transactions recorded.</td></tr>
             @endforelse
         </tbody></table></div>
 
@@ -423,7 +423,7 @@
                     <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->payment_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_amount) }}</td><td class="money">{{ $money($installment->interest_amount) }}</td><td class="money">{{ $money($installment->total_amount) }}</td><td class="money">{{ $installment->is_paid ? $money($installment->total_amount) : $money(0) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>{{ $display($installment->remarks ?? $installment->collector?->name) }}</td><td><span class="badge {{ $installment->status_badge }}">{{ $installment->status_badge }}</span></td><td><a class="btn btn-sm btn-secondary" href="{{ route('admin.loans.show', $loan) }}">Open loan</a></td></tr>
                 @endforeach
             @else
-                <tr><td colspan="11" class="empty">Repayment schedule has not been generated.</td></tr>
+                <tr><td colspan="11" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>Repayment schedule has not been generated.</td></tr>
             @endif
         </tbody></table></div>
 
@@ -432,7 +432,7 @@
             @forelse($loan->payments->sortByDesc('paid_at') as $payment)
                 <tr><td>{{ $payment->payment_number }}</td><td>{{ $payment->paid_at?->format('d M Y H:i') }}</td><td>{{ str_replace('_', ' ', $payment->payment_method) }}</td><td>{{ $display($payment->reference_number) }}</td><td class="money">{{ $money($payment->amount) }}</td><td><span class="badge {{ $payment->status }}">{{ $payment->status }}</span></td></tr>
             @empty
-                <tr><td colspan="6" class="empty">No payments received.</td></tr>
+                <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No payments received.</td></tr>
             @endforelse
         </tbody></table></div>
 
@@ -459,7 +459,7 @@
         @endif
     </div>
 @empty
-    <div class="card" style="margin-top:20px"><div class="card-body empty">No loans found for this member.</div></div>
+    <div class="card" style="margin-top:20px"><div class="card-body empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loans found for this member.</div></div>
 @endforelse
 
 @endsection

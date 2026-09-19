@@ -124,7 +124,7 @@
             <div class="table-wrap"><table><thead><tr><th>Jina</th><th>Uhusiano</th><th>Asilimia</th><th>Uthibitisho wa mteja</th></tr></thead><tbody>
                 @forelse($member->nominees as $nominee)
                     <tr><td>{{ $nominee->name }}</td><td>{{ $display($nominee->relationship) }}</td><td>{{ number_format((float) $nominee->percentage, 2) }}%</td><td>{{ $nominee->attested_at?->format('d M Y H:i') ?? ($nominee->signature_path ? 'Signed' : 'Not attested') }}</td></tr>
-                @empty<tr><td colspan="4" class="empty">No nominees recorded.</td></tr>@endforelse
+                @empty<tr><td colspan="4" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No nominees recorded.</td></tr>@endforelse
             </tbody></table></div>
         </div>
 
@@ -133,7 +133,7 @@
             <div class="table-wrap"><table><thead><tr><th>Aina</th><th>Jina</th><th>Uhusiano</th><th>Simu</th><th>Kitambulisho cha taifa / mpiga kura</th><th>Anwani ya makazi</th><th>Ushahidi</th><th>Imekubaliwa</th></tr></thead><tbody>
                 @forelse($application->guarantors as $guarantor)
                     <tr><td>{{ str($guarantor->guarantor_type)->replace('_', ' ')->title() }}</td><td>{{ $guarantor->name }}</td><td>{{ $display($guarantor->relationship) }}</td><td>{{ $display($guarantor->phone) }}</td><td>{{ $display($guarantor->national_id ?: $guarantor->voter_id) }}</td><td>{{ $display(collect([$guarantor->house_number, $guarantor->street, $guarantor->ward, $guarantor->district, $guarantor->region])->filter()->implode(', ')) }}</td><td>Signature {{ $guarantor->signature_path ? '✓' : '—' }} · Thumbprint {{ $guarantor->thumbprint_path ? '✓' : '—' }} · Joint photo {{ $guarantor->joint_photo_path ? '✓' : '—' }}</td><td>{{ $guarantor->declaration_accepted_at?->format('d M Y H:i') ?? 'Not accepted' }}</td></tr>
-                @empty<tr><td colspan="8" class="empty">No guarantors captured.</td></tr>@endforelse
+                @empty<tr><td colspan="8" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No guarantors captured.</td></tr>@endforelse
             </tbody></table></div>
         </div>
 
@@ -197,7 +197,7 @@
                             <form method="POST" action="{{ route('admin.loan-applications.compliance.documents.verify', [$application, $document]) }}">@csrf<input type="hidden" name="decision" value="verified"><button class="btn btn-sm btn-primary">Thibitisha</button></form>
                         @endif
                     @endcan
-                @empty<p class="muted">No supporting documents uploaded yet.</p>@endforelse
+                @empty<p class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No supporting documents uploaded yet.</p>@endforelse
 
                 @if($status === 'draft')
                     <form method="POST" enctype="multipart/form-data" action="{{ route('admin.loan-applications.compliance.documents', $application) }}">
@@ -221,7 +221,7 @@
                 <div class="table-wrap"><table><thead><tr><th>Member</th><th>Phone</th><th>Confirmed</th><th>Signature</th></tr></thead><tbody>
                     @forelse($application->groupWitnesses as $witness)
                         <tr><td>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</td><td>{{ $witness->member->phone }}</td><td>{{ $witness->confirmed_at?->format('d M Y H:i') }}</td><td>{{ $witness->signature_path ? 'Captured' : 'Not captured' }}</td></tr>
-                    @empty<tr><td colspan="4" class="empty">No group witnesses confirmed.</td></tr>@endforelse
+                    @empty<tr><td colspan="4" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No group witnesses confirmed.</td></tr>@endforelse
                 </tbody></table></div>
                 @if(!in_array($status, ['approved', 'rejected', 'disbursed', 'cancelled']))
                     <form method="POST" action="{{ route('admin.loan-applications.witnesses.store', $application) }}">@csrf<label>Add eligible witness<select name="member_id" required><option value="">Select group member</option>@foreach($eligibleWitnesses as $witness)<option value="{{ $witness->id }}">{{ $witness->membership_number }} · {{ $witness->first_name }} {{ $witness->last_name }}</option>@endforeach</select></label><div class="form-actions"><button class="btn btn-gold">Confirm witness</button></div></form>
@@ -234,7 +234,7 @@
             <div class="table-wrap"><table><thead><tr><th>Officer</th><th>Role</th><th>Decision</th><th>Remarks</th><th>Date</th></tr></thead><tbody>
                 @forelse($application->approvals as $approval)
                     <tr><td>{{ $display($approval->user?->name) }}</td><td>{{ str($approval->role)->replace('_', ' ')->title() }}</td><td><span class="badge {{ $approval->decision }}">{{ $approval->decision }}</span></td><td>{{ $display($approval->remarks) }}</td><td>{{ $approval->acted_at?->format('d M Y H:i') }}</td></tr>
-                @empty<tr><td colspan="5" class="empty">No recommendations or approvals recorded.</td></tr>@endforelse
+                @empty<tr><td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No recommendations or approvals recorded.</td></tr>@endforelse
             </tbody></table></div>
             @if($application->assignedCreditOfficer || $application->latestCreditReview)
                 <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">

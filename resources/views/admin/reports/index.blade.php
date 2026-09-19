@@ -71,7 +71,7 @@
                             <td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td>
                             <td><span class="badge {{ $loan->status->value }}">{{ $loan->status->value }}</span></td>
                     </tr>@empty<tr>
-                            <td colspan="6" class="empty">{{ __('No arrears in the selected portfolio.') }}</td>
+                            <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No arrears in the selected portfolio.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -97,7 +97,7 @@ $subjectRoutes = [
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="empty">{{ __('No activity records found.') }}</td></tr>
+                <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No activity records found.') }}</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -69,7 +69,7 @@
                     </tr>
                     @endif
                     @empty
-                    <tr><td colspan="7" style="text-align:center; padding:2rem">{{ __('No APK versions uploaded yet.') }}</td></tr>
+                    <tr><td colspan="7" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No APK versions uploaded yet.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

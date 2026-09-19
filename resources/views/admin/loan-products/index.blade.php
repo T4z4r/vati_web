@@ -60,7 +60,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="empty">{{ __('No loan products configured.') }}</td>
+                            <td colspan="8" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No loan products configured.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
