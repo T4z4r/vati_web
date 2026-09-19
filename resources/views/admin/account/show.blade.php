@@ -76,22 +76,3 @@
         </div>
     </form>
 @endsection
-
-@push('scripts')
-    <script>
-        document.querySelectorAll('.js-toggle-password').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const input = toggle.closest('.pwd-field')?.querySelector('input');
-                if (!input) return;
-                const willShow = input.type === 'password';
-                input.type = willShow ? 'text' : 'password';
-                toggle.setAttribute('aria-pressed', String(willShow));
-                toggle.setAttribute('aria-label', willShow ? @json(__('Hide password')) :
-                    @json(__('Show password')));
-                toggle.querySelector('.toggle-icon')?.classList.toggle('ph-eye-slash', willShow);
-                toggle.querySelector('.toggle-icon')?.classList.toggle('ph-eye', !willShow);
-                input.focus();
-            });
-        });
-    </script>
-@endpush

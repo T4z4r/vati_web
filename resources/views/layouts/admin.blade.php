@@ -267,6 +267,41 @@
                     });
                 });
             }
+
+            const pwdToggleIcon = (btn, willShow) => {
+                const icon = btn.querySelector('.toggle-icon');
+                icon?.classList.toggle('ph-eye-slash', willShow);
+                icon?.classList.toggle('ph-eye', !willShow);
+            };
+
+            document.addEventListener('click', e => {
+                const btn = e.target.closest('.js-toggle-password');
+                if (!btn) return;
+                const input = btn.closest('.pwd-field')?.querySelector('input');
+                if (!input || input.type === 'hidden') return;
+                const willShow = input.type === 'password';
+                input.type = willShow ? 'text' : 'password';
+                btn.setAttribute('aria-pressed', String(willShow));
+                btn.setAttribute('aria-label', willShow ? @json(__('Hide password')) : @json(__('Show password')));
+                pwdToggleIcon(btn, willShow);
+                input.focus();
+            });
+
+            document.querySelectorAll('input[type="password"]').forEach(input => {
+                if (input.dataset.pwdEnhanced || input.closest('.pwd-field')) return;
+                const wrap = document.createElement('span');
+                wrap.className = 'pwd-field';
+                input.parentNode.insertBefore(wrap, input);
+                wrap.appendChild(input);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'password-toggle js-toggle-password';
+                btn.setAttribute('aria-label', @json(__('Show password')));
+                btn.setAttribute('aria-pressed', 'false');
+                btn.innerHTML = '<span class="ph ph-eye toggle-icon" aria-hidden="true"></span>';
+                wrap.appendChild(btn);
+                input.dataset.pwdEnhanced = '1';
+            });
         });
     </script>
 </body>
