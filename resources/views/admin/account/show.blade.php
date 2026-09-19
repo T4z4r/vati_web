@@ -40,12 +40,19 @@
             <form class="card-body form-grid" method="POST" action="{{ route('admin.account.password') }}">
                 @csrf
                 @method('PUT')
-                <label>{{ __('Current password') }}<input type="password" name="current_password" required
-                        autocomplete="current-password"></label>
-                <label>{{ __('New password') }}<input type="password" name="password" minlength="10" required
-                        autocomplete="new-password"></label>
-                <label>{{ __('Confirm new password') }}<input type="password" name="password_confirmation" minlength="10"
-                        required autocomplete="new-password"></label>
+                <label>{{ __('Current password') }}<span class="pwd-field"><input type="password"
+                            name="current_password" required autocomplete="current-password"><button type="button"
+                                class="password-toggle js-toggle-password" aria-label="{{ __('Show password') }}"
+                                aria-pressed="false"><span class="ph ph-eye toggle-icon" aria-hidden="true"></span></button></span></label>
+                <label>{{ __('New password') }}<span class="pwd-field"><input type="password" name="password"
+                            minlength="10" required autocomplete="new-password"><button type="button"
+                                class="password-toggle js-toggle-password" aria-label="{{ __('Show password') }}"
+                                aria-pressed="false"><span class="ph ph-eye toggle-icon" aria-hidden="true"></span></button></span></label>
+                <label>{{ __('Confirm new password') }}<span class="pwd-field"><input type="password"
+                            name="password_confirmation" minlength="10" required
+                            autocomplete="new-password"><button type="button"
+                                class="password-toggle js-toggle-password" aria-label="{{ __('Show password') }}"
+                                aria-pressed="false"><span class="ph ph-eye toggle-icon" aria-hidden="true"></span></button></span></label>
                 <div class="full form-actions">
                     <button class="btn btn-primary">{{ __('Change password') }}</button>
                 </div>
@@ -69,3 +76,22 @@
         </div>
     </form>
 @endsection
+
+@push('scripts')
+    <script>
+        document.querySelectorAll('.js-toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const input = toggle.closest('.pwd-field')?.querySelector('input');
+                if (!input) return;
+                const willShow = input.type === 'password';
+                input.type = willShow ? 'text' : 'password';
+                toggle.setAttribute('aria-pressed', String(willShow));
+                toggle.setAttribute('aria-label', willShow ? @json(__('Hide password')) :
+                    @json(__('Show password')));
+                toggle.querySelector('.toggle-icon')?.classList.toggle('ph-eye-slash', willShow);
+                toggle.querySelector('.toggle-icon')?.classList.toggle('ph-eye', !willShow);
+                input.focus();
+            });
+        });
+    </script>
+@endpush

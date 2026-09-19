@@ -1446,6 +1446,13 @@ textarea {
     font-weight: 600;
     cursor: pointer;
 }
+.pwd-field {
+    position: relative;
+    display: block;
+}
+.pwd-field input {
+    padding-right: 44px;
+}
 .password-toggle:hover,
 .password-toggle:focus {
     background: #f0f4f1;
