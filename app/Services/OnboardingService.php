@@ -21,6 +21,9 @@ class OnboardingService
     public function group(array $data, User $user): MemberGroup
     {
         return DB::transaction(function () use ($data, $user) {
+            if ($user->hasRole('loan_officer')) {
+                $data['loan_officer_id'] = $user->id;
+            }
             $group = MemberGroup::create([...$data, 'group_code' => $this->numbers->group()]);
             activity()->causedBy($user)->performedOn($group)->log('Group onboarded');
 

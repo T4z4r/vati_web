@@ -134,4 +134,25 @@ class OnboardingApiTest extends TestCase
             'nominees' => [['name' => 'Child', 'relationship' => 'Child', 'percentage' => 80]],
         ])->assertUnprocessable()->assertJsonValidationErrors('nominees');
     }
+
+    public function test_onboarding_group_is_auto_assigned_to_the_creating_loan_officer(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $region = Region::create(['name' => 'Dar es Salaam']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Kinondoni']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'KIN-01', 'branch_name' => 'Kinondoni']);
+        $officer = User::factory()->create(['branch_id' => $branch->id]);
+        $officer->assignRole('loan_officer');
+        Sanctum::actingAs($officer);
+
+        $this->postJson('/api/v1/onboarding/groups', [
+            'branch_id' => $branch->id,
+            'group_name' => 'Officer Group',
+            'meeting_day' => 'Monday',
+            'location' => 'Kinondoni',
+            'loan_officer_id' => $officer->id,
+        ])->assertCreated()
+            ->assertJsonPath('data.loan_officer.id', $officer->id)
+            ->assertJsonPath('data.loan_officer_id', $officer->id);
+    }
 }

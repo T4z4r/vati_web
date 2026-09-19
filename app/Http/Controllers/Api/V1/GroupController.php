@@ -17,7 +17,11 @@ class GroupController extends ApiController
 
     public function store(Request $request, NumberGeneratorService $numbers)
     {
-        $group = MemberGroup::create([...$this->validated($request), 'group_code' => $numbers->group()]);
+        $data = [...$this->validated($request), 'group_code' => $numbers->group()];
+        if ($request->user()->hasRole('loan_officer')) {
+            $data['loan_officer_id'] = $request->user()->id;
+        }
+        $group = MemberGroup::create($data);
         activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['group_code' => $group->group_code])->log('Group created');
 
         return response()->json(['success' => true, 'message' => 'Group created successfully.', 'data' => $group], 201);

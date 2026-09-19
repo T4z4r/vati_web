@@ -207,6 +207,18 @@ class FlutterApiRequirementsTest extends TestCase
         ])->assertCreated()->assertJsonPath('data.code', 'VATI-LP-'.now()->year.'-000002');
     }
 
+    public function test_group_created_by_loan_officer_is_auto_assigned_to_them(): void
+    {
+        $officer = User::factory()->create(['branch_id' => $this->branch->id]);
+        $officer->assignRole('loan_officer');
+        Sanctum::actingAs($officer);
+
+        $this->postJson('/api/v1/groups', ['branch_id' => $this->branch->id, 'group_name' => 'Officer Led Group'])
+            ->assertCreated()
+            ->assertJsonPath('data.loan_officer_id', $officer->id);
+        $this->assertDatabaseHas('member_groups', ['group_name' => 'Officer Led Group', 'loan_officer_id' => $officer->id]);
+    }
+
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication
     {
         return LoanApplication::create([
