@@ -36,16 +36,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
 
-    Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index');
-    Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store');
-    Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store');
-    Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store');
-    Route::resource('users', UserController::class);
+    Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index')->middleware('role:super_admin|head_office_admin');
+    Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store')->middleware('role:super_admin|head_office_admin');
+    Route::post('areas', [OrganizationController::class, 'storeArea'])->name('areas.store')->middleware('role:super_admin|head_office_admin');
+    Route::post('branches', [OrganizationController::class, 'storeBranch'])->name('branches.store')->middleware('role:super_admin|head_office_admin');
+    Route::resource('users', UserController::class)->middleware('role:super_admin|head_office_admin');
     Route::get('roles/permissions', [UserController::class, 'rolePermissions'])
-        ->name('roles.permissions.index');
+        ->name('roles.permissions.index')->middleware('role:super_admin|head_office_admin');
 
     Route::put('roles/{role}/permissions', [UserController::class, 'updateRolePermissions'])
-        ->name('roles.permissions.update');
+        ->name('roles.permissions.update')->middleware('role:super_admin|head_office_admin');
 
     Route::resource('groups', GroupController::class)->only(['create', 'store'])->middleware('permission:create-groups');
     Route::resource('groups', GroupController::class)->only(['edit', 'update'])->middleware('permission:edit-groups');
@@ -60,8 +60,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('members/{member}/documents', [MemberDocumentController::class, 'store'])->name('members.documents.store')->middleware('permission:edit-members');
     Route::delete('members/{member}/documents/{document}', [MemberDocumentController::class, 'destroy'])->name('members.documents.destroy')->middleware('permission:delete-members');
     Route::get('members/{member}/documents/{document}/download', [MemberDocumentController::class, 'download'])->name('members.documents.download')->middleware('permission:view-members');
-    Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-loan-products');
-    Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('permission:view-loan-products');
+    Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('role:super_admin|head_office_admin');
+    Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('role:super_admin|head_office_admin');
 
     Route::resource('group-visits', GroupVisitController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware('permission:view-group-visits');
 
@@ -94,7 +94,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loans/{loan}/default-notices', [ComplianceController::class, 'defaultNotice'])->name('loans.default-notices.store')->middleware('permission:issue-default-notices');
     Route::post('loans/{loan}/clearance', [ComplianceController::class, 'clearance'])->name('loans.clearance.store')->middleware('permission:authorize-loan-clearances');
 
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:view-reports');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('role:super_admin|head_office_admin');
 
     Route::prefix('system')->name('system.')->middleware('role:super_admin|head_office_admin')->group(function () {
         Route::get('/', [SystemController::class, 'overview'])->name('overview');

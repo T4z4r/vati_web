@@ -53,28 +53,30 @@
                         aria-hidden="true"></span>
                     {{ __('Loans & Collections') }}</a>
             @endcan
-            <p class="nav-label">{{ __('Management') }}</p>
-            @can('view-loan-products')
-                <a class="{{ request()->routeIs('admin.loan-products.*') ? 'active' : '' }}"
-                    href="{{ route('admin.loan-products.index') }}"><span class="ph ph-wallet nav-icon"
+            @role('super_admin|head_office_admin')
+                <p class="nav-label">{{ __('Management') }}</p>
+                @can('view-loan-products')
+                    <a class="{{ request()->routeIs('admin.loan-products.*') ? 'active' : '' }}"
+                        href="{{ route('admin.loan-products.index') }}"><span class="ph ph-wallet nav-icon"
+                            aria-hidden="true"></span>
+                        {{ __('Loan Products') }}</a>
+                @endcan
+                @can('view-reports')
+                    <a class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
+                        href="{{ route('admin.reports.index') }}"><span class="ph ph-chart-line-up nav-icon"
+                            aria-hidden="true"></span> {{ __('Reports') }}</a>
+                @endcan
+                <a class="{{ request()->routeIs('admin.organization.*') ? 'active' : '' }}"
+                    href="{{ route('admin.organization.index') }}"><span class="ph ph-tree-structure nav-icon"
                         aria-hidden="true"></span>
-                    {{ __('Loan Products') }}</a>
-            @endcan
-            @can('view-reports')
-                <a class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
-                    href="{{ route('admin.reports.index') }}"><span class="ph ph-chart-line-up nav-icon"
-                        aria-hidden="true"></span> {{ __('Reports') }}</a>
-            @endcan
-            <a class="{{ request()->routeIs('admin.organization.*') ? 'active' : '' }}"
-                href="{{ route('admin.organization.index') }}"><span class="ph ph-tree-structure nav-icon"
-                    aria-hidden="true"></span>
-                {{ __('Organization') }}</a>
-            <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                href="{{ route('admin.users.index') }}"><span class="ph ph-user-gear nav-icon"
-                    aria-hidden="true"></span> {{ __('Staff Accounts') }}</a>
-            <a class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
-                href="{{ route('admin.roles.permissions.index') }}"><span class="ph ph-shield-check nav-icon"
-                    aria-hidden="true"></span> {{ __('Roles & Permissions') }}</a>
+                    {{ __('Organization') }}</a>
+                <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                    href="{{ route('admin.users.index') }}"><span class="ph ph-user-gear nav-icon"
+                        aria-hidden="true"></span> {{ __('Staff Accounts') }}</a>
+                <a class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
+                    href="{{ route('admin.roles.permissions.index') }}"><span class="ph ph-shield-check nav-icon"
+                        aria-hidden="true"></span> {{ __('Roles & Permissions') }}</a>
+            @endrole
 
             @role('super_admin|head_office_admin')
                 <p class="nav-label">{{ __('SYSTEM') }}</p>

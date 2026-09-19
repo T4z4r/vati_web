@@ -64,15 +64,15 @@ Route::prefix('v1')->group(function () {
         Route::post('onboarding/members', [OnboardingController::class, 'member']);
         Route::post('onboarding/loan-applications', [OnboardingController::class, 'loanApplication']);
 
-        Route::apiResource('regions', RegionController::class);
-        Route::apiResource('areas', AreaController::class);
-        Route::apiResource('branches', BranchController::class);
-        Route::get('roles', [UserController::class, 'roles']);
-        Route::apiResource('users', UserController::class);
-        Route::get('users/{user}/attachments', [UserAttachmentController::class, 'index']);
-        Route::post('users/{user}/attachments', [UserAttachmentController::class, 'store']);
-        Route::get('users/{user}/attachments/{userAttachment}/download', [UserAttachmentController::class, 'download'])->name('api.users.attachments.download');
-        Route::delete('users/{user}/attachments/{userAttachment}', [UserAttachmentController::class, 'destroy']);
+        Route::apiResource('regions', RegionController::class)->middleware('role:super_admin|head_office_admin');
+        Route::apiResource('areas', AreaController::class)->middleware('role:super_admin|head_office_admin');
+        Route::apiResource('branches', BranchController::class)->middleware('role:super_admin|head_office_admin');
+        Route::get('roles', [UserController::class, 'roles'])->middleware('role:super_admin|head_office_admin');
+        Route::apiResource('users', UserController::class)->middleware('role:super_admin|head_office_admin');
+        Route::get('users/{user}/attachments', [UserAttachmentController::class, 'index'])->middleware('role:super_admin|head_office_admin');
+        Route::post('users/{user}/attachments', [UserAttachmentController::class, 'store'])->middleware('role:super_admin|head_office_admin');
+        Route::get('users/{user}/attachments/{userAttachment}/download', [UserAttachmentController::class, 'download'])->name('api.users.attachments.download')->middleware('role:super_admin|head_office_admin');
+        Route::delete('users/{user}/attachments/{userAttachment}', [UserAttachmentController::class, 'destroy'])->middleware('role:super_admin|head_office_admin');
         Route::apiResource('groups', GroupController::class)->only(['index', 'show']);
         Route::apiResource('groups', GroupController::class)->only('store');
         Route::apiResource('groups', GroupController::class)->only(['update', 'destroy']);
@@ -98,8 +98,8 @@ Route::prefix('v1')->group(function () {
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show']);
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store']);
 
-        Route::apiResource('loan-products', LoanProductController::class)->only(['index', 'show']);
-        Route::apiResource('loan-products', LoanProductController::class)->only(['store', 'update', 'destroy']);
+        Route::apiResource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('role:super_admin|head_office_admin');
+        Route::apiResource('loan-products', LoanProductController::class)->only(['store', 'update', 'destroy'])->middleware('role:super_admin|head_office_admin');
         Route::post('loan-calculator', [LoanCalculatorController::class, 'calculate']);
         Route::apiResource('loan-applications', LoanApplicationController::class)->only(['index', 'show']);
         Route::apiResource('loan-applications', LoanApplicationController::class)->only(['store', 'update', 'destroy']);
