@@ -252,6 +252,7 @@
                     },
                     "response": []
                 },
+                {
                     "name": "Portfolio Summary",
                     "request": {
                         "method": "GET",
@@ -1171,6 +1172,7 @@
                     "name": "Update Group",
                     "request": {
                         "method": "PUT",
+                        "description": "Update an existing group. Required: set the group_id collection variable used in the URL; group_id is not a body field. All body fields are optional and nullable in validation. Omitted fields retain their existing values. The example updates only group_name. Supported fields: branch_id (existing branch ID), group_name (max 150 characters), meeting_day (Monday-Sunday), meeting_time (HH:mm), meeting_location (max 255), region (max 100), district (max 100), ward (max 100), location (max 255), loan_officer_id (existing user ID), and status (boolean). Send null to clear a nullable database field. Although validation accepts null for every body field, branch_id, group_name, and status have non-nullable database columns; omit these fields to keep their current values. Success returns success, message, and the updated group in data.",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -1181,7 +1183,7 @@
                         "url": "{{base_url}}/api/v1/groups/{{group_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"group_name\": \"Postman Women Entrepreneurs\",\n  \"meeting_day\": \"Monday\",\n  \"meeting_time\": \"10:00\",\n  \"location\": \"Kinondoni Community Hall\",\n  \"status\": true\n}",
+                            "raw": "{\n  \"group_name\": \"Postman Women Entrepreneurs Updated\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
