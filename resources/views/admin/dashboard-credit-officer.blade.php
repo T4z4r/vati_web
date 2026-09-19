@@ -16,7 +16,7 @@
             <span class="ph ph-clock stat-icon" aria-hidden="true"></span>
             <small>{{ __('Pending review') }}</small>
             <strong>{{ number_format($pendingCreditReview) }}</strong>
-            <em>{{ __('{{ $newAssignments }} new', ['new' => $newAssignments]) }}</em>
+            <em>{{ __(':new new', ['new' => $newAssignments]) }}</em>
         </div>
         <div class="stat">
             <span class="ph ph-check-circle stat-icon" aria-hidden="true"></span>
