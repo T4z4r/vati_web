@@ -96,7 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:view-reports');
 
-    Route::prefix('system')->name('system.')->group(function () {
+    Route::prefix('system')->name('system.')->middleware('role:super_admin|head_office_admin')->group(function () {
         Route::get('/', [SystemController::class, 'overview'])->name('overview');
         Route::get('audit', [SystemController::class, 'audit'])->name('audit');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
@@ -109,5 +109,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::get('app-versions/{appVersion}/download', [AppVersionController::class, 'download'])->name('app-versions.download');
         Route::post('app-versions/{appVersion}/toggle-latest', [AppVersionController::class, 'toggleLatest'])->name('app-versions.toggle-latest');
     });
-    Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge');
+    Route::post('system/data/purge', [SystemController::class, 'purge'])->name('system.data.purge')->middleware('role:super_admin|head_office_admin');
 });

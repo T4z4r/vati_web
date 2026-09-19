@@ -35,6 +35,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class VatiDemoSeeder extends Seeder
 {
@@ -168,6 +169,10 @@ class VatiDemoSeeder extends Seeder
 
     private function user(string $email, string $name, int $branchId, string $role): User
     {
+        if ($role === 'super_admin') {
+            throw new RuntimeException("Refusing to seed demo user '{$email}' with the super_admin role. Use SuperAdminSeeder for the super administrator.");
+        }
+
         $user = User::updateOrCreate(
             ['email' => $email],
             [
