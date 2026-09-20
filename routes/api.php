@@ -96,6 +96,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('groups/{group}', [GroupController::class, 'destroy']);
         Route::get('groups/{group}/members', [GroupController::class, 'members']);
         Route::get('groups/{group}/dashboard', [GroupPortfolioController::class, 'dashboard']);
+        Route::get('groups/{group}/statistics', [GroupPortfolioController::class, 'statistics']);
         Route::get('groups/{group}/loans', [GroupPortfolioController::class, 'loans']);
         Route::get('groups/{group}/applications', [GroupPortfolioController::class, 'applications']);
         Route::get('groups/{group}/collections', [GroupPortfolioController::class, 'collections']);

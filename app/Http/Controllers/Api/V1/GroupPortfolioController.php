@@ -40,6 +40,42 @@ class GroupPortfolioController extends ApiController
         ]]);
     }
 
+    public function statistics(MemberGroup $group)
+    {
+        $activeLoans = $group->loans()->whereIn('status', ['active', 'overdue']);
+        $portfolio = (float) (clone $activeLoans)->sum('total_balance');
+        $loanIds = (clone $activeLoans)->select('id');
+        $weekStart = today()->startOfWeek();
+        $weekEnd = today()->endOfWeek();
+        $monthStart = today()->startOfMonth();
+        $expected = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereBetween('due_date', [$weekStart, $weekEnd])->sum('total_due');
+        $actual = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereBetween('paid_at', [$weekStart, $weekEnd])->sum('amount');
+        $monthlyCollections = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereBetween('paid_at', [$monthStart, today()->endOfDay()])->sum('amount');
+        $disbursed = (float) Loan::where('group_id', $group->id)->whereNotIn('status', ['pending_disbursement', 'rejected', 'cancelled'])->sum('principal_amount');
+        $arrears = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereDate('due_date', '<', today())->whereNotIn('status', ['paid', 'waived'])->get()->sum(fn ($item) => max(0, (float) $item->total_due - (float) $item->total_paid - (float) $item->interest_exemption));
+
+        return response()->json(['success' => true, 'data' => [
+            'group_id' => $group->id,
+            'total_members' => $group->members()->count(),
+            'active_members' => $group->members()->where('status', 'active')->count(),
+            'total_loans' => $group->loans()->count(),
+            'active_loans' => (clone $activeLoans)->count(),
+            'members_with_active_loans' => (clone $activeLoans)->distinct('member_id')->count('member_id'),
+            'total_loan_applications' => $group->loanApplications()->count(),
+            'outstanding_portfolio' => $portfolio,
+            'total_disbursed' => $disbursed,
+            'expected_weekly_collection' => $expected,
+            'actual_weekly_collection' => $actual,
+            'monthly_collections' => $monthlyCollections,
+            'outstanding_weekly_collection' => max(0, round($expected - $actual, 2)),
+            'collection_rate' => $expected > 0 ? round($actual / $expected * 100, 2) : 0,
+            'arrears' => round($arrears, 2),
+            'par_1' => $this->par($group, $portfolio, 1),
+            'par_7' => $this->par($group, $portfolio, 7),
+            'par_30' => $this->par($group, $portfolio, 30),
+        ]]);
+    }
+
     public function loans(Request $request, MemberGroup $group)
     {
         return LoanResource::collection($group->loans()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
