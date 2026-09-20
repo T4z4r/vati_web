@@ -73,7 +73,7 @@ Route::prefix('v1')->group(function () {
         Route::post('users/{user}/attachments', [UserAttachmentController::class, 'store']);
         Route::get('users/{user}/attachments/{userAttachment}/download', [UserAttachmentController::class, 'download'])->name('api.users.attachments.download');
         Route::delete('users/{user}/attachments/{userAttachment}', [UserAttachmentController::class, 'destroy']);
-        Route::apiResource('groups', GroupController::class)->only(['index', 'show']);
+        Route::apiResource('groups', GroupController::class)->only(['index', 'show','update']);
         Route::apiResource('groups', GroupController::class)->only('store');
         Route::apiResource('groups', GroupController::class)->only('destroy');
         Route::get('groups/{group}/members', [GroupController::class, 'members']);
