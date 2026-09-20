@@ -481,7 +481,7 @@
                 const vat = principal * (Number(option.dataset.vat) / 100);
                 const securityAmount = principal * (Number(option.dataset.securityPercentage) / 100);
                 const totalCharges = processingFee + insuranceFee + vat;
-                const receivableAmount = principal - securityAmount;
+                const receivableAmount = principal - securityAmount - totalCharges;
 
                 estimate.value = formatMoney(totalRepayment);
                 charges.value = formatMoney(totalCharges);

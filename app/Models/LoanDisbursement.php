@@ -10,7 +10,7 @@ class LoanDisbursement extends Model
 
     protected function casts(): array
     {
-        return ['disbursed_at' => 'datetime'];
+        return ['disbursed_at' => 'datetime', 'amount' => 'decimal:2'];
     }
 
     public function loan()

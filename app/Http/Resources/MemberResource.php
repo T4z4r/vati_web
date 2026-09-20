@@ -85,7 +85,10 @@ class MemberResource extends JsonResource
                 'mime_type' => $document->mime_type,
                 'file_size' => $document->file_size,
                 'description' => $document->description,
-                'file_url' => asset('storage/'.$document->file_path),
+                'file_url' => $document->disk === 'public' ? asset('storage/'.$document->file_path) : route('api.members.documents.download', [$this->resource, $document]),
+                'size_bytes' => $document->file_size,
+                'status' => $document->status ?? 'uploaded',
+                'created_at' => $document->created_at?->toIso8601String(),
                 'uploaded_by' => $document->relationLoaded('uploadedBy') && $document->uploadedBy
                     ? ['id' => $document->uploadedBy->id, 'name' => $document->uploadedBy->name]
                     : null,

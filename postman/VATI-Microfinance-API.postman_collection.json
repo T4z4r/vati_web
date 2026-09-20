@@ -1477,6 +1477,42 @@
                     ]
                 },
                 {
+                    "name": "Upload Member Signature",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents",
+                        "description": "Upload a private PNG signature (2 MiB / 4 million pixels by default). Returns 201 for creation, 200 for identical retry, or 409 if a different active signature exists. Let Postman set the multipart boundary.",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document_type",
+                                    "value": "signature",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Personal information",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
                     "name": "Download Member Document",
                     "request": {
                         "method": "GET",

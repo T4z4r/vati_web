@@ -12,6 +12,13 @@ class Loan extends Model
 
     protected $guarded = [];
 
+    public function getAmountReceivableAttribute(): string
+    {
+        return number_format(round((float) $this->principal_amount
+            - (float) ($this->calc_security_amount ?? 0)
+            - (float) ($this->calc_charges ?? $this->total_fees_and_vat ?? 0), 2), 2, '.', '');
+    }
+
     protected function casts(): array
     {
         return [
@@ -35,6 +42,11 @@ class Loan extends Model
             'weekly_installment' => 'decimal:2',
             'refinancing_amount' => 'decimal:2',
             'increment_amount' => 'decimal:2',
+            'calc_insurance_fee' => 'decimal:2',
+            'calc_vat' => 'decimal:2',
+            'calc_security_amount' => 'decimal:2',
+            'calc_charges' => 'decimal:2',
+            'calc_amount_receivable' => 'decimal:2',
         ];
     }
 

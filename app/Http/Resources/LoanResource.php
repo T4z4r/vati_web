@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Services\LoanCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,25 +14,17 @@ class LoanResource extends JsonResource
             ? max(0, 100 - ($this->total_balance / $this->total_repayment) * 100)
             : 0;
 
-        $breakdown = null;
-        if ($this->calc_charges !== null) {
-            $breakdown = [
-                'principal' => number_format((float) $this->principal_amount, 2, '.', ''),
-                'interest' => number_format((float) $this->interest_amount, 2, '.', ''),
-                'processing_fee' => number_format((float) $this->processing_fee, 2, '.', ''),
-                'insurance_fee' => number_format((float) ($this->calc_insurance_fee ?? 0), 2, '.', ''),
-                'vat' => number_format((float) ($this->calc_vat ?? 0), 2, '.', ''),
-                'security_amount' => number_format((float) $this->calc_security_amount ?? 0, 2, '.', ''),
-                'charges' => number_format((float) $this->calc_charges ?? $this->total_fees_and_vat, 2, '.', ''),
-                'amount_receivable' => number_format((float) $this->calc_amount_receivable ?? 0, 2, '.', ''),
-                'total_repayment' => number_format((float) $this->total_repayment, 2, '.', ''),
-            ];
-        } elseif ($this->relationLoaded('product') && $this->product && $this->principal_amount && $this->number_of_installments) {
-            try {
-                $breakdown = collect(app(LoanCalculatorService::class)->calculate($this->product, (float) $this->principal_amount, (int) $this->number_of_installments))
-                    ->map(fn ($v) => number_format($v, 2, '.', ''))->all();
-            } catch (\Throwable) {}
-        }
+        $breakdown = [
+            'principal' => number_format((float) $this->principal_amount, 2, '.', ''),
+            'interest' => number_format((float) $this->interest_amount, 2, '.', ''),
+            'processing_fee' => number_format((float) $this->processing_fee, 2, '.', ''),
+            'insurance_fee' => number_format((float) ($this->calc_insurance_fee ?? 0), 2, '.', ''),
+            'vat' => number_format((float) ($this->calc_vat ?? 0), 2, '.', ''),
+            'security_amount' => number_format((float) ($this->calc_security_amount ?? 0), 2, '.', ''),
+            'charges' => number_format((float) ($this->calc_charges ?? $this->total_fees_and_vat ?? 0), 2, '.', ''),
+            'amount_receivable' => $this->amount_receivable,
+            'total_repayment' => number_format((float) $this->total_repayment, 2, '.', ''),
+        ];
 
         return [
             'id' => $this->id,
@@ -55,6 +46,12 @@ class LoanResource extends JsonResource
             'weekly_installment' => $this->weekly_installment,
             'admission_fee' => $this->admission_fee,
             'processing_fee' => $this->processing_fee,
+            'insurance_fee' => number_format((float) ($this->calc_insurance_fee ?? 0), 2, '.', ''),
+            'vat' => number_format((float) ($this->calc_vat ?? 0), 2, '.', ''),
+            'security_amount' => number_format((float) ($this->calc_security_amount ?? 0), 2, '.', ''),
+            'charges' => number_format((float) ($this->calc_charges ?? $this->total_fees_and_vat ?? 0), 2, '.', ''),
+            'amount_receivable' => $this->amount_receivable,
+            'transaction_charges' => $this->transaction_charges,
             'other_charges' => $this->other_charges,
             'total_fees_and_vat' => $this->total_fees_and_vat,
             'refinancing_amount' => $this->refinancing_amount,
@@ -160,6 +157,7 @@ class LoanResource extends JsonResource
             ])->all()),
             'disbursement' => $this->whenLoaded('disbursement', fn () => [
                 'id' => $this->disbursement->id,
+                'amount' => $this->disbursement->amount,
                 'method' => $this->disbursement->method,
                 'recipient_number' => $this->disbursement->recipient_number,
                 'reference_number' => $this->disbursement->reference_number,

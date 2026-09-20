@@ -46,11 +46,16 @@ class LoanCalculatorService
         }
         $interest = 0.0;
 
-        $processingFee = $principal * ((float) $product->processing_fee_percentage / 100);
-        $insuranceFee = $principal * ((float) $product->insurance_percentage / 100);
-        $vat = $principal * ((float) $product->vat_percentage / 100);
-        $securityAmount = $principal * ((float) $product->security_percentage / 100);
+        $principal = round($principal, 2);
+        $processingFee = round($principal * ((float) $product->processing_fee_percentage / 100), 2);
+        $insuranceFee = round($principal * ((float) $product->insurance_percentage / 100), 2);
+        $vat = round($principal * ((float) $product->vat_percentage / 100), 2);
+        $securityAmount = round($principal * ((float) $product->security_percentage / 100), 2);
         $totalCharges = $processingFee + $insuranceFee + $vat;
+        $receivable = round($principal - $securityAmount - $totalCharges, 2);
+        if ($receivable < 0) {
+            throw new DomainException('Loan fees and security cannot exceed the principal amount.');
+        }
 
         return [
             'principal' => round($principal, 2),
@@ -60,7 +65,7 @@ class LoanCalculatorService
             'vat' => round($vat, 2),
             'security_amount' => round($securityAmount, 2),
             'charges' => round($totalCharges, 2),
-            'amount_receivable' => round($principal - $securityAmount, 2),
+            'amount_receivable' => $receivable,
             'total_repayment' => round($totalRepayment, 2),
             'installment_count' => $installmentCount,
             'installment_amount' => $factor !== null

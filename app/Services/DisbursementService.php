@@ -27,9 +27,13 @@ class DisbursementService
             }
 
             $date = Carbon::parse($data['disbursed_at'] ?? now());
+            $amount = $loan->amount_receivable;
+            if ((float) $amount < 0 || (float) $amount > (float) $loan->principal_amount) {
+                throw new DomainException('Loan fees and security produce an invalid disbursement amount.');
+            }
             $firstPayment = Carbon::parse($data['first_payment_date'] ?? ($loan->product->repayment_frequency === 'weekly' ? $date->copy()->addWeek() : $date->copy()->addMonth()));
             $disbursement = $loan->disbursement()->create([
-                'amount' => $loan->principal_amount,
+                'amount' => $amount,
                 'method' => $data['method'],
                 'recipient_number' => $data['recipient_number'] ?? null,
                 'bank_account' => $data['bank_account'] ?? null,
@@ -42,13 +46,14 @@ class DisbursementService
             ]);
             $loan->update([
                 'status' => LoanStatus::ACTIVE,
+                'calc_amount_receivable' => $amount,
                 'disbursement_date' => $date,
                 'first_payment_date' => $firstPayment,
                 'maturity_date' => $loan->product->repayment_frequency === 'weekly' ? $firstPayment->copy()->addWeeks($loan->number_of_installments - 1) : $firstPayment->copy()->addMonths($loan->number_of_installments - 1),
             ]);
             $loan->application->update(['status' => ApplicationStatus::DISBURSED]);
             $this->schedule->generate($loan->fresh('product'), $firstPayment);
-            activity()->causedBy($user)->performedOn($loan)->withProperties(['amount' => $loan->principal_amount])->log('Loan disbursed');
+            activity()->causedBy($user)->performedOn($loan)->withProperties(['amount' => $amount, 'principal' => $loan->principal_amount, 'charges' => $loan->calc_charges ?? $loan->total_fees_and_vat, 'security' => $loan->calc_security_amount])->log('Loan disbursed');
             $this->notifications->send(
                 $this->notifications->applicationOriginators($loan->application),
                 'loan_disbursed',

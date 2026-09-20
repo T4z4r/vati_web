@@ -20,7 +20,7 @@ class LoanApplicationResource extends JsonResource
                 'vat' => number_format((float) ($this->calc_vat ?? 0), 2, '.', ''),
                 'security_amount' => number_format((float) $this->calc_security_amount, 2, '.', ''),
                 'charges' => number_format((float) $this->calc_charges, 2, '.', ''),
-                'amount_receivable' => number_format((float) $this->calc_amount_receivable, 2, '.', ''),
+                'amount_receivable' => number_format((float) $this->requested_amount - (float) $this->calc_security_amount - (float) $this->calc_charges, 2, '.', ''),
                 'total_repayment' => number_format((float) $this->calc_total_repayment, 2, '.', ''),
             ];
         } elseif ($this->relationLoaded('product') && $this->product && $this->requested_amount && $this->duration_months) {
