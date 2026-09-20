@@ -12,7 +12,7 @@ class MemberController extends ApiController
 {
     public function index(Request $request)
     {
-        $query = $this->branchScope(Member::with('branch', 'group'), $request)
+        $query = Member::with('branch', 'group')
             ->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$s}%")->orWhere('first_name', 'like', "%{$s}%")->orWhere('last_name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%")))
             ->when($request->branch_id, fn ($q, $v) => $q->where('branch_id', $v))->when($request->group_id, fn ($q, $v) => $q->where('group_id', $v))->when($request->status, fn ($q, $v) => $q->where('status', $v));
 

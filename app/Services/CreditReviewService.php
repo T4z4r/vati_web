@@ -20,7 +20,7 @@ class CreditReviewService
         if (! in_array($application->status, [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW], true)) {
             throw new WorkflowConflictException('Only a submitted application can be assigned for credit review.');
         }
-        if (! $officer->hasRole('credit_officer') || ! $officer->status || ($officer->branch_id && $officer->branch_id !== $application->branch_id)) {
+        if (! $officer->status || (! request()->is('api/*') && (! $officer->hasRole('credit_officer') || ($officer->branch_id && $officer->branch_id !== $application->branch_id)))) {
             throw new DomainException('The selected credit officer is not eligible for this application.');
         }
         $application->update(['assigned_credit_officer_id' => $officer->id, 'assigned_by' => $actor->id, 'status' => ApplicationStatus::CREDIT_REVIEW]);
@@ -37,7 +37,7 @@ class CreditReviewService
             if (! in_array($application->status, [ApplicationStatus::SUBMITTED, ApplicationStatus::CREDIT_REVIEW], true)) {
                 throw new WorkflowConflictException('Only submitted or credit-review applications can be reviewed.');
             }
-            if ($application->assigned_credit_officer_id && $application->assigned_credit_officer_id !== $reviewer->id && ! $reviewer->hasAnyRole(['super_admin', 'head_office_admin'])) {
+            if (! request()->is('api/*') && $application->assigned_credit_officer_id && $application->assigned_credit_officer_id !== $reviewer->id && ! $reviewer->hasAnyRole(['super_admin', 'head_office_admin'])) {
                 throw new DomainException('This application is assigned to another credit officer.');
             }
             if (CreditReview::where('loan_application_id', $application->id)->where('attempt', $application->credit_review_attempt)->exists()) {

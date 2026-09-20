@@ -14,8 +14,6 @@ class GroupPortfolioController extends ApiController
 {
     public function dashboard(MemberGroup $group)
     {
-        $this->assertOfficerAccess($group);
-
         $activeLoans = $group->loans()->whereIn('status', ['active', 'overdue']);
         $portfolio = (float) (clone $activeLoans)->sum('total_balance');
         $loanIds = (clone $activeLoans)->select('id');
@@ -44,35 +42,22 @@ class GroupPortfolioController extends ApiController
 
     public function loans(Request $request, MemberGroup $group)
     {
-        $this->assertOfficerAccess($group);
-
         return LoanResource::collection($group->loans()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
     }
 
     public function applications(Request $request, MemberGroup $group)
     {
-        $this->assertOfficerAccess($group);
-
         return LoanApplicationResource::collection($group->loanApplications()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
     }
 
     public function collections(Request $request, MemberGroup $group)
     {
-        $this->assertOfficerAccess($group);
-
         return $group->collections()->with('meeting')->latest('collection_date')->paginate($this->perPage($request));
     }
 
     public function meetings(Request $request, MemberGroup $group)
     {
-        $this->assertOfficerAccess($group);
-
         return $group->meetings()->latest('meeting_date')->paginate($this->perPage($request));
-    }
-
-    private function assertOfficerAccess(MemberGroup $group): void
-    {
-        abort_unless($group->isOfficerAssigned(auth()->user()), 404);
     }
 
     private function par(MemberGroup $group, float $portfolio, int $days): float

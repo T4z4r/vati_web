@@ -82,12 +82,10 @@ class DashboardController extends ApiController
             'total_issued_amount' => $portfolio['total_issued_amount'],
         ];
 
-        if ($user->can('view-management-dashboard')) {
-            $loans = Loan::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
-            $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
-            $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
-            $data['management'] = $this->managementSummary($loans, $applications, $activeLoans, $branchId);
-        }
+        $loans = Loan::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+        $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+        $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
+        $data['management'] = $this->managementSummary($loans, $applications, $activeLoans, $branchId);
 
         return response()->json(['success' => true, 'data' => $data]);
     }

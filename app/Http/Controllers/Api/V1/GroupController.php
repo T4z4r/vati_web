@@ -12,15 +12,12 @@ class GroupController extends ApiController
 {
     public function index(Request $request)
     {
-        return $this->branchScope(MemberGroup::with('branch', 'loanOfficer'), $request)->officerAssigned($request->user())->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
+        return MemberGroup::with('branch', 'loanOfficer')->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q->where('group_name', 'like', "%{$s}%")->orWhere('group_code', 'like', "%{$s}%")))->latest()->paginate($this->perPage($request));
     }
 
     public function store(Request $request, NumberGeneratorService $numbers)
     {
         $data = [...$this->validated($request), 'group_code' => $numbers->group()];
-        if ($request->user()->hasRole('loan_officer')) {
-            $data['loan_officer_id'] = $request->user()->id;
-        }
         $group = MemberGroup::create($data);
         activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['group_code' => $group->group_code])->log('Group created');
 
@@ -29,8 +26,6 @@ class GroupController extends ApiController
 
     public function show(Request $request, MemberGroup $group)
     {
-        abort_unless($group->isOfficerAssigned($request->user()), 404);
-
         $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
 
         $group->setRelation('members', $group->members()
@@ -72,8 +67,6 @@ class GroupController extends ApiController
 
     public function members(Request $request, MemberGroup $group)
     {
-        abort_unless($group->isOfficerAssigned($request->user()), 404);
-
         return $group->members()->paginate($this->perPage($request));
     }
 

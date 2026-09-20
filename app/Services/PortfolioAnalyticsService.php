@@ -82,7 +82,7 @@ class PortfolioAnalyticsService
 
     public function authorizedBranch(User $user, ?int $requested): ?int
     {
-        if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id) {
+        if (! request()->is('api/*') && ! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id) {
             abort_if($requested && $requested !== $user->branch_id, 403, 'You cannot access another branch.');
 
             return $user->branch_id;

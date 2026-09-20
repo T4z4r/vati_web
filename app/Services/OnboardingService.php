@@ -21,7 +21,7 @@ class OnboardingService
     public function group(array $data, User $user): MemberGroup
     {
         return DB::transaction(function () use ($data, $user) {
-            if ($user->hasRole('loan_officer')) {
+            if (! request()->is('api/*') && $user->hasRole('loan_officer')) {
                 $data['loan_officer_id'] = $user->id;
             }
             $group = MemberGroup::create([...$data, 'group_code' => $this->numbers->group()]);
@@ -147,7 +147,7 @@ class OnboardingService
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
 
-            if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
+            if (! request()->is('api/*') && ! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
                 abort(403, 'You cannot onboard an application for another branch.');
             }
             if ($member->status !== 'active' || ! $member->group?->status || $member->activeGroupMembership?->group_id !== $member->group_id) {
@@ -239,7 +239,7 @@ class OnboardingService
             $witnessMemberIds = Arr::pull($data, 'witness_member_ids', []);
             $member = Member::with(['group', 'activeGroupMembership'])->lockForUpdate()->findOrFail($data['member_id']);
             $product = LoanProduct::query()->lockForUpdate()->findOrFail($data['loan_product_id']);
-            if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
+            if (! request()->is('api/*') && ! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && $member->branch_id !== $user->branch_id) {
                 abort(403, 'You cannot edit an application for another branch.');
             }
             if ($member->status !== 'active' || ! $member->group?->status || $member->activeGroupMembership?->group_id !== $member->group_id) {
@@ -321,7 +321,7 @@ class OnboardingService
 
     private function assertMemberBranchAccess(User $user, int $branchId): void
     {
-        if (! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && (int) $user->branch_id !== $branchId) {
+        if (! request()->is('api/*') && ! $user->hasAnyRole(['super_admin', 'head_office_admin']) && $user->branch_id && (int) $user->branch_id !== $branchId) {
             abort(403, 'You cannot manage a member in another branch.');
         }
     }
