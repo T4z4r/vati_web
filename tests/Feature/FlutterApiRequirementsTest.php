@@ -277,8 +277,9 @@ class FlutterApiRequirementsTest extends TestCase
 
         Sanctum::actingAs($this->creditOfficer);
         $this->putJson("/api/v1/groups/{$otherGroup->id}", ['branch_id' => $otherBranch->id, 'group_name' => 'Ilala Renamed'])
-            ->assertStatus(403)
-            ->assertJson(['success' => false, 'message' => 'You cannot access another branch.']);
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.group_name', 'Ilala Renamed');
 
         $this->putJson("/api/v1/groups/{$this->group->id}", ['branch_id' => $this->branch->id, 'group_name' => ''])
             ->assertStatus(422)

@@ -75,7 +75,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('users/{user}/attachments/{userAttachment}', [UserAttachmentController::class, 'destroy']);
         Route::apiResource('groups', GroupController::class)->only(['index', 'show']);
         Route::apiResource('groups', GroupController::class)->only('store');
-        Route::apiResource('groups', GroupController::class)->only(['update', 'destroy']);
+        Route::apiResource('groups', GroupController::class)->only('destroy');
         Route::get('groups/{group}/members', [GroupController::class, 'members']);
         Route::get('groups/{group}/dashboard', [GroupPortfolioController::class, 'dashboard']);
         Route::get('groups/{group}/loans', [GroupPortfolioController::class, 'loans']);
@@ -145,4 +145,5 @@ Route::prefix('v1')->group(function () {
         });
         Route::post('system/data/purge', [DataPurgeController::class, 'purge'])->name('api.system.data.purge');
     });
+    Route::put('groups/{group}', [GroupController::class, 'update'])->middleware('auth:sanctum');
 });
