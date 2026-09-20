@@ -118,6 +118,7 @@ Route::prefix('v1')->group(function () {
         Route::get('members/{member}/documents', [MemberDocumentController::class, 'index']);
         Route::post('members/{member}/documents', [MemberDocumentController::class, 'store']);
         Route::get('members/{member}/documents/{memberDocument}/download', [MemberDocumentController::class, 'download'])->name('api.members.documents.download');
+        Route::get('members/{member}/documents/{memberDocument}', [MemberDocumentController::class, 'show']);
         Route::delete('members/{member}/documents/{memberDocument}', [MemberDocumentController::class, 'destroy']);
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show']);
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store']);

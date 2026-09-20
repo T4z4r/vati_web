@@ -18,6 +18,13 @@ class MemberDocumentController extends ApiController
         return response()->json(['success' => true, 'data' => $member->documents()->with('uploadedBy')->get()->map(fn (MemberDocument $document) => $this->shape($member, $document))]);
     }
 
+    public function show(Member $member, MemberDocument $memberDocument)
+    {
+        $this->belongsTo($member, $memberDocument);
+
+        return response()->json(['success' => true, 'data' => $this->shape($member, $memberDocument)]);
+    }
+
     public function store(Request $request, Member $member)
     {
         $signature = $request->input('document_type') === 'signature';
