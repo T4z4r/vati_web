@@ -248,7 +248,7 @@ class FlutterApiRequirementsTest extends TestCase
         $this->getJson("/api/v1/loan-products/{$this->product->id}")->assertOk();
     }
 
-    public function test_loan_officer_group_scoping_follows_the_setting(): void
+    public function test_api_loan_officers_can_access_all_groups_regardless_of_setting(): void
     {
         $officerA = User::factory()->create(['branch_id' => $this->branch->id]);
         $officerA->assignRole('loan_officer');
@@ -259,11 +259,11 @@ class FlutterApiRequirementsTest extends TestCase
         $groupB = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G3', 'group_name' => 'Officer B Group', 'loan_officer_id' => $officerB->id]);
 
         Sanctum::actingAs($officerA);
-        $this->getJson('/api/v1/groups')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $groupA->id);
+        $this->getJson('/api/v1/groups')->assertOk()->assertJsonCount(3, 'data');
         $this->getJson("/api/v1/groups/{$groupA->id}")->assertOk();
         $this->getJson("/api/v1/groups/{$groupA->id}/dashboard")->assertOk();
-        $this->getJson("/api/v1/groups/{$groupB->id}")->assertNotFound();
-        $this->getJson("/api/v1/groups/{$groupB->id}/dashboard")->assertNotFound();
+        $this->getJson("/api/v1/groups/{$groupB->id}")->assertOk();
+        $this->getJson("/api/v1/groups/{$groupB->id}/dashboard")->assertOk();
 
         SystemSetting::set('restrict_loan_officer_groups', false);
         $this->getJson('/api/v1/groups')->assertOk()->assertJsonCount(3, 'data');

@@ -21,7 +21,7 @@ class OnboardingController extends ApiController
             'meeting_time' => ['nullable', 'date_format:H:i'],
             'region' => ['nullable', 'string', 'max:100'], 'district' => ['nullable', 'string', 'max:100'],
             'ward' => ['nullable', 'string', 'max:100'], 'location' => ['required', 'string', 'max:255'],
-            'loan_officer_id' => ['nullable', Rule::exists('users', 'id')->where(fn ($query) => $query->where('branch_id', $request->integer('branch_id'))->where('status', true))],
+            'loan_officer_id' => ['nullable', Rule::exists('users', 'id')->where('status', true)],
         ]);
         $group = $service->group([...$data, 'status' => true], $request->user());
 

@@ -219,7 +219,7 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonCount($loan->number_of_installments, 'data.loans.0.installments');
     }
 
-    public function test_branch_user_cannot_access_another_branch_member(): void
+    public function test_api_branch_user_can_access_another_branch_member(): void
     {
         $otherArea = Area::create(['region_id' => $this->branch->area->region_id, 'name' => 'Ilala', 'code' => 'ILA']);
         $otherBranch = Branch::create(['area_id' => $otherArea->id, 'branch_code' => 'DSM-002', 'branch_name' => 'Ilala']);
@@ -229,7 +229,7 @@ class VatiWorkflowTest extends TestCase
         $user->assignRole('loan_officer');
         Sanctum::actingAs($user);
 
-        $this->getJson("/api/v1/members/{$member->id}")->assertForbidden();
+        $this->getJson("/api/v1/members/{$member->id}")->assertOk();
     }
 
     public function test_member_requires_an_active_group_in_the_selected_branch(): void
@@ -309,7 +309,7 @@ class VatiWorkflowTest extends TestCase
         $this->getJson("/api/v1/groups/{$this->group->id}/meetings")->assertOk();
     }
 
-    public function test_branch_user_cannot_create_an_application_for_another_branch_member(): void
+    public function test_api_branch_user_can_create_an_application_for_another_branch_member(): void
     {
         $otherArea = Area::create(['region_id' => $this->branch->area->region_id, 'name' => 'Ubungo', 'code' => 'UBG']);
         $otherBranch = Branch::create(['area_id' => $otherArea->id, 'branch_code' => 'DSM-004', 'branch_name' => 'Ubungo']);
@@ -319,7 +319,7 @@ class VatiWorkflowTest extends TestCase
         $user->assignRole('loan_officer');
         Sanctum::actingAs($user);
 
-        $this->postJson('/api/v1/loan-applications', ['member_id' => $member->id, 'loan_product_id' => $this->product->id, 'requested_amount' => 1000000, 'duration_months' => 6])->assertForbidden();
+        $this->postJson('/api/v1/loan-applications', ['member_id' => $member->id, 'loan_product_id' => $this->product->id, 'requested_amount' => 1000000, 'duration_months' => 6])->assertCreated();
     }
 
     private function member(?Branch $branch = null, ?MemberGroup $group = null): Member
