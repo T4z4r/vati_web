@@ -49,7 +49,7 @@ Route::prefix('v1')->group(function () {
     Route::get('app/latest', [AppDownloadController::class, 'latest'])->name('app.latest');
     Route::get('app/{appVersion}/download', [AppDownloadController::class, 'download'])->name('api.app.download');
 
-    Route::middleware(['auth:sanctum', 'branch.access'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/change-password', [AuthController::class, 'changePassword']);
         Route::get('profile', [AuthController::class, 'profile']);
@@ -64,11 +64,27 @@ Route::prefix('v1')->group(function () {
         Route::post('onboarding/members', [OnboardingController::class, 'member']);
         Route::post('onboarding/loan-applications', [OnboardingController::class, 'loanApplication']);
 
-        Route::apiResource('regions', RegionController::class);
-        Route::apiResource('areas', AreaController::class);
-        Route::apiResource('branches', BranchController::class);
+        Route::get('regions', [RegionController::class, 'index'])->name('regions.index');
+        Route::post('regions', [RegionController::class, 'store'])->name('regions.store');
+        Route::get('regions/{region}', [RegionController::class, 'show'])->name('regions.show');
+        Route::match(['PUT', 'PATCH'], 'regions/{region}', [RegionController::class, 'update'])->name('regions.update');
+        Route::delete('regions/{region}', [RegionController::class, 'destroy'])->name('regions.destroy');
+        Route::get('areas', [AreaController::class, 'index'])->name('areas.index');
+        Route::post('areas', [AreaController::class, 'store'])->name('areas.store');
+        Route::get('areas/{area}', [AreaController::class, 'show'])->name('areas.show');
+        Route::match(['PUT', 'PATCH'], 'areas/{area}', [AreaController::class, 'update'])->name('areas.update');
+        Route::delete('areas/{area}', [AreaController::class, 'destroy'])->name('areas.destroy');
+        Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+        Route::get('branches/{branch}', [BranchController::class, 'show'])->name('branches.show');
+        Route::match(['PUT', 'PATCH'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+        Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
         Route::get('roles', [UserController::class, 'roles']);
-        Route::apiResource('users', UserController::class);
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::match(['PUT', 'PATCH'], 'users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('users/{user}/attachments', [UserAttachmentController::class, 'index']);
         Route::post('users/{user}/attachments', [UserAttachmentController::class, 'store']);
         Route::get('users/{user}/attachments/{userAttachment}/download', [UserAttachmentController::class, 'download'])->name('api.users.attachments.download');
@@ -84,11 +100,16 @@ Route::prefix('v1')->group(function () {
         Route::get('groups/{group}/applications', [GroupPortfolioController::class, 'applications']);
         Route::get('groups/{group}/collections', [GroupPortfolioController::class, 'collections']);
         Route::get('groups/{group}/meetings', [GroupPortfolioController::class, 'meetings']);
-        Route::apiResource('group-visits', GroupVisitController::class);
-        Route::apiResource('members', MemberController::class)->only(['index', 'show']);
-        Route::apiResource('members', MemberController::class)->only('store');
-        Route::apiResource('members', MemberController::class)->only('update');
-        Route::apiResource('members', MemberController::class)->only('destroy');
+        Route::get('group-visits', [GroupVisitController::class, 'index'])->name('group-visits.index');
+        Route::post('group-visits', [GroupVisitController::class, 'store'])->name('group-visits.store');
+        Route::get('group-visits/{group_visit}', [GroupVisitController::class, 'show'])->name('group-visits.show');
+        Route::match(['PUT', 'PATCH'], 'group-visits/{group_visit}', [GroupVisitController::class, 'update'])->name('group-visits.update');
+        Route::delete('group-visits/{group_visit}', [GroupVisitController::class, 'destroy'])->name('group-visits.destroy');
+        Route::get('members', [MemberController::class, 'index'])->name('members.index');
+        Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
+        Route::post('members', [MemberController::class, 'store'])->name('members.store');
+        Route::match(['PUT', 'PATCH'], 'members/{member}', [MemberController::class, 'update'])->name('members.update');
+        Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
         Route::put('members/{member}/kyc', [MemberKycController::class, 'update']);
         Route::post('members/{member}/photo', [MemberPhotoController::class, 'store']);
         Route::get('members/{member}/passbook', [MemberPassbookController::class, 'show']);
@@ -100,11 +121,17 @@ Route::prefix('v1')->group(function () {
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show']);
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store']);
 
-        Route::apiResource('loan-products', LoanProductController::class)->only(['index', 'show']);
-        Route::apiResource('loan-products', LoanProductController::class)->only(['store', 'update', 'destroy']);
+        Route::get('loan-products', [LoanProductController::class, 'index'])->name('loan-products.index');
+        Route::get('loan-products/{loan_product}', [LoanProductController::class, 'show'])->name('loan-products.show');
+        Route::post('loan-products', [LoanProductController::class, 'store'])->name('loan-products.store');
+        Route::match(['PUT', 'PATCH'], 'loan-products/{loan_product}', [LoanProductController::class, 'update'])->name('loan-products.update');
+        Route::delete('loan-products/{loan_product}', [LoanProductController::class, 'destroy'])->name('loan-products.destroy');
         Route::post('loan-calculator', [LoanCalculatorController::class, 'calculate']);
-        Route::apiResource('loan-applications', LoanApplicationController::class)->only(['index', 'show']);
-        Route::apiResource('loan-applications', LoanApplicationController::class)->only(['store', 'update', 'destroy']);
+        Route::get('loan-applications', [LoanApplicationController::class, 'index'])->name('loan-applications.index');
+        Route::get('loan-applications/{loan_application}', [LoanApplicationController::class, 'show'])->name('loan-applications.show');
+        Route::post('loan-applications', [LoanApplicationController::class, 'store'])->name('loan-applications.store');
+        Route::match(['PUT', 'PATCH'], 'loan-applications/{loan_application}', [LoanApplicationController::class, 'update'])->name('loan-applications.update');
+        Route::delete('loan-applications/{loan_application}', [LoanApplicationController::class, 'destroy'])->name('loan-applications.destroy');
         Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationWorkflowController::class, 'submit']);
         Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationWorkflowController::class, 'approve']);
         Route::post('loan-applications/{loanApplication}/reject', [LoanApplicationWorkflowController::class, 'reject']);
@@ -147,5 +174,4 @@ Route::prefix('v1')->group(function () {
         });
         Route::post('system/data/purge', [DataPurgeController::class, 'purge'])->name('api.system.data.purge');
     });
-    Route::put('groups/{group}', [GroupController::class, 'update'])->middleware('auth:sanctum');
 });
