@@ -37,6 +37,8 @@ class ApiAccessTest extends TestCase
         $this->getJson("/api/v1/groups/{$group->id}/dashboard")->assertOk();
         $this->putJson("/api/v1/groups/{$group->id}", ['group_name' => 'Updated'])->assertOk();
         $this->assertDatabaseHas('member_groups', ['id' => $group->id, 'group_name' => 'Updated']);
+        $this->postJson("/api/v1/groups/{$group->id}", ['group_name' => 'Updated via POST'])->assertOk();
+        $this->assertDatabaseHas('member_groups', ['id' => $group->id, 'group_name' => 'Updated via POST']);
         $this->getJson('/api/v1/portfolio/summary?branch_id='.$other->id)->assertOk();
         $this->getJson('/api/v1/dashboard?branch_id='.$other->id)->assertOk()->assertJsonStructure(['data' => ['management']]);
         $this->getJson('/api/v1/system/settings')->assertOk();
