@@ -287,6 +287,47 @@ class FlutterApiRequirementsTest extends TestCase
             ->assertJsonStructure(['errors' => ['group_name']]);
     }
 
+    public function test_group_update_accepts_full_mobile_payload(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->putJson("/api/v1/groups/{$this->group->id}", [
+            'branch_id' => $this->branch->id,
+            'group_name' => 'Umoja Women Group',
+            'location' => 'Makumbusho',
+            'meeting_location' => 'Kimara Market Hall',
+            'meeting_day' => 'Wednesday',
+            'meeting_time' => '10:30',
+            'status' => true,
+            'region' => 'Kinondoni',
+            'district' => 'Kinondoni',
+            'ward' => 'Ward Name',
+        ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.group_name', 'Umoja Women Group')
+            ->assertJsonPath('data.location', 'Makumbusho')
+            ->assertJsonPath('data.meeting_location', 'Kimara Market Hall')
+            ->assertJsonPath('data.meeting_day', 'Wednesday')
+            ->assertJsonPath('data.meeting_time', '10:30')
+            ->assertJsonPath('data.status', true)
+            ->assertJsonPath('data.region', 'Kinondoni')
+            ->assertJsonPath('data.district', 'Kinondoni')
+            ->assertJsonPath('data.ward', 'Ward Name');
+
+        $this->assertDatabaseHas('member_groups', [
+            'id' => $this->group->id,
+            'group_name' => 'Umoja Women Group',
+            'location' => 'Makumbusho',
+            'meeting_location' => 'Kimara Market Hall',
+            'meeting_day' => 'Wednesday',
+            'meeting_time' => '10:30:00',
+            'status' => true,
+            'region' => 'Kinondoni',
+            'district' => 'Kinondoni',
+            'ward' => 'Ward Name',
+        ]);
+    }
+
     private function application(ApplicationStatus $status = ApplicationStatus::DRAFT, ?int $assignedTo = null): LoanApplication
     {
         return LoanApplication::create([

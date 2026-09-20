@@ -49,14 +49,14 @@ class GroupController extends ApiController
 
     public function update(Request $request, MemberGroup $group)
     {
-        // $validated = $this->validated($request, $group);
-        // try {
-            $group->update($request->all());
-        // } catch (\Throwable $e) {
-        //     report($e);
+        $validated = $this->validated($request, $group);
+        try {
+            $group->update($validated);
+        } catch (\Throwable $e) {
+            report($e);
 
-        //     return response()->json(['success' => false, 'message' => 'Group update failed. Please check the submitted details and try again.'], 422);
-        // }
+            return response()->json(['success' => false, 'message' => 'Group update failed. Please check the submitted details and try again.'], 422);
+        }
         activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['changed_fields' => array_keys($group->getChanges())])->log('Group updated');
 
         return response()->json(['success' => true, 'message' => 'Group updated successfully.', 'data' => $group->refresh()]);
