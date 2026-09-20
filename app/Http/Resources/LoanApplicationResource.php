@@ -39,6 +39,7 @@ class LoanApplicationResource extends JsonResource
             'branch' => $this->whenLoaded('branch'),
             'application_type' => $this->application_type,
             'requested_amount' => $this->requested_amount,
+            'amount_receivable' => $breakdown['amount_receivable'] ?? null,
             'recommended_amount' => $this->recommended_amount,
             'duration_months' => $this->duration_months,
             'recommended_duration_months' => $this->recommended_duration_months,

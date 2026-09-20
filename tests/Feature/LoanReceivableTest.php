@@ -22,6 +22,13 @@ class LoanReceivableTest extends TestCase
         $member = Member::create(['branch_id' => $branch->id, 'group_id' => $group->id, 'membership_number' => 'FEE-M', 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255711111112']);
         $product = LoanProduct::create(['name' => 'Fees Loan', 'code' => 'FEE', 'minimum_amount' => 1000, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'weekly', 'processing_fee_percentage' => 3, 'insurance_percentage' => 2, 'vat_percentage' => 1, 'security_percentage' => 10]);
         $application = LoanApplication::create(['application_number' => 'FEE-A', 'member_id' => $member->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'loan_product_id' => $product->id, 'requested_amount' => 1000000, 'duration_months' => 6, 'status' => 'submitted', 'created_by' => $user->id]);
+        Sanctum::actingAs($user);
+        $this->getJson('/api/v1/loan-applications')->assertOk()
+            ->assertJsonPath('data.0.amount_receivable', '840000.00')
+            ->assertJsonPath('data.0.calculator_breakdown.amount_receivable', '840000.00')
+            ->assertJsonStructure(['data', 'links', 'meta']);
+        $application->update(['calc_total_repayment' => 1000000, 'calc_security_amount' => 100000, 'calc_charges' => 60000]);
+        $this->getJson('/api/v1/loan-applications')->assertOk()->assertJsonPath('data.0.amount_receivable', '840000.00');
         $application->update(['recommended_amount' => 1100000]);
         try {
             app(LoanApprovalService::class)->decide($application, $user, 'approved');
