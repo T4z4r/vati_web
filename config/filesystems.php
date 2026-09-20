@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        'signatures' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/member-signatures'),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

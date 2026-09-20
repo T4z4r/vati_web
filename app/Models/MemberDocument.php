@@ -20,6 +20,11 @@ class MemberDocument extends Model
         'file_size',
         'description',
         'uploaded_by',
+        'disk',
+        'status',
+        'sha256',
+        'active_signature_member_id',
+        'file_cleanup_pending',
     ];
 
     protected $casts = [
@@ -72,6 +77,7 @@ class MemberDocument extends Model
             'business_license' => 'Business License',
             'passbook_scan' => 'Passbook Scan',
             'signature_card' => 'Signature Card',
+            'signature' => 'Signature',
             'other' => 'Other Document',
             default => ucfirst(str_replace('_', ' ', $this->document_type)),
         };

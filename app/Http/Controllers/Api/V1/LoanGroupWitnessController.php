@@ -43,7 +43,7 @@ class LoanGroupWitnessController extends ApiController
                 throw new DomainException('Witnesses cannot be added in the current application state.');
             }
 
-            $member = Member::with('activeGroupMembership')->findOrFail($data['member_id']);
+            $member = Member::with('activeGroupMembership')->lockForUpdate()->findOrFail($data['member_id']);
             if ($member->id === $application->member_id) {
                 throw new DomainException('The borrower cannot witness their own application.');
             }
@@ -51,10 +51,18 @@ class LoanGroupWitnessController extends ApiController
                 throw new DomainException('The witness must be an active member of the borrower’s originating group.');
             }
 
+            $signature = null;
+            if (! empty($data['signature_path'])) {
+                $signature = $member->documents()->where('document_type', 'signature')->where('file_path', $data['signature_path'])->first();
+                if (! $signature) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['signature_path' => 'Select an existing signature belonging to this witness.']);
+                }
+            }
             $witness = $application->groupWitnesses()->create([
                 'group_id' => $application->group_id,
                 'member_id' => $member->id,
-                'signature_path' => $data['signature_path'] ?? null,
+                'signature_path' => $signature?->file_path,
+                'signature_document_id' => $signature?->id,
                 'confirmed_at' => now(),
                 'recorded_by' => $request->user()->id,
             ]);

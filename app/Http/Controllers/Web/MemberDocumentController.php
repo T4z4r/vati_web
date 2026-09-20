@@ -56,6 +56,10 @@ class MemberDocumentController extends Controller
         }
 
         $filePath = $document->file_path;
+        if ($document->document_type === 'signature') {
+            app(\App\Services\MemberSignatureService::class)->delete($member, $document, $request->user());
+            return back()->with('success', 'Signature deleted successfully.');
+        }
         $force = $request->boolean('_force');
         $force ? $document->forceDelete() : $document->delete();
 
@@ -84,6 +88,6 @@ class MemberDocumentController extends Controller
 
         $this->authorize('view-members');
 
-        return Storage::disk('public')->download($document->file_path, $document->file_name);
+        return Storage::disk($document->disk)->download($document->file_path, $document->file_name, ['Cache-Control' => 'private, no-store']);
     }
 }
