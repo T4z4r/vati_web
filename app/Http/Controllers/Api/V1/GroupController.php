@@ -47,19 +47,27 @@ class GroupController extends ApiController
         return response()->json(['success' => true, 'data' => new GroupResource($group)]);
     }
 
+    // public function update(Request $request, MemberGroup $group)
+    // {
+    //     $validated = $this->validated($request, $group);
+    //     try {
+    //         $group->update($validated);
+    //     } catch (\Throwable $e) {
+    //         report($e);
+
+    //         return response()->json(['success' => false, 'message' => 'Group update failed. Please check the submitted details and try again.'], 422);
+    //     }
+    //     activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['changed_fields' => array_keys($group->getChanges())])->log('Group updated');
+
+    //     return response()->json(['success' => true, 'message' => 'Group updated successfully.', 'data' => $group->refresh()]);
+    // }
     public function update(Request $request, MemberGroup $group)
     {
-        $validated = $this->validated($request, $group);
-        try {
-            $group->update($validated);
-        } catch (\Throwable $e) {
-            report($e);
+        $group->update($this->data($request, true));
 
-            return response()->json(['success' => false, 'message' => 'Group update failed. Please check the submitted details and try again.'], 422);
-        }
-        activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['changed_fields' => array_keys($group->getChanges())])->log('Group updated');
+        // return redirect()->route('admin.groups.show', $group)->with('success', 'Group updated successfully.');
+                return response()->json(['success' => true, 'message' => 'Group updated successfully.', 'data' => $group->refresh()]);
 
-        return response()->json(['success' => true, 'message' => 'Group updated successfully.', 'data' => $group->refresh()]);
     }
 
     public function destroy(Request $request, MemberGroup $group)

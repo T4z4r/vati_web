@@ -281,11 +281,11 @@ class FlutterApiRequirementsTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.group_name', 'Ilala Renamed');
 
-        $this->putJson("/api/v1/groups/{$this->group->id}", ['branch_id' => $this->branch->id, 'group_name' => ''])
+        $this->putJson("/api/v1/groups/{$this->group->id}", ['branch_id' => $this->branch->id, 'group_name' => 'Tumaini', 'meeting_day' => 'Funday'])
             ->assertStatus(422)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', 'The group name field is required.')
-            ->assertJsonStructure(['errors' => ['group_name']]);
+            ->assertJsonPath('message', 'The selected meeting day is invalid.')
+            ->assertJsonStructure(['errors' => ['meeting_day']]);
     }
 
     public function test_group_update_accepts_full_mobile_payload(): void
@@ -321,7 +321,7 @@ class FlutterApiRequirementsTest extends TestCase
             'location' => 'Makumbusho',
             'meeting_location' => 'Kimara Market Hall',
             'meeting_day' => 'Wednesday',
-            'meeting_time' => '10:30:00',
+            'meeting_time' => '10:30',
             'status' => true,
             'region' => 'Kinondoni',
             'district' => 'Kinondoni',
