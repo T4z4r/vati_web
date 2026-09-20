@@ -1982,7 +1982,21 @@
                         "header": [],
                         "url": "{{base_url}}/api/v1/loans/{{loan_id}}"
                     },
-                    "response": []
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const loan = pm.response.json().data;",
+                                    "  pm.collectionVariables.set(\"loan_amount_receivable\", loan.amount_receivable);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "Export Loan PDF",
@@ -2008,13 +2022,14 @@
                         "url": "{{base_url}}/api/v1/loans/{{loan_id}}/disburse",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"method\": \"mpesa\",\n  \"recipient_number\": \"+255710000001\",\n  \"reference_number\": \"POSTMAN-DISB-{{$timestamp}}\",\n  \"disbursed_at\": \"{{$isoTimestamp}}\"\n}",
+                            "raw": "{\n  \"amount\": \"{{loan_amount_receivable}}\",\n  \"method\": \"mpesa\",\n  \"recipient_number\": \"+255710000001\",\n  \"reference_number\": \"POSTMAN-DISB-{{$timestamp}}\",\n  \"disbursed_at\": \"{{$isoTimestamp}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
                                 }
                             }
-                        }
+                        },
+                        "description": "Run Get Loan first to capture amount_receivable. Amount is required and must match the saved receivable. Invalid/nonpositive amounts return 422; stale amounts and repeat attempts return 409. Success returns updated loan data with issued_amount and disbursement.amount."
                     },
                     "response": []
                 },

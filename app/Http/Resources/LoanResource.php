@@ -52,6 +52,7 @@ class LoanResource extends JsonResource
             'charges' => number_format((float) ($this->calc_charges ?? $this->total_fees_and_vat ?? 0), 2, '.', ''),
             'amount_receivable' => $this->amount_receivable,
             'transaction_charges' => $this->transaction_charges,
+            'issued_amount' => $this->whenLoaded('disbursement', fn () => $this->disbursement->amount),
             'other_charges' => $this->other_charges,
             'total_fees_and_vat' => $this->total_fees_and_vat,
             'refinancing_amount' => $this->refinancing_amount,

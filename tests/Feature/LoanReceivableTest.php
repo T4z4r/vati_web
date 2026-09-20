@@ -30,8 +30,25 @@ class LoanReceivableTest extends TestCase
         $loan->update(['calc_amount_receivable' => 1000000]);
         Sanctum::actingAs($user);
         $this->getJson('/api/v1/loans')->assertOk()->assertJsonPath('data.0.amount_receivable', '840000.00')->assertJsonPath('data.0.charges', '60000.00');
+        $url = '/api/v1/loans/'.$loan->id.'/disburse';
+        $this->postJson($url, ['method' => 'cash', 'amount' => 840000])->assertConflict();
+        foreach ([null, 0] as $invalidSavedAmount) {
+            $loan->update(['calc_amount_receivable' => $invalidSavedAmount]);
+            $this->postJson($url, ['method' => 'cash', 'amount' => 840000])->assertConflict();
+        }
+        $loan->update(['calc_amount_receivable' => 840000]);
+        foreach ([null, 0, -1, 'invalid', '840000.001'] as $invalidAmount) {
+            $this->postJson($url, ['method' => 'cash', 'amount' => $invalidAmount])->assertUnprocessable()->assertJsonValidationErrors('amount');
+        }
+        $this->postJson($url, ['method' => 'cash'])->assertUnprocessable()->assertJsonValidationErrors('amount');
         $this->postJson('/api/v1/loans/'.$loan->id.'/disburse', ['method' => 'cash', 'amount' => 1000000])
-            ->assertCreated()->assertJsonPath('data.amount', '840000.00');
+            ->assertConflict();
+        $this->assertDatabaseCount('loan_disbursements', 0);
+        $this->postJson($url, ['method' => 'cash', 'amount' => '840000.00'])
+            ->assertCreated()->assertJsonPath('data.id', $loan->id)->assertJsonPath('data.status', 'active')
+            ->assertJsonPath('data.issued_amount', '840000.00')->assertJsonPath('data.disbursement.amount', '840000.00');
+        $this->postJson($url, ['method' => 'cash', 'amount' => 840000])->assertConflict();
+        $this->assertDatabaseCount('loan_disbursements', 1);
         $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 840000]);
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('840000.00', $loan->fresh()->calc_amount_receivable);

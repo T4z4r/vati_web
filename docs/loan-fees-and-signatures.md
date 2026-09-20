@@ -32,7 +32,15 @@ Portfolio “total issued” and API management disbursement totals sum complete
 
 ### Existing records
 
-Existing disbursements are historical records and are not rewritten. Review any earlier over-disbursements separately. Pending loans use their saved fee/security amounts and refresh `calc_amount_receivable` when disbursed. Missing legacy fee/security values are treated as zero; check incomplete legacy records before issuing funds. The loan API computes its breakdown from saved values instead of recalculating with today's product settings.
+Existing disbursements are historical records and are not rewritten. Review any earlier over-disbursements separately. Disbursement requires a positive saved `calc_amount_receivable` consistent with the loan's saved principal, fees, and security. A missing or outdated saved receivable returns 409 and must be reviewed/corrected before issuance. The loan API computes its breakdown from saved values instead of recalculating with today's product settings.
+
+### Disbursement API contract
+
+`POST /api/v1/loans/{id}/disburse` requires `amount` copied from the backend's `amount_receivable`, plus `method`. Existing recipient, reference, and date fields remain supported. Amounts must be positive numeric values with at most two decimal places. Missing, malformed, zero, or negative submitted amounts return 422.
+
+Inside a database transaction, the service locks and reloads the loan, rejects any existing disbursement, verifies the saved receivable, and compares the submitted amount with that saved value. A mismatch or repeat attempt returns 409. No disbursement or repayment schedule is created on rejection. The saved amount, never the submitted value, is used for issuance. Shared web/internal callers may omit `amount`; any supplied value is still checked.
+
+Success returns 201 with updated loan data in `data`, including its `id`, `status: active`, `amount_receivable`, `issued_amount`, and `disbursement.amount`. Clients that previously treated `data` as a disbursement record should now read that record from `data.disbursement`.
 
 ## Member signature upload
 

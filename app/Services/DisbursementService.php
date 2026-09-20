@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\LoanStatus;
+use App\Exceptions\WorkflowConflictException;
 use App\Models\Loan;
 use App\Models\LoanDisbursement;
 use App\Models\User;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class DisbursementService
 {
@@ -19,17 +21,30 @@ class DisbursementService
     {
         return DB::transaction(function () use ($loan, $user, $data) {
             $loan = Loan::query()->lockForUpdate()->findOrFail($loan->id);
+            if ($loan->disbursement()->exists()) {
+                throw new WorkflowConflictException('This loan has already been disbursed.');
+            }
             if ($loan->status !== LoanStatus::PENDING_DISBURSEMENT || $loan->application->status !== ApplicationStatus::APPROVED) {
-                throw new DomainException('Only an approved, pending loan can be disbursed.');
+                throw new WorkflowConflictException('Only an approved, pending loan can be disbursed.');
             }
             if ($loan->application->cancellation()->exists()) {
                 throw new DomainException('A cancelled application cannot be disbursed.');
             }
 
             $date = Carbon::parse($data['disbursed_at'] ?? now());
-            $amount = $loan->amount_receivable;
-            if ((float) $amount < 0 || (float) $amount > (float) $loan->principal_amount) {
-                throw new DomainException('Loan fees and security produce an invalid disbursement amount.');
+            $amount = $loan->calc_amount_receivable;
+            if ($amount === null || (float) $amount <= 0 || (float) $amount > (float) $loan->principal_amount || $amount !== $loan->amount_receivable) {
+                throw new WorkflowConflictException('The saved amount receivable is invalid or outdated. Review the loan before disbursement.');
+            }
+            // API callers must send an amount; internal/web callers may omit it.
+            // Any supplied amount is checked against the locked, saved receivable.
+            if (array_key_exists('amount', $data)) {
+                Validator::make($data, ['amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2']])->validate();
+                $parts = explode('.', (string) $data['amount'], 2);
+                $submitted = (ltrim($parts[0], '+0') ?: '0').'.'.str_pad($parts[1] ?? '', 2, '0');
+                if ($submitted !== $amount) {
+                    throw new WorkflowConflictException('The submitted amount does not match the saved amount receivable. Refresh the loan and try again.');
+                }
             }
             $firstPayment = Carbon::parse($data['first_payment_date'] ?? ($loan->product->repayment_frequency === 'weekly' ? $date->copy()->addWeek() : $date->copy()->addMonth()));
             $disbursement = $loan->disbursement()->create([
