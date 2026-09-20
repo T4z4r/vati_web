@@ -70,6 +70,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('members/{member}/documents', [MemberDocumentController::class, 'store'])->name('members.documents.store')->middleware('permission:edit-members');
     Route::delete('members/{member}/documents/{document}', [MemberDocumentController::class, 'destroy'])->name('members.documents.destroy')->middleware('permission:delete-members');
     Route::get('members/{member}/documents/{document}/download', [MemberDocumentController::class, 'download'])->name('members.documents.download')->middleware('permission:view-members');
+    Route::get('members/{member}/documents/{document}/view', [MemberDocumentController::class, 'view'])->name('members.documents.view')->middleware('permission:view-members');
     Route::resource('loan-products', LoanProductController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('role:super_admin|head_office_admin');
     Route::resource('loan-products', LoanProductController::class)->only(['index', 'show'])->middleware('role:super_admin|head_office_admin');
 

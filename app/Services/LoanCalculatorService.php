@@ -7,14 +7,6 @@ use DomainException;
 
 class LoanCalculatorService
 {
-    /** Fixed weekly payment factors per loan duration in months (weekly payment = principal x factor). */
-    public const WEEKLY_PAYMENT_FACTORS = [6 => 0.0445, 8 => 0.0360, 12 => 0.0295];
-
-    public static function weeklyPaymentFactor(int $durationMonths): ?float
-    {
-        return self::WEEKLY_PAYMENT_FACTORS[$durationMonths] ?? null;
-    }
-
     public function installmentCount(LoanProduct $product, int $durationMonths): int
     {
         return $product->repayment_frequency === 'weekly'
@@ -33,17 +25,8 @@ class LoanCalculatorService
         }
 
         $installmentCount = $this->installmentCount($product, $durationMonths);
-        $factor = $product->repayment_frequency === 'weekly' ? self::weeklyPaymentFactor($durationMonths) : null;
-
-        if ($factor !== null) {
-            // Fixed weekly payment schedule: each weekly payment = principal x factor.
-            $weeklyInstallment = round($principal * $factor, 2);
-            $totalRepayment = round($weeklyInstallment * $installmentCount, 2);
-        } else {
-            // Interest-free lending: only the principal is repayable.
-            $totalRepayment = round($principal, 2);
-            $weeklyInstallment = null;
-        }
+        // Fees and security are withheld at issuance, never added to debt.
+        $totalRepayment = round($principal, 2);
         $interest = 0.0;
 
         $principal = round($principal, 2);
@@ -68,9 +51,7 @@ class LoanCalculatorService
             'amount_receivable' => $receivable,
             'total_repayment' => round($totalRepayment, 2),
             'installment_count' => $installmentCount,
-            'installment_amount' => $factor !== null
-                ? $weeklyInstallment
-                : round(round($principal, 2) / $installmentCount, 2),
+            'installment_amount' => intdiv((int) round($totalRepayment * 100), $installmentCount) / 100,
         ];
     }
 }

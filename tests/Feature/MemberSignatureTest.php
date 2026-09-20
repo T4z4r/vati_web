@@ -32,6 +32,30 @@ class MemberSignatureTest extends TestCase
         return '/api/v1/members/'.$this->member->id.'/documents';
     }
 
+    public function test_web_can_view_private_signature_with_member_permission(): void
+    {
+        $file = UploadedFile::fake()->image('signature.png', 100, 40);
+        $bytes = file_get_contents($file->getRealPath());
+        $response = $this->postJson($this->url(), ['document_type' => 'signature', 'file' => $file])->assertCreated();
+        $document = MemberDocument::findOrFail($response->json('data.id'));
+        $viewer = User::factory()->create(['branch_id' => $this->member->branch_id]);
+        \Spatie\Permission\Models\Permission::findOrCreate('view-members', 'web');
+        $viewer->givePermissionTo('view-members');
+        $url = route('admin.members.documents.view', [$this->member, $document]);
+        $view = $this->actingAs($viewer, 'web')->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertStringContainsString('inline', $view->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('no-store', $view->headers->get('Cache-Control'));
+        $this->assertSame($bytes, $view->streamedContent());
+        $other = $this->member->replicate();
+        $other->membership_number = 'SIG-WEB';
+        $other->phone = '255711111119';
+        $other->save();
+        $this->get(route('admin.members.documents.view', [$other, $document]))->assertNotFound();
+        Storage::disk('signatures')->delete($document->file_path);
+        $this->get($url)->assertNotFound();
+        $this->actingAs(User::factory()->create(), 'web')->get($url)->assertForbidden();
+    }
+
     public function test_private_png_upload_retry_conflict_download_and_delete(): void
     {
         $image = UploadedFile::fake()->image('drawing.png', 100, 40);

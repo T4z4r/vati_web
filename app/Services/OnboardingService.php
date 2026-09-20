@@ -277,6 +277,14 @@ class OnboardingService
                 'cancellation_deadline' => null,
                 'applicant_signature_path' => null,
                 'applicant_thumbprint_path' => null,
+                'calc_interest' => $figures['interest'],
+                'calc_processing_fee' => $figures['processing_fee'],
+                'calc_insurance_fee' => $figures['insurance_fee'],
+                'calc_vat' => $figures['vat'],
+                'calc_security_amount' => $figures['security_amount'],
+                'calc_charges' => $figures['charges'],
+                'calc_amount_receivable' => $figures['amount_receivable'],
+                'calc_total_repayment' => $figures['total_repayment'],
             ]);
             $application->assessment()->updateOrCreate(['loan_application_id' => $application->id], [
                 ...$assessment,

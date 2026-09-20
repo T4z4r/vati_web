@@ -2,6 +2,12 @@
 
 ## Loan fees and amount receivable
 
+### Principal-only balances
+
+Weekly and monthly loans now repay only their approved principal. The earlier weekly factors could inflate debt (for example, 1,000,000 × 0.0445 × 26 = 1,157,000); those factors have been removed from the backend and web preview. Approval rejects any recommended principal above the requested amount. Fees and security are deductions from issuance, not additions to repayment debt.
+
+The regular installment is the principal divided by the installment count, rounded down to cents. The final installment includes the rounding remainder, so the schedule sums exactly to principal. Payments reduce that balance; reversing a valid payment restores its allocation. Draft edits refresh the saved calculator figures. This change does not automatically rewrite historical loan or payment records.
+
 The amount issued to the member is now the net amount after both security and fees:
 
 ```text

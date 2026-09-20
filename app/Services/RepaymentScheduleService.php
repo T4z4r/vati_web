@@ -14,7 +14,7 @@ class RepaymentScheduleService
         if ((float) $loan->interest_amount <= 0.009) {
             // Interest-free schedule: every instalment counts fully toward the balance.
             $remainingTotal = round((float) $loan->total_repayment, 2);
-            $perInstallment = floor(($remainingTotal / $count) * 100) / 100;
+            $perInstallment = intdiv((int) round($remainingTotal * 100), $count) / 100;
             $weekly = $loan->product->repayment_frequency === 'weekly';
 
             for ($i = 1; $i <= $count; $i++) {

@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\MemberDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 
 class MemberDocumentController extends Controller
 {
@@ -15,7 +16,7 @@ class MemberDocumentController extends Controller
      */
     public function store(Request $request, Member $member)
     {
-        $this->authorize('edit-members');
+        Gate::authorize('edit-members');
 
         $validated = $request->validate([
             'document_type' => ['required', 'string', 'in:national_id,voter_id,address_proof,business_license,passbook_scan,signature_card,other'],
@@ -49,7 +50,7 @@ class MemberDocumentController extends Controller
      */
     public function destroy(Request $request, Member $member, MemberDocument $document)
     {
-        $this->authorize('delete-members');
+        Gate::authorize('delete-members');
 
         if ($document->member_id !== $member->id) {
             abort(403, 'Unauthorized action.');
@@ -86,8 +87,25 @@ class MemberDocumentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $this->authorize('view-members');
+        Gate::authorize('view-members');
 
         return Storage::disk($document->disk)->download($document->file_path, $document->file_name, ['Cache-Control' => 'private, no-store']);
+    }
+
+    public function view(Member $member, MemberDocument $document)
+    {
+        Gate::authorize('view-members');
+        abort_unless((int) $document->member_id === (int) $member->id, 404);
+        $disk = Storage::disk($document->disk);
+        abort_unless($disk->exists($document->file_path), 404, 'Document file not found.');
+        $mime = $disk->mimeType($document->file_path);
+        $headers = ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'];
+        if (! in_array($mime, ['image/png', 'image/jpeg', 'application/pdf'], true)) {
+            return $disk->download($document->file_path, $document->file_name, $headers);
+        }
+
+        return $disk->response($document->file_path, $document->file_name, [
+            ...$headers, 'Content-Type' => $mime,
+        ], 'inline');
     }
 }

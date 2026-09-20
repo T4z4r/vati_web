@@ -20,8 +20,18 @@ class LoanReceivableTest extends TestCase
         $group = MemberGroup::create(['branch_id' => $branch->id, 'group_code' => 'FEE-G', 'group_name' => 'Fees']);
         $user = User::factory()->create();
         $member = Member::create(['branch_id' => $branch->id, 'group_id' => $group->id, 'membership_number' => 'FEE-M', 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255711111112']);
-        $product = LoanProduct::create(['name' => 'Fees Loan', 'code' => 'FEE', 'minimum_amount' => 1000, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'monthly', 'processing_fee_percentage' => 3, 'insurance_percentage' => 2, 'vat_percentage' => 1, 'security_percentage' => 10]);
+        $product = LoanProduct::create(['name' => 'Fees Loan', 'code' => 'FEE', 'minimum_amount' => 1000, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'weekly', 'processing_fee_percentage' => 3, 'insurance_percentage' => 2, 'vat_percentage' => 1, 'security_percentage' => 10]);
         $application = LoanApplication::create(['application_number' => 'FEE-A', 'member_id' => $member->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'loan_product_id' => $product->id, 'requested_amount' => 1000000, 'duration_months' => 6, 'status' => 'submitted', 'created_by' => $user->id]);
+        $application->update(['recommended_amount' => 1100000]);
+        try {
+            app(LoanApprovalService::class)->decide($application, $user, 'approved');
+            $this->fail('Approval above the requested amount must be rejected.');
+        } catch (\DomainException $e) {
+            $this->assertStringContainsString('cannot exceed the requested amount', $e->getMessage());
+        }
+        $this->assertDatabaseCount('loans', 0);
+        $this->assertSame('submitted', $application->fresh()->status->value);
+        $application->update(['recommended_amount' => null]);
         $loan = app(LoanApprovalService::class)->decide($application, $user, 'approved')->loan;
         $this->assertSame('840000.00', $loan->amount_receivable);
         $this->assertSame('60000.00', $loan->calc_charges);
@@ -74,6 +84,16 @@ class LoanReceivableTest extends TestCase
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('840000.00', $loan->fresh()->calc_amount_receivable);
         $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '840000.00');
+        $this->assertSame('1000000.00', $loan->fresh()->total_balance);
+        $this->assertSame(1000000.0, round((float) $loan->installments()->sum('total_due'), 2));
+        $this->assertSame(26, $loan->installments()->count());
+        $payment = app(\App\Services\PaymentService::class)->post($loan, $user, 100000, ['payment_method' => 'cash']);
+        $this->assertSame('900000.00', $loan->fresh()->total_balance);
+        app(\App\Services\PaymentService::class)->reverse($payment, $user, 'Test reversal');
+        $this->assertSame('1000000.00', $loan->fresh()->total_balance);
+        app(\App\Services\PaymentService::class)->post($loan, $user, 1000000, ['payment_method' => 'cash']);
+        $this->assertSame('0.00', $loan->fresh()->total_balance);
+        $this->assertSame('settled', $loan->fresh()->status->value);
     }
 
     public function test_calculator_rejects_deductions_exceeding_principal(): void
@@ -81,5 +101,18 @@ class LoanReceivableTest extends TestCase
         $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 10000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'monthly', 'processing_fee_percentage' => 80, 'security_percentage' => 30]);
         $this->expectException(\DomainException::class);
         app(LoanCalculatorService::class)->calculate($product, 1000, 6);
+    }
+
+    public function test_every_duration_keeps_repayment_equal_to_principal(): void
+    {
+        foreach (['weekly', 'monthly'] as $frequency) {
+            $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => $frequency]);
+            foreach (range(1, 12) as $months) {
+                $figures = app(LoanCalculatorService::class)->calculate($product, 1000000.01, $months);
+                $this->assertSame(1000000.01, $figures['total_repayment']);
+                $this->assertSame(0.0, $figures['interest']);
+                $this->assertLessThanOrEqual($figures['principal'], round($figures['installment_amount'] * $figures['installment_count'], 2));
+            }
+        }
     }
 }

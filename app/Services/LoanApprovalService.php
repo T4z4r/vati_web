@@ -39,10 +39,13 @@ class LoanApprovalService
 
             if ($to === ApplicationStatus::APPROVED && ! $application->loan()->exists()) {
                 $approvedAmount = (float) ($application->recommended_amount ?: $application->requested_amount);
+                if ($approvedAmount <= 0 || $approvedAmount > (float) $application->requested_amount) {
+                    throw new DomainException('Approved principal must be positive and cannot exceed the requested amount.');
+                }
                 $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
                 $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
                 $installments = $this->calculator->installmentCount($application->product, $approvedDuration);
-                // Interest-free lending: the full scheduled total (factor-based for weekly products) is booked as outstanding debt.
+                // Interest-free lending: starting debt is exactly the approved principal.
                 $totalRepayment = round((float) $figures['total_repayment'], 2);
                 Loan::create([
                     'loan_number' => $this->numbers->loan(),

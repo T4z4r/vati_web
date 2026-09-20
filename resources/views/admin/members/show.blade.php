@@ -105,6 +105,7 @@
                             <td>{{ $document->file_name }}</td>
                             <td>{{ $document->created_at?->format('d M Y') }}</td>
                             <td>
+                                <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.view', [$member, $document]) }}" target="_blank" rel="noopener noreferrer"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</a>
                                 <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.download', [$member, $document]) }}">Pakua</a>
                                 @can('delete-members')
                                     <form method="POST" action="{{ route('admin.members.documents.destroy', [$member, $document]) }}" style="display:inline">

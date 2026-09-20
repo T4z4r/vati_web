@@ -405,17 +405,12 @@
             }
         }
 
-        const WEEKLY_PAYMENT_FACTORS = { 6: 0.0445, 8: 0.036, 12: 0.0295 };
-
         function weeklyInstallmentsFor(duration) {
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Interest-free lending: weekly payments follow the fixed factors; otherwise only the principal is repayable.
+        // Interest-free lending: only the approved principal is repayable.
         function scheduledTotalFor(principal, duration, frequency) {
-            if (frequency === 'weekly' && WEEKLY_PAYMENT_FACTORS[duration]) {
-                return Math.round((principal * WEEKLY_PAYMENT_FACTORS[duration] * weeklyInstallmentsFor(duration)) * 100) / 100;
-            }
             return Math.round(principal * 100) / 100;
         }
 
