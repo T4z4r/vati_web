@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DisbursementService
 {
-    public function __construct(private RepaymentScheduleService $schedule, private NotificationService $notifications) {}
+    public function __construct(private RepaymentScheduleService $schedule, private NotificationService $notifications, private SecurityAccountService $securityAccounts) {}
 
     public function disburse(Loan $loan, User $user, array $data): LoanDisbursement
     {
@@ -59,6 +59,17 @@ class DisbursementService
                 'approved_by' => $user->id,
                 'status' => 'completed',
             ]);
+            $securityAmount = (float) ($loan->calc_security_amount ?? 0);
+            if ($securityAmount < 0) {
+                throw new DomainException('The saved loan security amount cannot be negative.');
+            }
+            if ($securityAmount > 0) {
+                $this->securityAccounts->transact($loan->member, $user, 'deposit', $securityAmount, [
+                    'loan_id' => $loan->id,
+                    'transaction_date' => $date,
+                    'remarks' => 'Security withheld on disbursement of loan '.$loan->loan_number,
+                ]);
+            }
             $loan->update([
                 'status' => LoanStatus::ACTIVE,
                 'calc_amount_receivable' => $amount,

@@ -10,6 +10,8 @@ amount_receivable = principal - security_amount - charges
 disbursement.amount = amount_receivable
 ```
 
+On successful issuance, the loan's saved `calc_security_amount` is automatically credited to the member's security account as a deposit linked to the loan. Existing balances are preserved; an account is created when needed. The transaction records the disbursement date, processing user, and before/after balances. Zero security creates no ledger entry. Issuance and the security credit commit or roll back together, and repeated disbursement attempts cannot credit security again. This applies to both API and web disbursement. Previously issued loans are not backfilled automatically.
+
 Each fee is rounded to two decimal places before summing. VAT retains the existing product rule: its percentage is applied to principal. Security is a separate deduction and is not counted twice in charges. Deductions exceeding principal are rejected.
 
 Example in TZS:

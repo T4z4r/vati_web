@@ -44,11 +44,32 @@ class LoanReceivableTest extends TestCase
         $this->postJson('/api/v1/loans/'.$loan->id.'/disburse', ['method' => 'cash', 'amount' => 1000000])
             ->assertConflict();
         $this->assertDatabaseCount('loan_disbursements', 0);
+        $this->assertDatabaseCount('security_transactions', 0);
+        // A failure after crediting security must roll back issuance and the credit.
+        \App\Models\SecurityTransaction::created(fn () => throw new \RuntimeException('Simulated ledger failure'));
+        try {
+            $this->postJson($url, ['method' => 'cash', 'amount' => 840000])->assertServerError();
+            $this->assertDatabaseCount('loan_disbursements', 0);
+            $this->assertDatabaseCount('security_transactions', 0);
+            $this->assertDatabaseCount('member_security_accounts', 0);
+            $this->assertSame('pending_disbursement', $loan->fresh()->status->value);
+        } finally {
+            \App\Models\SecurityTransaction::flushEventListeners();
+        }
+        // Preserve the member's existing savings when adding the loan security.
+        app(\App\Services\SecurityAccountService::class)->transact($member, $user, 'deposit', 25000);
         $this->postJson($url, ['method' => 'cash', 'amount' => '840000.00'])
             ->assertCreated()->assertJsonPath('data.id', $loan->id)->assertJsonPath('data.status', 'active')
             ->assertJsonPath('data.issued_amount', '840000.00')->assertJsonPath('data.disbursement.amount', '840000.00');
         $this->postJson($url, ['method' => 'cash', 'amount' => 840000])->assertConflict();
         $this->assertDatabaseCount('loan_disbursements', 1);
+        $this->assertDatabaseHas('member_security_accounts', ['member_id' => $member->id, 'balance' => 125000]);
+        $this->assertDatabaseHas('security_transactions', [
+            'loan_id' => $loan->id, 'transaction_type' => 'deposit', 'amount' => 100000,
+            'balance_before' => 25000, 'balance_after' => 125000, 'created_by' => $user->id,
+        ]);
+        $this->assertSame(1, \App\Models\SecurityTransaction::where('loan_id', $loan->id)->count());
+        $this->getJson('/api/v1/members/'.$member->id.'/security')->assertOk()->assertJsonPath('data.balance', 125000);
         $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 840000]);
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('840000.00', $loan->fresh()->calc_amount_receivable);
