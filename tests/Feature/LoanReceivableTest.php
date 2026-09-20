@@ -35,6 +35,7 @@ class LoanReceivableTest extends TestCase
         $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 840000]);
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('840000.00', $loan->fresh()->calc_amount_receivable);
+        $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '840000.00');
     }
 
     public function test_calculator_rejects_deductions_exceeding_principal(): void
