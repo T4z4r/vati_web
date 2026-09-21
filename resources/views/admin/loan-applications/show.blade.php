@@ -199,19 +199,17 @@
                     @endcan
                 @empty<p class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No supporting documents uploaded yet.</p>@endforelse
 
-                @if($status === 'draft')
-                    <form method="POST" enctype="multipart/form-data" action="{{ route('admin.loan-applications.compliance.documents', $application) }}">
-                        @csrf
-                        <label>Document type<select name="document_type">
-                            <option value="">Select document</option>
-                            @foreach(\App\Services\ApplicationComplianceService::SUPPORT_DOCUMENT_LABELS as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
-                            @endforeach
-                        </select></label>
-                        <label>PDF or image<input type="file" name="document" accept=".pdf,image/*" required></label>
-                        <div class="form-actions"><button class="btn btn-gold">Pakia kiambatisho</button></div>
-                    </form>
-                @endif
+                <form method="POST" enctype="multipart/form-data" action="{{ route('admin.loan-applications.compliance.documents', $application) }}">
+                    @csrf
+                    <label>Document type<select name="document_type">
+                        <option value="">Select document</option>
+                        @foreach(\App\Services\ApplicationComplianceService::SUPPORT_DOCUMENT_LABELS as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select></label>
+                    <label>PDF or image<input type="file" name="document" accept=".pdf,image/*" required></label>
+                    <div class="form-actions"><button class="btn btn-gold">Pakia kiambatisho</button></div>
+                </form>
             </div>
         </div>
 
