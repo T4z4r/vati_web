@@ -31,7 +31,6 @@
             <div><small>{{ __('Processing fee') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->processing_fee, 2) }}</strong></div>
             <div><small>{{ __('Insurance fee') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_insurance_fee, 2) }}</strong></div>
             <div><small>{{ __('VAT') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_vat, 2) }}</strong></div>
-            <div><small>{{ __('Total fees and charges') }}</small><strong class="d-block">TZS {{ number_format((float) ($loan->calc_charges ?? $loan->total_fees_and_vat), 2) }}</strong></div>
             <div><small>{{ __('Security amount') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_security_amount, 2) }}</strong></div>
             <div><small>{{ __('Amount receivable after deductions') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->amount_receivable, 2) }}</strong></div>
         </div>
