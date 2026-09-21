@@ -83,7 +83,7 @@ class ApplicationComplianceService
 
     public function addDocument(LoanApplication $application, string $type, UploadedFile $file, User $user, bool $required = false, ?string $remarks = null): LoanDocument
     {
-        $this->ensureDraft($application);
+        $this->ensureDocumentAttachable($application);
 
         return $application->documents()->create([
             'document_type' => $type,
@@ -126,6 +126,20 @@ class ApplicationComplianceService
     {
         if (! in_array($application->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED], true)) {
             throw new DomainException('Compliance evidence can only be changed while the application is a draft or returned for correction.');
+        }
+    }
+
+    private function ensureDocumentAttachable(LoanApplication $application): void
+    {
+        $finalised = [
+            ApplicationStatus::APPROVED,
+            ApplicationStatus::DISBURSED,
+            ApplicationStatus::REJECTED,
+            ApplicationStatus::CANCELLED,
+        ];
+
+        if (in_array($application->status, $finalised, true)) {
+            throw new DomainException('Compliance documents can no longer be attached once the application has been finalised.');
         }
     }
 }
