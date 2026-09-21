@@ -11,11 +11,19 @@ class RepaymentScheduleService
     {
         $count = max(1, (int) $loan->number_of_installments);
 
+        // Tiered per-day rate on the principal amount. Falls back to the weekly
+        // principle-plus-interest split only when no tier matches.
+        $principalNet = (float) $loan->principal_amount;
+        $ratePerDay = $principalNet >= 10_000_000 ? 0.0295
+            : ($principalNet >= 8_000_000 ? 0.036
+            : ($principalNet >= 6_000_000 ? 0.0445 : 0.0600));
+        $perDay = round($principalNet * $ratePerDay, 2);
+
         if ((float) $loan->interest_amount <= 0.009) {
-            // Interest-free schedule: every instalment counts fully toward the balance.
+            // Interest-free schedule: every instalment counts fully toward the balance,
+            // billed at the tiered per-day rate × 7-day weekly period.
             $remainingTotal = round((float) $loan->total_repayment, 2);
-            $perInstallment = intdiv((int) round($remainingTotal * 100), $count) / 100;
-            $weekly = $loan->product->repayment_frequency === 'weekly';
+            $weeklyInstallment = $perDay > 0 ? round($perDay * 7, 2) : round($remainingTotal / $count, 2);
 
             for ($i = 1; $i <= $count; $i++) {
                 $total = $i === $count ? $remainingTotal : min($perInstallment, $remainingTotal);
