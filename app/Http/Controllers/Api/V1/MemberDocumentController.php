@@ -101,6 +101,7 @@ class MemberDocumentController extends ApiController
             'created_at' => $document->created_at?->toIso8601String(),
             'description' => $document->description,
             'download_url' => route('api.members.documents.download', [$member, $document]),
+            'delete_url' => route('api.members.documents.destroy', [$member, $document]),
             'uploaded_by' => $document->uploadedBy ? ['id' => $document->uploadedBy->id, 'name' => $document->uploadedBy->name] : null,
             'uploaded_at' => $document->created_at?->toIso8601String(),
         ];

@@ -86,6 +86,7 @@ class MemberResource extends JsonResource
                 'file_size' => $document->file_size,
                 'description' => $document->description,
                 'file_url' => $document->disk === 'public' ? asset('storage/'.$document->file_path) : route('api.members.documents.download', [$this->resource, $document]),
+                'delete_url' => route('api.members.documents.destroy', [$this->resource, $document]),
                 'size_bytes' => $document->file_size,
                 'status' => $document->status ?? 'uploaded',
                 'created_at' => $document->created_at?->toIso8601String(),

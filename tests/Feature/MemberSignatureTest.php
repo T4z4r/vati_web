@@ -135,6 +135,34 @@ class MemberSignatureTest extends TestCase
         $this->assertCount(0, Storage::disk('signatures')->allFiles());
     }
 
+    public function test_document_delete_url_is_consistent_and_scoped_to_its_member(): void
+    {
+        Storage::fake('public');
+        $created = $this->postJson($this->url(), [
+            'document_type' => 'national_id',
+            'file' => UploadedFile::fake()->image('id.jpg'),
+        ])->assertCreated();
+        $document = MemberDocument::findOrFail($created->json('data.id'));
+        $url = url($this->url().'/'.$document->id);
+        $created->assertJsonPath('data.delete_url', $url);
+        $this->getJson($this->url())->assertOk()->assertJsonPath('data.0.delete_url', $url);
+        $this->getJson('/api/v1/members/'.$this->member->id)->assertOk()
+            ->assertJsonPath('data.documents.0.delete_url', $url);
+
+        $other = $this->member->replicate();
+        $other->membership_number = 'DELETE-OTHER';
+        $other->phone = '255711111119';
+        $other->save();
+        $this->deleteJson(route('api.members.documents.destroy', [$other, $document]))->assertNotFound();
+        Storage::disk('public')->assertExists($document->file_path);
+        $this->assertFalse($document->fresh()->trashed());
+
+        $this->deleteJson($created->json('data.delete_url'))->assertNoContent();
+        $this->assertSoftDeleted('member_documents', ['id' => $document->id]);
+        Storage::disk('public')->assertMissing($document->file_path);
+        $this->deleteJson($url)->assertNotFound();
+    }
+
     public function test_cleanup_retries_pending_deletion_and_removes_only_stale_orphans(): void
     {
         $response = $this->postJson($this->url(), ['document_type' => 'signature', 'file' => UploadedFile::fake()->image('signature.png')])->assertCreated();
