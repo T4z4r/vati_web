@@ -11,6 +11,10 @@ class LoanProduct extends Model
 
     protected $guarded = [];
 
+    protected $attributes = [
+        'vat_percentage' => 0.18,
+    ];
+
     protected function casts(): array
     {
         return [

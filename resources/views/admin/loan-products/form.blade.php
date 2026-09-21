@@ -52,7 +52,7 @@
                         name="insurance_percentage"
                         value="{{ old('insurance_percentage', $product->insurance_percentage ?? 0) }}"
                         required></label><label>{{ __('VAT (%)') }}<input type="number" step="0.0001"
-                        name="vat_percentage" value="{{ old('vat_percentage', $product->vat_percentage ?? 18) }}"
+                        name="vat_percentage" value="{{ old('vat_percentage', $product->vat_percentage ?? 0.18) }}"
                         required></label><label class="check"><input style="width:auto;margin:0" type="checkbox"
                         name="status" value="1" @checked(old('status', $product->status ?? true))> {{ __('Product is active') }}</label>
             </div>
