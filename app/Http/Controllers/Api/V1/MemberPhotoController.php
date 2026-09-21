@@ -10,7 +10,7 @@ class MemberPhotoController extends ApiController
 {
     public function store(Request $request, Member $member)
     {
-        $request->validate(['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200']]);
+        $request->validate(['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
         $oldPath = $member->photo_path;
         $path = $request->file('photo')->store('members/photos', 'public');
         $member->update(['photo_path' => $path]);
