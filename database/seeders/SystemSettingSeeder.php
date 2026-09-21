@@ -22,10 +22,10 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'min_loan_amount', 'value' => '50000', 'type' => 'number', 'group' => 'loan_defaults', 'description' => 'Minimum loan amount (TZS).'],
             ['key' => 'max_loan_amount', 'value' => '5000000', 'type' => 'number', 'group' => 'loan_defaults', 'description' => 'Maximum loan amount (TZS).'],
 
-            ['key' => 'default_processing_fee', 'value' => '2.50', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default processing fee percentage.'],
-            ['key' => 'default_transaction_fee', 'value' => '1.50', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default transaction fee percentage.'],
+            ['key' => 'default_processing_fee', 'value' => '1.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default processing fee percentage.'],
+            ['key' => 'default_transaction_fee', 'value' => '0.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default transaction fee percentage.'],
             ['key' => 'default_security_percentage', 'value' => '10.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default security (collateral) percentage of principal.'],
-            ['key' => 'default_vat_rate', 'value' => '18.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default VAT percentage applied to fees.'],
+            ['key' => 'default_vat_rate', 'value' => '18.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default VAT percentage applied to principal.'],
             ['key' => 'membership_fee', 'value' => '5000', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Member admission fee (TZS).'],
             ['key' => 'passbook_replacement_fee', 'value' => '1000', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Passbook replacement fee (TZS).'],
 

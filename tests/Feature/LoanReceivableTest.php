@@ -20,16 +20,16 @@ class LoanReceivableTest extends TestCase
         $group = MemberGroup::create(['branch_id' => $branch->id, 'group_code' => 'FEE-G', 'group_name' => 'Fees']);
         $user = User::factory()->create();
         $member = Member::create(['branch_id' => $branch->id, 'group_id' => $group->id, 'membership_number' => 'FEE-M', 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255711111112']);
-        $product = LoanProduct::create(['name' => 'Fees Loan', 'code' => 'FEE', 'minimum_amount' => 1000, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'weekly', 'processing_fee_percentage' => 3, 'insurance_percentage' => 2, 'security_percentage' => 10]);
+        $product = LoanProduct::create(['name' => 'Fees Loan', 'code' => 'FEE', 'minimum_amount' => 1000, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'weekly', 'security_percentage' => 10]);
         $application = LoanApplication::create(['application_number' => 'FEE-A', 'member_id' => $member->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'loan_product_id' => $product->id, 'requested_amount' => 1000000, 'duration_months' => 6, 'status' => 'submitted', 'created_by' => $user->id]);
         Sanctum::actingAs($user);
         $this->getJson('/api/v1/loan-applications')->assertOk()
-            ->assertJsonPath('data.0.amount_receivable', '848200.00')
-            ->assertJsonPath('data.0.calculator_breakdown.amount_receivable', '848200.00')
-            ->assertJsonPath('data.0.calculator_breakdown.vat', '1800.00')
+            ->assertJsonPath('data.0.amount_receivable', '695000.00')
+            ->assertJsonPath('data.0.calculator_breakdown.amount_receivable', '695000.00')
+            ->assertJsonPath('data.0.calculator_breakdown.vat', '180000.00')
             ->assertJsonStructure(['data', 'links', 'meta']);
-        $application->update(['calc_total_repayment' => 1000000, 'calc_security_amount' => 100000, 'calc_charges' => 51800]);
-        $this->getJson('/api/v1/loan-applications')->assertOk()->assertJsonPath('data.0.amount_receivable', '848200.00');
+        $application->update(['calc_total_repayment' => 1000000, 'calc_security_amount' => 100000, 'calc_charges' => 205000]);
+        $this->getJson('/api/v1/loan-applications')->assertOk()->assertJsonPath('data.0.amount_receivable', '695000.00');
         $application->update(['recommended_amount' => 1100000]);
         try {
             app(LoanApprovalService::class)->decide($application, $user, 'approved');
@@ -41,23 +41,23 @@ class LoanReceivableTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status->value);
         $application->update(['recommended_amount' => null]);
         $loan = app(LoanApprovalService::class)->decide($application, $user, 'approved')->loan;
-        $this->assertSame('848200.00', $loan->amount_receivable);
-        $this->assertSame('51800.00', $loan->calc_charges);
-        $this->assertSame('1800.00', $loan->calc_vat);
-        $this->assertSame('0.1800', $product->fresh()->vat_percentage);
+        $this->assertSame('695000.00', $loan->amount_receivable);
+        $this->assertSame('205000.00', $loan->calc_charges);
+        $this->assertSame('180000.00', $loan->calc_vat);
+        $this->assertSame('18.0000', $product->fresh()->vat_percentage);
         $product->update(['processing_fee_percentage' => 50]);
         // An old cached receivable must not allow over-disbursement.
         $loan->update(['calc_amount_receivable' => 1000000]);
         Sanctum::actingAs($user);
-        $this->getJson('/api/v1/loans')->assertOk()->assertJsonPath('data.0.amount_receivable', '848200.00')->assertJsonPath('data.0.charges', '51800.00');
+        $this->getJson('/api/v1/loans')->assertOk()->assertJsonPath('data.0.amount_receivable', '695000.00')->assertJsonPath('data.0.charges', '205000.00');
         $url = '/api/v1/loans/'.$loan->id.'/disburse';
-        $this->postJson($url, ['method' => 'cash', 'amount' => 848200])->assertConflict();
+        $this->postJson($url, ['method' => 'cash', 'amount' => 695000])->assertConflict();
         foreach ([null, 0] as $invalidSavedAmount) {
             $loan->update(['calc_amount_receivable' => $invalidSavedAmount]);
-            $this->postJson($url, ['method' => 'cash', 'amount' => 848200])->assertConflict();
+            $this->postJson($url, ['method' => 'cash', 'amount' => 695000])->assertConflict();
         }
-        $loan->update(['calc_amount_receivable' => 848200]);
-        foreach ([null, 0, -1, 'invalid', '848200.001'] as $invalidAmount) {
+        $loan->update(['calc_amount_receivable' => 695000]);
+        foreach ([null, 0, -1, 'invalid', '695000.001'] as $invalidAmount) {
             $this->postJson($url, ['method' => 'cash', 'amount' => $invalidAmount])->assertUnprocessable()->assertJsonValidationErrors('amount');
         }
         $this->postJson($url, ['method' => 'cash'])->assertUnprocessable()->assertJsonValidationErrors('amount');
@@ -68,7 +68,7 @@ class LoanReceivableTest extends TestCase
         // A failure after crediting security must roll back issuance and the credit.
         \App\Models\SecurityTransaction::created(fn () => throw new \RuntimeException('Simulated ledger failure'));
         try {
-            $this->postJson($url, ['method' => 'cash', 'amount' => 848200])->assertServerError();
+            $this->postJson($url, ['method' => 'cash', 'amount' => 695000])->assertServerError();
             $this->assertDatabaseCount('loan_disbursements', 0);
             $this->assertDatabaseCount('security_transactions', 0);
             $this->assertDatabaseCount('member_security_accounts', 0);
@@ -78,10 +78,10 @@ class LoanReceivableTest extends TestCase
         }
         // Preserve the member's existing savings when adding the loan security.
         app(\App\Services\SecurityAccountService::class)->transact($member, $user, 'deposit', 25000);
-        $this->postJson($url, ['method' => 'cash', 'amount' => '848200.00'])
+        $this->postJson($url, ['method' => 'cash', 'amount' => '695000.00'])
             ->assertCreated()->assertJsonPath('data.id', $loan->id)->assertJsonPath('data.status', 'active')
-            ->assertJsonPath('data.issued_amount', '848200.00')->assertJsonPath('data.disbursement.amount', '848200.00');
-        $this->postJson($url, ['method' => 'cash', 'amount' => 848200])->assertConflict();
+            ->assertJsonPath('data.issued_amount', '695000.00')->assertJsonPath('data.disbursement.amount', '695000.00');
+        $this->postJson($url, ['method' => 'cash', 'amount' => 695000])->assertConflict();
         $this->assertDatabaseCount('loan_disbursements', 1);
         $this->assertDatabaseHas('member_security_accounts', ['member_id' => $member->id, 'balance' => 125000]);
         $this->assertDatabaseHas('security_transactions', [
@@ -90,10 +90,10 @@ class LoanReceivableTest extends TestCase
         ]);
         $this->assertSame(1, \App\Models\SecurityTransaction::where('loan_id', $loan->id)->count());
         $this->getJson('/api/v1/members/'.$member->id.'/security')->assertOk()->assertJsonPath('data.balance', 125000);
-        $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 848200]);
+        $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 695000]);
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
-        $this->assertSame('848200.00', $loan->fresh()->calc_amount_receivable);
-        $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '848200.00');
+        $this->assertSame('695000.00', $loan->fresh()->calc_amount_receivable);
+        $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '695000.00');
         $this->assertSame('1000000.00', $loan->fresh()->total_balance);
         $this->assertSame(1000000.0, round((float) $loan->installments()->sum('total_due'), 2));
         $this->assertSame(26, $loan->installments()->count());
@@ -111,6 +111,27 @@ class LoanReceivableTest extends TestCase
         $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 10000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => 'monthly', 'processing_fee_percentage' => 80, 'security_percentage' => 30]);
         $this->expectException(\DomainException::class);
         app(LoanCalculatorService::class)->calculate($product, 1000, 6);
+    }
+
+    public function test_only_four_principal_deductions_apply_even_with_legacy_extra_fees(): void
+    {
+        $product = new LoanProduct([
+            'minimum_amount' => 1, 'maximum_amount' => 2000000,
+            'minimum_duration_months' => 1, 'maximum_duration_months' => 12,
+            'repayment_frequency' => 'monthly', 'annual_interest_rate' => 24,
+            'transaction_fee_percentage' => 5, 'membership_fee' => 5000,
+        ]);
+
+        $figures = app(LoanCalculatorService::class)->calculate($product, 1000000, 6);
+
+        $this->assertSame(10000.0, $figures['processing_fee']);
+        $this->assertSame(15000.0, $figures['insurance_fee']);
+        $this->assertSame(180000.0, $figures['vat']);
+        $this->assertSame(100000.0, $figures['security_amount']);
+        $this->assertSame(205000.0, $figures['charges']);
+        $this->assertSame(695000.0, $figures['amount_receivable']);
+        $this->assertSame(1000000.0, $figures['total_repayment']);
+        $this->assertSame(0.0, $figures['interest']);
     }
 
     public function test_every_duration_keeps_repayment_equal_to_principal(): void

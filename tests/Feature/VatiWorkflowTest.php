@@ -56,7 +56,7 @@ class VatiWorkflowTest extends TestCase
             'interest_method' => 'flat', 'repayment_frequency' => 'weekly',
             'security_percentage' => 10, 'processing_fee_percentage' => 1,
             'insurance_percentage' => 1.5, 'transaction_fee_percentage' => 0, 'membership_fee' => 0,
-            'vat_percentage' => 0.18, 'required_group_witnesses' => 2,
+            'vat_percentage' => 18, 'required_group_witnesses' => 2,
         ]);
         $this->term = LoanTerm::create(['version' => 'TEST-1', 'title' => 'Test terms', 'body' => 'Test declaration', 'effective_from' => today(), 'is_active' => true]);
     }
@@ -150,9 +150,9 @@ class VatiWorkflowTest extends TestCase
         $figures = $calculator->calculate($this->product, 1000000, 6);
 
         $this->assertSame(26, $figures['installment_count']);
-        $this->assertSame(44500.0, $figures['installment_amount']);
+        $this->assertSame(38461.53, $figures['installment_amount']);
         $this->assertSame(0.0, $figures['interest']);
-        $this->assertSame(1157000.0, $figures['total_repayment']);
+        $this->assertSame(1000000.0, $figures['total_repayment']);
         $this->expectException(\DomainException::class);
         $calculator->calculate($this->product, 50000, 6);
     }

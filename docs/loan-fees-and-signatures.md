@@ -25,12 +25,12 @@ Example in TZS:
 | Item | Amount |
 | --- | ---: |
 | Principal | 1,000,000.00 |
-| Processing fee (3%) | 30,000.00 |
-| Insurance (2%) | 20,000.00 |
-| VAT (1%) | 10,000.00 |
-| Total fees and charges | 60,000.00 |
+| Processing fee (1%) | 10,000.00 |
+| Insurance (1.5%) | 15,000.00 |
+| VAT (18%) | 180,000.00 |
+| Total fees and charges | 205,000.00 |
 | Security (10%) | 100,000.00 |
-| Amount receivable / amount issued | **840,000.00** |
+| Amount receivable / amount issued | **695,000.00** |
 
 Approval already saves the approved amount's calculator breakdown on the loan. Disbursement now uses those saved charges and security, not the current product settings or a client-supplied amount. The audit entry records the net amount and deductions. Principal, repayment schedules, and outstanding debt retain their existing meaning.
 
