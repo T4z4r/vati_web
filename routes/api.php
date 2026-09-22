@@ -105,7 +105,7 @@ Route::prefix('v1')->group(function () {
         Route::post('group-visits', [GroupVisitController::class, 'store'])->name('group-visits.store');
         Route::get('group-visits/{group_visit}', [GroupVisitController::class, 'show'])->name('group-visits.show');
         Route::match(['POST', 'PUT', 'PATCH'], 'group-visits/{group_visit}', [GroupVisitController::class, 'update'])->name('group-visits.update');
-        Route::delete('group-visits/{group_visit}', [GroupVisitController::class, 'destroy'])->name('group-visits.destroy');
+        Route::post('group-visits/{group_visit}/delete', [GroupVisitController::class, 'destroy'])->name('group-visits.delete');
         Route::get('members', [MemberController::class, 'index'])->name('members.index');
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::post('members', [MemberController::class, 'store'])->name('members.store');
