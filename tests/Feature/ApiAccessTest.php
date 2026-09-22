@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\Branch;
+use App\Models\GroupMembership;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
@@ -178,6 +179,51 @@ class ApiAccessTest extends TestCase
                 ->assertStatus(409)
                 ->assertJsonPath('message', 'Only applications that are not recommended can be deleted.');
             $this->assertNotSoftDeleted('loan_applications', ['id' => $application->id]);
+        }
+    }
+
+    private function activeApplicant(MemberGroup $group, Branch $branch, User $user): Member
+    {
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'status' => 'active', 'created_by' => $user->id]);
+        GroupMembership::create(['member_id' => $member->id, 'group_id' => $group->id, 'joined_at' => today(), 'status' => 'active']);
+
+        return $member;
+    }
+
+    private function updatePayload(Member $member, LoanProduct $product, float $amount): array
+    {
+        return [
+            'member_id' => $member->id,
+            'loan_product_id' => $product->id,
+            'application_type' => 'main',
+            'requested_amount' => $amount,
+            'duration_months' => 6,
+        ];
+    }
+
+    public function test_update_non_draft_loan_application_is_allowed(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = $this->activeApplicant($group, $branch, $user);
+        $application = LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 6, 'application_type' => 'main', 'status' => 'submitted', 'created_by' => $user->id]);
+
+        $this->putJson("/api/v1/loan-applications/{$application->id}", $this->updatePayload($member, $product, 5000))
+            ->assertOk()
+            ->assertJsonPath('data.requested_amount', 5000);
+        $this->assertDatabaseHas('loan_applications', ['id' => $application->id, 'requested_amount' => 5000, 'status' => 'submitted']);
+    }
+
+    public function test_update_finalised_loan_application_is_blocked(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = $this->activeApplicant($group, $branch, $user);
+        foreach (['approved', 'disbursed', 'rejected', 'cancelled'] as $status) {
+            $application = LoanApplication::create(['application_number' => 'APP-'.$status, 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 6, 'application_type' => 'main', 'status' => $status, 'created_by' => $user->id]);
+
+            $this->putJson("/api/v1/loan-applications/{$application->id}", $this->updatePayload($member, $product, 5000))
+                ->assertUnprocessable()
+                ->assertJsonPath('message', 'Finalised loan applications cannot be edited.');
+            $this->assertDatabaseHas('loan_applications', ['id' => $application->id, 'requested_amount' => 1000]);
         }
     }
 

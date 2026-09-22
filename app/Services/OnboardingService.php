@@ -224,8 +224,8 @@ class OnboardingService
     {
         return DB::transaction(function () use ($application, $data, $user) {
             $application = LoanApplication::query()->lockForUpdate()->findOrFail($application->id);
-            if ($application->status->value !== 'draft') {
-                throw new DomainException('Only draft loan applications can be edited.');
+            if (in_array($application->status->value, ['approved', 'disbursed', 'rejected', 'cancelled'], true)) {
+                throw new DomainException('Finalised loan applications cannot be edited.');
             }
             if ((int) $data['member_id'] !== (int) $application->member_id) {
                 throw new DomainException('The applicant cannot be changed on an existing draft. Create a new application instead.');
