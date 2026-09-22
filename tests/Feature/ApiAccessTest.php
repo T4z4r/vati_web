@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\Branch;
+use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
@@ -63,6 +64,53 @@ class ApiAccessTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data.applications')
             ->assertJsonPath('data.applications.0.application_number', 'APP-B');
+    }
+
+    private function baseData(): array
+    {
+        $region = Region::create(['name' => 'Test Region']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Test Area']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'BR1', 'branch_name' => 'Branch']);
+        $group = MemberGroup::create(['branch_id' => $branch->id, 'group_code' => 'G1', 'group_name' => 'Group']);
+        $product = LoanProduct::create(['name' => 'Test Loan', 'code' => 'TEST', 'minimum_amount' => 1000, 'maximum_amount' => 1000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'annual_interest_rate' => 24, 'repayment_frequency' => 'weekly', 'required_group_witnesses' => 0]);
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        Sanctum::actingAs($user);
+
+        return compact('branch', 'group', 'product', 'user');
+    }
+
+    public function test_member_without_loans_or_applications_can_be_deleted(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+
+        $this->postJson("/api/v1/members/{$member->id}/delete")->assertNoContent();
+        $this->assertSoftDeleted('members', ['id' => $member->id]);
+    }
+
+    public function test_member_with_any_loan_application_cannot_be_deleted(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+
+        $this->postJson("/api/v1/members/{$member->id}/delete")
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'This member has loans or loan applications and cannot be deleted.');
+        $this->assertNotSoftDeleted('members', ['id' => $member->id]);
+    }
+
+    public function test_member_with_a_loan_cannot_be_deleted(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        $application = LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+        Loan::create(['loan_number' => 'L-1', 'loan_application_id' => $application->id, 'member_id' => $member->id, 'group_id' => $group->id, 'loan_product_id' => $product->id, 'branch_id' => $branch->id, 'principal_amount' => 1000, 'interest_amount' => 200, 'total_repayment' => 1200, 'principal_balance' => 1000, 'interest_balance' => 200, 'total_balance' => 1200, 'number_of_installments' => 1, 'installment_amount' => 1200, 'status' => 'pending_disbursement']);
+
+        $this->postJson("/api/v1/members/{$member->id}/delete")
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'This member has loans or loan applications and cannot be deleted.');
+        $this->assertNotSoftDeleted('members', ['id' => $member->id]);
     }
 
     public function test_api_access_requires_authentication(): void

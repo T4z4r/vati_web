@@ -110,7 +110,7 @@ Route::prefix('v1')->group(function () {
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::post('members', [MemberController::class, 'store'])->name('members.store');
         Route::match(['POST', 'PUT', 'PATCH'], 'members/{member}', [MemberController::class, 'update'])->name('members.update');
-        Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+        Route::post('members/{member}/delete', [MemberController::class, 'destroy'])->name('members.delete');
         Route::match(['POST', 'PUT'], 'members/{member}/kyc', [MemberKycController::class, 'update']);
         Route::post('members/{member}/photo', [MemberPhotoController::class, 'store']);
         Route::get('members/{member}/passbook', [MemberPassbookController::class, 'show']);

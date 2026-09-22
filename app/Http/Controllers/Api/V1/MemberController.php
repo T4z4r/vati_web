@@ -40,7 +40,7 @@ class MemberController extends ApiController
 
     public function destroy(Request $request, Member $member)
     {
-        abort_if($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists(), 409, 'This member has loan history and cannot be deleted.');
+        abort_if($member->loans()->exists() || $member->loanApplications()->exists(), 409, 'This member has loans or loan applications and cannot be deleted.');
         $force = $request->boolean('force');
         $force ? $member->forceDelete() : $member->delete();
         activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force])->log($force ? 'Member permanently deleted' : 'Member deleted');
