@@ -33,6 +33,8 @@ class LoanApplicationResource extends JsonResource
         return [
             'id' => $this->id,
             'application_number' => $this->application_number,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
             'member' => new MemberResource($this->whenLoaded('member')),
             'product' => $this->whenLoaded('product'),
             'group' => $this->whenLoaded('group'),

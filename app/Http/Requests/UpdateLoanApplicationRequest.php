@@ -53,6 +53,7 @@ class UpdateLoanApplicationRequest extends FormRequest
             'application_type' => ['sometimes', 'required', Rule::in(['main', 'refinance', 'top_up'])],
             'requested_amount' => ['sometimes', 'required', 'numeric', 'min:'.($product?->minimum_amount ?? 0), 'max:'.($product?->maximum_amount ?? PHP_INT_MAX)],
             'duration_months' => ['sometimes', 'required', 'integer', 'min:'.($product?->minimum_duration_months ?? 1), 'max:'.($product?->maximum_duration_months ?? 120)],
+            'created_at' => ['nullable', 'date'],
             'existing_loan_balance' => ['nullable', 'numeric', 'min:0'],
             'refinancing_amount' => ['nullable', 'numeric', 'min:0'],
             'increment_amount' => ['nullable', 'numeric', 'min:0'],

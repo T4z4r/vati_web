@@ -88,6 +88,8 @@
                         value="{{ old('requested_amount', $application->requested_amount) }}" required></label>
                 <label>Muda (miezi)<input id="months" type="number" min="1" name="duration_months"
                         value="{{ old('duration_months', $application->duration_months) }}" required></label>
+                <label>Tarehe ya ombi (Application date)<input type="date" name="created_at"
+                        value="{{ old('created_at', $application->created_at?->toDateString() ?? now()->toDateString()) }}"></label>
                 <label>Makadirio ya jumla ya marejesho<input id="estimate" readonly
                         placeholder="Chagua bidhaa na masharti"></label>
                 <label>Makadirio ya gharama<input id="charges" readonly placeholder="Chagua bidhaa na masharti"></label>

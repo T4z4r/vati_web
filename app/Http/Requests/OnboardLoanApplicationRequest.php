@@ -57,6 +57,7 @@ class OnboardLoanApplicationRequest extends FormRequest
             'application_type' => ['required', Rule::in(['main', 'refinance', 'top_up'])],
             'requested_amount' => ['required', 'numeric', 'min:'.($product?->minimum_amount ?? 0), 'max:'.($product?->maximum_amount ?? PHP_INT_MAX)],
             'duration_months' => ['required', 'integer', 'min:'.($product?->minimum_duration_months ?? 1), 'max:'.($product?->maximum_duration_months ?? 120)],
+            'created_at' => ['nullable', 'date'],
             'existing_loan_balance' => ['nullable', 'numeric', 'min:0'],
             'refinancing_amount' => ['nullable', 'numeric', 'min:0'],
             'increment_amount' => ['nullable', 'numeric', 'min:0'],

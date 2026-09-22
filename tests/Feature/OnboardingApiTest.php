@@ -9,6 +9,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -154,6 +155,54 @@ class OnboardingApiTest extends TestCase
         ])->assertCreated()
             ->assertJsonPath('data.loan_officer.id', $officer->id)
             ->assertJsonPath('data.loan_officer_id', $officer->id);
+    }
+
+    public function test_loan_application_creation_persists_provided_created_at(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $region = Region::create(['name' => 'Dar es Salaam']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Kinondoni']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'KIN-03', 'branch_name' => 'Kinondoni']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('super_admin');
+        Sanctum::actingAs($admin);
+        $groupId = $this->postJson('/api/v1/onboarding/groups', [
+            'branch_id' => $branch->id,
+            'group_code' => 'KIN-G03',
+            'group_name' => 'CreatedAt Group',
+            'meeting_day' => 'Monday',
+            'location' => 'Kinondoni',
+        ])->json('data.id');
+
+        $memberId = $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => $branch->id, 'group_id' => $groupId, 'first_name' => 'Asha', 'last_name' => 'Musa',
+            'phone' => '255700000020',
+        ])->json('data.id');
+
+        $product = LoanProduct::create([
+            'name' => 'Created At Loan', 'code' => 'CREATED', 'minimum_amount' => 100000,
+            'maximum_amount' => 5000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12,
+            'repayment_frequency' => 'monthly', 'status' => true,
+        ]);
+
+        $response = $this->postJson('/api/v1/loan-applications', [
+            'member_id' => $memberId,
+            'loan_product_id' => $product->id,
+            'application_type' => 'main',
+            'requested_amount' => 600000,
+            'duration_months' => 6,
+            'loan_purpose' => 'Restock inventory',
+            'created_at' => '2024-05-01',
+        ])->assertCreated()
+            ->assertJsonStructure(['data' => ['id', 'application_number', 'created_at']]);
+
+        $returnedCreatedAt = \Illuminate\Support\Carbon::parse($response->json('data.created_at'))
+            ->setTimezone(config('app.timezone'))->toDateString();
+        $this->assertSame('2024-05-01', $returnedCreatedAt);
+
+        $applicationId = $response->json('data.id');
+        $createdAt = DB::table('loan_applications')->where('id', $applicationId)->value('created_at');
+        $this->assertStringStartsWith('2024-05-01', (string) $createdAt);
     }
 
     public function test_member_onboarding_allows_missing_and_duplicate_national_ids(): void
