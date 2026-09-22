@@ -9,6 +9,7 @@ use App\Models\LoanInstallmentRecord;
 use App\Models\LoanSecurityTransaction;
 use App\Services\DisbursementService;
 use App\Services\ExportService;
+use App\Services\LoanRevertService;
 use App\Services\SettlementService;
 use App\Services\VatCorrectionService;
 use DomainException;
@@ -96,6 +97,19 @@ class LoanController extends Controller
             ->log('Loan figures autocorrected from the loan page');
 
         return back()->with('success', $result['message']);
+    }
+
+    public function revert(Request $request, Loan $loan, LoanRevertService $service)
+    {
+        try {
+            $result = $service->revert($loan, $request->user());
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.loan-applications.show', $result['application_id'])
+            ->with('success', $result['message']);
     }
 
     private function branchId(Request $request): ?int

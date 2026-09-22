@@ -237,6 +237,18 @@
                         </div>
                     </form>
                 </div>
+                <div class="card">
+                    <div class="card-head">
+                        <h2>{{ __('Revert to application') }}</h2>
+                    </div>
+                    <form class="card-body" method="POST" action="{{ route('admin.loans.revert', $loan) }}">@csrf<p
+                            class="muted">
+                            {{ __('Delete this loan and return its application to approved. Only possible when the loan has no payments or security activity.') }}</p>
+                        <div class="form-actions"><button class="btn btn-danger"
+                                data-confirm="{{ __('Delete this loan and revert its application to approved? This cannot be undone.') }}">{{ __('Revert loan') }}</button>
+                        </div>
+                    </form>
+                </div>
                 <br>
             @endif
             <div class="card">
