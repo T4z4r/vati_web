@@ -102,6 +102,57 @@
     </div>
 </div>
 
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-head"><h2>{{ __('Force Delete Records by Table') }}</h2></div>
+    <div class="card-body">
+        <p style="margin-bottom: 1rem;">{{ __('Hard-delete every row in a specific table, including soft-deleted records. System tables (users, roles, settings, number sequences) are excluded from this list.') }}</p>
+        <form id="tableForm" method="POST" action="{{ route('admin.system.data.tables.delete') }}">
+            @csrf
+            <input type="hidden" name="table" id="tableInput" value="">
+            <input type="hidden" name="expected_phrase" value="DELETE ALL DATA">
+
+            <div class="form-grid">
+                <label>
+                    {{ __('Table') }}
+                    <select id="tableSelect" required>
+                        <option value="">{{ __('Select table...') }}</option>
+                        @foreach($tables as $table)
+                        <option value="{{ $table['table'] }}">{{ __($table['label']) }} ({{ number_format($table['count']) }} {{ __('records') }})</option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" id="tablePreviewBtn">{{ __('Preview') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" id="tablePreviewCard" style="margin-top: 1rem; display: none;">
+    <div class="card-head"><h2>{{ __('Preview') }}</h2></div>
+    <div class="card-body">
+        <div id="tablePreviewContent"></div>
+
+        <div id="tableDeleteSection" style="display:none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #dee2e6);">
+            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <strong>{{ __('WARNING: This hard-deletes the selected records (or every row in the table). Irreversible.') }}</strong>
+                <p style="margin: 0.5rem 0 0;">{{ __('Type') }} <code>DELETE ALL DATA</code> {{ __('to confirm.') }}</p>
+            </div>
+            <div class="form-grid">
+                <label>
+                    {{ __('Confirmation Phrase') }}
+                    <input type="text" id="tableConfirmationInput" placeholder="DELETE ALL DATA" required>
+                </label>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-danger" id="tableDeleteBtn" disabled>{{ __('Force Delete Selected') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const previewBtn = document.getElementById('previewBtn');
@@ -208,6 +259,127 @@ purgeBtn.addEventListener('click', () => {
         reverseButtons: true,
     }).then(result => {
         if (result.isConfirmed) form.submit();
+    });
+});
+
+const tableSelect = document.getElementById('tableSelect');
+const tableInput = document.getElementById('tableInput');
+const tableForm = document.getElementById('tableForm');
+const tablePreviewBtn = document.getElementById('tablePreviewBtn');
+const tablePreviewCard = document.getElementById('tablePreviewCard');
+const tableConfirmationInput = document.getElementById('tableConfirmationInput');
+const tableDeleteBtn = document.getElementById('tableDeleteBtn');
+
+tableConfirmationInput.addEventListener('input', () => {
+    tableDeleteBtn.disabled = tableConfirmationInput.value !== 'DELETE ALL DATA';
+});
+
+tableSelect.addEventListener('change', () => {
+    tableInput.value = tableSelect.value;
+    tablePreviewCard.style.display = 'none';
+});
+
+tablePreviewBtn.addEventListener('click', async () => {
+    if (!tableSelect.value) { alert('{{ __("Please select a table.") }}'); return; }
+
+    tableInput.value = tableSelect.value;
+    tablePreviewBtn.disabled = true;
+    tablePreviewBtn.textContent = '{{ __("Loading...") }}';
+
+    try {
+        const resp = await fetch('{{ route("admin.system.data.tables.preview") }}?table=' + encodeURIComponent(tableSelect.value), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json();
+
+        if (!data.success) { alert(data.message || 'Error'); return; }
+
+        tablePreviewCard.style.display = 'block';
+        const rows = data.data.rows || [];
+        const count = data.data.count || 0;
+
+        let html = '<div class="detail"><small>{{ __("Records found") }}</small><strong>' + count.toLocaleString() + '</strong></div>';
+        if (rows.length < count) {
+            html += '<p style="margin-top: 0.5rem;">{{ __("Showing the latest") }} ' + rows.length + ' {{ __("of") }} ' + count.toLocaleString() + ' {{ __("records. Leave all boxes unchecked to delete every row.") }}</p>';
+        }
+
+        if (rows.length) {
+            html += '<div class="table-wrap" style="margin-top: 1rem;"><table><thead><tr>' +
+                '<th class="col-check"><label title="{{ __("Select all") }}"><input type="checkbox" id="tableSelectAll"></label></th>' +
+                '<th>{{ __("ID") }}</th><th>{{ __("Record") }}</th></tr></thead><tbody>';
+            html += rows.map(r =>
+                '<tr><td><input type="checkbox" class="table-row-check" value="' + r.id + '" data-label="' + String(r.label).replace(/"/g, '&quot;') + '"></td>' +
+                '<td>' + r.id + '</td><td>' + String(r.label).replace(/</g, '&lt;') + '</td></tr>'
+            ).join('');
+            html += '</tbody></table></div>';
+        }
+        document.getElementById('tablePreviewContent').innerHTML = html;
+
+        const deleteSection = document.getElementById('tableDeleteSection');
+        if (count === 0) {
+            deleteSection.style.display = 'none';
+        } else {
+            deleteSection.style.display = 'block';
+        }
+
+        const selectAll = document.getElementById('tableSelectAll');
+        selectAll.addEventListener('change', () => {
+            document.querySelectorAll('.table-row-check').forEach(cb => { cb.checked = selectAll.checked; });
+            updateTableDeleteLabel();
+        });
+        document.querySelectorAll('.table-row-check').forEach(cb => cb.addEventListener('change', () => {
+            document.getElementById('tableSelectAll').checked =
+                document.querySelectorAll('.table-row-check').length > 0 &&
+                [...document.querySelectorAll('.table-row-check')].every(c => c.checked);
+            updateTableDeleteLabel();
+        }));
+        updateTableDeleteLabel();
+    } catch (e) {
+        alert('Network error.');
+    } finally {
+        tablePreviewBtn.disabled = false;
+        tablePreviewBtn.textContent = '{{ __("Preview") }}';
+    }
+});
+
+function updateTableDeleteLabel() {
+    const checked = document.querySelectorAll('.table-row-check:checked');
+    const btn = document.getElementById('tableDeleteBtn');
+    btn.textContent = checked.length
+        ? '{{ __("Force Delete") }} ' + checked.length + ' {{ __("Selected") }}'
+        : '{{ __("Force Delete All Rows") }}';
+}
+
+tableDeleteBtn.addEventListener('click', () => {
+    const selected = [...document.querySelectorAll('.table-row-check:checked')].map(cb => cb.value);
+    const scope = selected.length ? selected.length + ' {{ __("selected record(s)") }}' : '{{ __("every row") }}';
+    Swal.fire({
+        title: '{{ __("Force delete") }} ' + scope + '?',
+        text: '{{ __("The data will be permanently hard-deleted. This cannot be undone.") }}',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '{{ __("Yes, force delete") }}',
+        cancelButtonText: '{{ __("Cancel") }}',
+        confirmButtonColor: '#c62828',
+        cancelButtonColor: '#68736b',
+        reverseButtons: true,
+    }).then(result => {
+        if (result.isConfirmed) {
+            tableForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+            selected.forEach(id => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'ids[]';
+                hidden.value = id;
+                tableForm.appendChild(hidden);
+            });
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'confirmation_phrase';
+            hidden.value = tableConfirmationInput.value;
+            tableForm.appendChild(hidden);
+            tableForm.submit();
+        }
     });
 });
 </script>

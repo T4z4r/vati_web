@@ -56,7 +56,7 @@ class VatiWorkflowTest extends TestCase
             'interest_method' => 'flat', 'repayment_frequency' => 'weekly',
             'security_percentage' => 10, 'processing_fee_percentage' => 1,
             'insurance_percentage' => 1.5, 'transaction_fee_percentage' => 0, 'membership_fee' => 0,
-            'vat_percentage' => 18, 'required_group_witnesses' => 2,
+            'vat_percentage' => 0.18, 'required_group_witnesses' => 2,
         ]);
         $this->term = LoanTerm::create(['version' => 'TEST-1', 'title' => 'Test terms', 'body' => 'Test declaration', 'effective_from' => today(), 'is_active' => true]);
     }

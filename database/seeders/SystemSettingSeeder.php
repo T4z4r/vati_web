@@ -25,7 +25,7 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'default_processing_fee', 'value' => '1.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default processing fee percentage.'],
             ['key' => 'default_transaction_fee', 'value' => '0.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default transaction fee percentage.'],
             ['key' => 'default_security_percentage', 'value' => '10.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default security (collateral) percentage of principal.'],
-            ['key' => 'default_vat_rate', 'value' => '18.00', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default VAT percentage applied to principal.'],
+            ['key' => 'default_vat_rate', 'value' => '0.18', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Default VAT percentage applied to principal.'],
             ['key' => 'membership_fee', 'value' => '5000', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Member admission fee (TZS).'],
             ['key' => 'passbook_replacement_fee', 'value' => '1000', 'type' => 'number', 'group' => 'fee_defaults', 'description' => 'Passbook replacement fee (TZS).'],
 

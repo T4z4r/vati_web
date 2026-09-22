@@ -16,7 +16,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('loan_products', function (Blueprint $table) {
-            $table->decimal('vat_percentage', 8, 4)->default(18)->change();
+            $table->decimal('vat_percentage', 8, 4)->default(0.18)->change();
         });
     }
 };

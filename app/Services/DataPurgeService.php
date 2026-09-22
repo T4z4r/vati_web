@@ -8,10 +8,166 @@ use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class DataPurgeService
 {
+    public const FORCE_DELETABLE_TABLES = [
+        'payments' => 'Payments',
+        'payment_allocations' => 'Payment Allocations',
+        'payment_transactions' => 'Payment Transactions',
+        'security_transactions' => 'Security Transactions',
+        'loan_security_transactions' => 'Loan Security Transactions',
+        'cashbooks' => 'Cashbooks',
+        'cashbook_transactions' => 'Cashbook Transactions',
+        'loans' => 'Loans',
+        'loan_installments' => 'Loan Installments',
+        'loan_installment_records' => 'Installment Records',
+        'loan_cycles' => 'Loan Cycles',
+        'loan_disbursements' => 'Disbursements',
+        'loan_settlements' => 'Settlements',
+        'loan_clearances' => 'Clearances',
+        'loan_default_notices' => 'Default Notices',
+        'loan_refinancings' => 'Refinancings',
+        'loan_applications' => 'Loan Applications',
+        'loan_assessments' => 'Assessments',
+        'loan_utilizations' => 'Use-of-Funds',
+        'loan_guarantors' => 'Guarantors',
+        'loan_documents' => 'Loan Documents',
+        'loan_group_witnesses' => 'Group Witnesses',
+        'loan_approvals' => 'Approvals',
+        'credit_reviews' => 'Credit Reviews',
+        'loan_cancellations' => 'Cancellations',
+        'loan_terms' => 'Loan Terms',
+        'members' => 'Members',
+        'member_kycs' => 'Member KYC',
+        'member_nominees' => 'Nominees',
+        'member_family_members' => 'Family Members',
+        'member_assets' => 'Member Assets',
+        'member_documents' => 'Member Documents',
+        'member_security_accounts' => 'Security Accounts',
+        'passbook_replacements' => 'Passbook Replacements',
+        'member_groups' => 'Member Groups',
+        'group_memberships' => 'Group Memberships',
+        'group_meetings' => 'Group Meetings',
+        'group_collections' => 'Group Collections',
+        'group_visits' => 'Group Visits',
+        'group_attendances' => 'Group Attendances',
+        'loan_products' => 'Loan Products',
+        'notifications' => 'Notifications',
+        'activity_log' => 'Activity Log',
+    ];
+
+    public function tables(): array
+    {
+        return collect(self::FORCE_DELETABLE_TABLES)
+            ->map(fn (string $label, string $table) => [
+                'table' => $table,
+                'label' => $label,
+                'count' => Schema::hasTable($table) ? (int) DB::table($table)->count() : 0,
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function previewTable(string $table): array
+    {
+        $this->assertDeletableTable($table);
+
+        $columns = Schema::getColumnListing($table);
+        $rows = Schema::hasTable($table)
+            ? DB::table($table)->orderByDesc('id')->limit(200)->get()->map(
+                fn ($row) => ['id' => (int) $row->id, 'label' => $this->rowLabel($table, $row, $columns)]
+            )->values()->all()
+            : [];
+
+        return [
+            'table' => $table,
+            'label' => self::FORCE_DELETABLE_TABLES[$table],
+            'count' => (int) DB::table($table)->count(),
+            'rows' => $rows,
+        ];
+    }
+
+    public function forceDeleteTable(string $table, ?string $confirmationPhrase = null, array $ids = []): array
+    {
+        $this->assertDeletableTable($table);
+        if ($confirmationPhrase !== 'DELETE ALL DATA') {
+            throw new \DomainException('Confirmation phrase mismatch. Type "DELETE ALL DATA" to proceed.');
+        }
+
+        $query = DB::table($table);
+        $selecting = array_values(array_filter(array_map('intval', $ids)));
+        if ($selecting) {
+            $query = $query->whereIn('id', $selecting);
+        }
+
+        $count = $query->count();
+        if ($count === 0) {
+            return ['deleted' => 0, 'message' => $selecting ? 'No matching records were found for the selected ids.' : "No records found in the {$table} table."];
+        }
+
+        $query->delete();
+
+        $message = $selecting
+            ? "Force deleted {$count} selected record(s) from the {$table} table."
+            : "Force deleted {$count} records from the {$table} table.";
+
+        return ['deleted' => $count, 'message' => $message];
+    }
+
+    private function assertDeletableTable(string $table): void
+    {
+        abort_unless(array_key_exists($table, self::FORCE_DELETABLE_TABLES), 422, 'The selected table is not deletable.');
+    }
+
+    private function rowLabel(string $table, object $row, array $columns): string
+    {
+        $candidates = match ($table) {
+            'members' => ['membership_number', 'first_name', 'last_name', 'phone'],
+            'member_groups' => ['group_code', 'group_name'],
+            'loans' => ['loan_number'],
+            'loan_applications' => ['application_number'],
+            'payments' => ['payment_number'],
+            'loan_installments' => ['installment_number'],
+            'loan_products' => ['code', 'name'],
+            'loan_terms' => ['version', 'title'],
+            'app_versions' => ['version', 'name', 'platform'],
+            'notifications' => ['type', 'title'],
+            'activity_log' => ['description'],
+            default => ['name', 'title', 'version', 'description', 'document_type', 'code', 'number', 'first_name', 'last_name', 'phone'],
+        };
+
+        $fullName = $this->fullName($row, $columns);
+        if ($fullName) {
+            return $fullName;
+        }
+
+        foreach ($candidates as $column) {
+            if (! in_array($column, $columns, true)) {
+                continue;
+            }
+            $value = trim((string) ($row->{$column} ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return 'Record #'.$row->id;
+    }
+
+    private function fullName(object $row, array $columns): string
+    {
+        if (in_array('first_name', $columns, true)) {
+            $name = trim(($row->first_name ?? '').' '.($row->last_name ?? ''));
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return '';
+    }
+
     public function summary(): array
     {
         return [

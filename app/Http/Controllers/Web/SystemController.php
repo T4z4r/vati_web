@@ -9,6 +9,7 @@ use App\Services\DataPurgeService;
 use App\Services\SystemInfoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SystemController extends Controller
 {
@@ -54,7 +55,7 @@ class SystemController extends Controller
         }
 
         if ($request->filled('to')) {
-            $query->where('activity_log.created_at', '<=', $request->to . ' 23:59:59');
+            $query->where('activity_log.created_at', '<=', $request->to.' 23:59:59');
         }
 
         if ($request->filled('user_id')) {
@@ -114,9 +115,10 @@ class SystemController extends Controller
     public function data()
     {
         $summary = $this->purgeService->summary();
+        $tables = $this->purgeService->tables();
         $branches = Branch::orderBy('branch_name')->get();
 
-        return view('admin.system.data', compact('summary', 'branches'));
+        return view('admin.system.data', compact('summary', 'tables', 'branches'));
     }
 
     public function preview(Request $request)
@@ -146,6 +148,44 @@ class SystemController extends Controller
             'success' => true,
             'data' => array_merge($preview, $validation),
         ]);
+    }
+
+    public function previewTable(Request $request)
+    {
+        $request->validate(['table' => ['required', Rule::in(array_keys(DataPurgeService::FORCE_DELETABLE_TABLES))]]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->purgeService->previewTable($request->table),
+        ]);
+    }
+
+    public function forceDeleteTable(Request $request)
+    {
+        $request->validate([
+            'table' => ['required', Rule::in(array_keys(DataPurgeService::FORCE_DELETABLE_TABLES))],
+            'confirmation_phrase' => 'required|same:expected_phrase',
+            'expected_phrase' => 'required',
+            'ids' => 'nullable|array',
+            'ids.*' => 'integer|distinct',
+        ]);
+
+        try {
+            $result = $this->purgeService->forceDeleteTable(
+                $request->table,
+                $request->confirmation_phrase,
+                $request->input('ids', [])
+            );
+
+            activity()
+                ->causedBy($request->user())
+                ->withProperties(['table' => $request->table, 'ids' => $request->input('ids', []), 'count' => $result['deleted']])
+                ->log("Force delete executed: {$request->table} ({$result['deleted']} records)");
+
+            return redirect()->route('admin.system.data')->with('success', $result['message']);
+        } catch (\DomainException $e) {
+            return redirect()->route('admin.system.data')->with('error', $e->getMessage());
+        }
     }
 
     public function purge(Request $request)

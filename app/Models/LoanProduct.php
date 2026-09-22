@@ -14,7 +14,7 @@ class LoanProduct extends Model
     protected $attributes = [
         'processing_fee_percentage' => 1,
         'insurance_percentage' => 1.5,
-        'vat_percentage' => 18,
+        'vat_percentage' => 0.18,
         'security_percentage' => 10,
         'transaction_fee_percentage' => 0,
         'membership_fee' => 0,

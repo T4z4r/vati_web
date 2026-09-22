@@ -194,7 +194,7 @@ return new class extends Migration
             $table->decimal('processing_fee_percentage', 8, 4)->default(0);
             $table->decimal('transaction_fee_percentage', 8, 4)->default(0);
             $table->decimal('membership_fee', 18, 2)->default(0);
-            $table->decimal('vat_percentage', 8, 4)->default(18);
+            $table->decimal('vat_percentage', 8, 4)->default(0.18);
             $table->unsignedInteger('required_group_witnesses')->default(2);
             $table->boolean('status')->default(true);
             $table->timestamps();

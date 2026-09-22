@@ -12,7 +12,7 @@ return new class extends Migration
         $rates = [
             'processing_fee_percentage' => 1,
             'insurance_percentage' => 1.5,
-            'vat_percentage' => 18,
+            'vat_percentage' => 0.18,
             'security_percentage' => 10,
             'transaction_fee_percentage' => 0,
         ];
@@ -25,7 +25,7 @@ return new class extends Migration
 
         // Update product configuration, preserving saved loan and payment history.
         DB::table('loan_products')->update($rates + ['membership_fee' => 0, 'annual_interest_rate' => 0]);
-        foreach (['default_processing_fee' => '1.00', 'default_transaction_fee' => '0.00', 'default_vat_rate' => '18.00'] as $key => $value) {
+        foreach (['default_processing_fee' => '1.00', 'default_transaction_fee' => '0.00', 'default_vat_rate' => '0.18'] as $key => $value) {
             DB::table('system_settings')->where('key', $key)->update(['value' => $value]);
         }
     }

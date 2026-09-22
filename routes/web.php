@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\AccountController;
+use App\Http\Controllers\Web\AppVersionController;
+use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ComplianceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GroupController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\Web\OrganizationController;
 use App\Http\Controllers\Web\PaymentController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SecurityController;
-use App\Http\Controllers\Web\AppVersionController;
 use App\Http\Controllers\Web\SystemController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Middleware\SetLocale;
@@ -114,6 +114,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::put('settings', [SystemController::class, 'updateSettings'])->name('settings.update');
         Route::get('data', [SystemController::class, 'data'])->name('data');
         Route::get('data/preview', [SystemController::class, 'preview'])->name('data.preview');
+        Route::get('data/tables/preview', [SystemController::class, 'previewTable'])->name('data.tables.preview');
+        Route::post('data/tables/delete', [SystemController::class, 'forceDeleteTable'])->name('data.tables.delete');
         Route::get('app-versions', [AppVersionController::class, 'index'])->name('app-versions');
         Route::post('app-versions', [AppVersionController::class, 'store'])->name('app-versions.store');
         Route::delete('app-versions/{appVersion}', [AppVersionController::class, 'destroy'])->name('app-versions.destroy');
