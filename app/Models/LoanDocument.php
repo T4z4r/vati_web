@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ApplicationComplianceService;
 use Illuminate\Database\Eloquent\Model;
 
 class LoanDocument extends Model

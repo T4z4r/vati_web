@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\PortfolioAnalyticsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -77,6 +78,20 @@ class ApiAccessTest extends TestCase
         Sanctum::actingAs($user);
 
         return compact('branch', 'group', 'product', 'user');
+    }
+
+    public function test_upload_compliance_document_returns_document_type_label(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        $application = LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+
+        $this->post("/api/v1/loan-applications/{$application->id}/documents", [
+            'document_type' => 'business_license',
+            'file' => UploadedFile::fake()->create('license.pdf', 100, 'application/pdf'),
+        ])->assertCreated()
+            ->assertJsonPath('data.document_type_label', 'Copy of Business License')
+            ->assertJsonPath('data.verification_status', 'pending');
     }
 
     public function test_member_without_loans_or_applications_can_be_deleted(): void
