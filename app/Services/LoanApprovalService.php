@@ -45,7 +45,8 @@ class LoanApprovalService
                 $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
                 $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
                 $installments = $this->calculator->installmentCount($application->product, $approvedDuration);
-                // Interest-free lending: starting debt is exactly the approved principal.
+                // The starting debt is principal plus reducing-balance interest,
+                // with the principal and interest balances tracked separately.
                 $totalRepayment = round((float) $figures['total_repayment'], 2);
                 Loan::create([
                     'loan_number' => $this->numbers->loan(),
@@ -55,10 +56,11 @@ class LoanApprovalService
                     'loan_product_id' => $application->loan_product_id,
                     'branch_id' => $application->branch_id,
                     'principal_amount' => $figures['principal'],
-                    'interest_amount' => 0,
+                    'interest_amount' => $figures['interest'],
+                    'interest_rate' => $figures['interest_rate'],
                     'total_repayment' => $totalRepayment,
-                    'principal_balance' => $totalRepayment,
-                    'interest_balance' => 0,
+                    'principal_balance' => $figures['principal'],
+                    'interest_balance' => $figures['interest'],
                     'total_balance' => $totalRepayment,
                     'number_of_installments' => $installments,
                     'installment_amount' => $figures['installment_amount'],

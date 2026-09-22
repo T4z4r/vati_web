@@ -76,18 +76,7 @@ class VatCorrectionService
             return $split;
         }
 
-        $remainingPrincipal = (float) $loan->principal_amount;
-        $remainingInterest = (float) $loan->interest_amount;
-        $split = [];
-        for ($i = 1; $i <= $count; $i++) {
-            $principal = $i === $count ? $remainingPrincipal : round((float) $loan->principal_amount / $count, 2);
-            $interest = $i === $count ? $remainingInterest : round((float) $loan->interest_amount / $count, 2);
-            $split[] = round($principal + $interest, 2);
-            $remainingPrincipal = round($remainingPrincipal - $principal, 2);
-            $remainingInterest = round($remainingInterest - $interest, 2);
-        }
-
-        return $split;
+        return collect($this->schedule->rows($loan))->pluck('total_due')->all();
     }
 
     private function hasPaymentHistory(Loan $loan): bool
@@ -218,7 +207,9 @@ class VatCorrectionService
         return round((float) ($application->calc_vat ?? 0), 2) !== round((float) $f['vat'], 2)
             || round((float) ($application->calc_charges ?? 0), 2) !== round((float) $f['charges'], 2)
             || round((float) ($application->calc_security_amount ?? 0), 2) !== round((float) $f['security_amount'], 2)
-            || round((float) ($application->calc_amount_receivable ?? 0), 2) !== round((float) $f['amount_receivable'], 2);
+            || round((float) ($application->calc_amount_receivable ?? 0), 2) !== round((float) $f['amount_receivable'], 2)
+            || round((float) ($application->calc_interest ?? 0), 2) !== round((float) $f['interest'], 2)
+            || round((float) ($application->calc_total_repayment ?? 0), 2) !== round((float) $f['total_repayment'], 2);
     }
 
     private function loanNeedsCorrection(Loan $loan): bool

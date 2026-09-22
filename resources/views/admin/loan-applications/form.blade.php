@@ -411,12 +411,60 @@
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Interest-free lending: only the approved principal is repayable.
-        function scheduledTotalFor(principal, duration, frequency) {
-            return Math.round(principal * 100) / 100;
+        // Full-tenure reducing-balance interest tiers, keyed by duration in months.
+        // Rates are the total interest charged over the whole tenure. They must
+        // mirror config/vati.php (interest_tiers) and LoanCalculatorService.
+        const interestTiers = { 6: 21, 8: 28, 10: 32 };
+
+        function round2(value) {
+            return Math.round(value * 100) / 100;
         }
 
-        function renderRepaymentSchedule(totalRepayment, duration, frequency) {
+        function periodRateFor(duration, frequency) {
+            const tier = interestTiers[duration];
+            if (!tier || !duration) return 0;
+            const monthly = (tier / 100) / duration;
+            return frequency === 'weekly' ? monthly * 12 / 52 : monthly;
+        }
+
+        function amortizeRows(principal, duration, frequency) {
+            const rate = periodRateFor(duration, frequency);
+            const count = frequency === 'weekly'
+                ? weeklyInstallmentsFor(duration)
+                : Math.max(1, duration);
+            const rows = [];
+            let remaining = round2(principal);
+
+            if (!rate) {
+                const even = round2(remaining / count);
+                for (let i = 1; i <= count; i++) {
+                    const total = i === count ? remaining : Math.min(even, remaining);
+                    rows.push({ principal: round2(total), interest: 0, total: round2(total), balance: round2(remaining - round2(total)) });
+                    remaining = round2(remaining - round2(total));
+                }
+                return rows;
+            }
+
+            const growth = Math.pow(1 + rate, count);
+            const payment = round2((principal * rate * growth) / (growth - 1));
+            for (let i = 1; i <= count; i++) {
+                const interest = round2(remaining * rate);
+                let part = i === count ? remaining : Math.min(Math.max(0, payment - interest), remaining);
+                part = round2(part);
+                const total = round2(part + interest);
+                rows.push({ principal: part, interest, total, balance: round2(remaining - part) });
+                remaining = round2(remaining - part);
+            }
+            return rows;
+        }
+
+        // Reducing-balance lending: interest accrues on the outstanding principal.
+        function scheduledTotalFor(principal, duration, frequency) {
+            const rows = amortizeRows(principal, duration, frequency);
+            return round2(rows.reduce((sum, row) => sum + row.total, 0));
+        }
+
+        function renderRepaymentSchedule(principal, totalRepayment, duration, frequency) {
             const memberSelected = Boolean(memberProfiles[memberSelect.value]);
             const installmentCount = frequency === 'weekly'
                 ? weeklyInstallmentsFor(duration)
@@ -425,40 +473,40 @@
             repaymentSchedule.style.display = memberSelected ? '' : 'none';
             scheduleBody.innerHTML = '';
 
-            if (!memberSelected || !totalRepayment || !duration || !installmentCount) {
+            if (!memberSelected || !principal || !totalRepayment || !duration || !installmentCount) {
                 return;
             }
 
-            const perInstallment = Math.floor((totalRepayment / installmentCount) * 100) / 100;
-            let remaining = totalRepayment;
+            const rows = amortizeRows(principal, duration, frequency);
+            let principalTotal = 0;
+            let interestTotal = 0;
 
-            for (let number = 1; number <= installmentCount; number++) {
-                const isLast = number === installmentCount;
-                const due = isLast ? remaining : perInstallment;
-                remaining = Math.round((remaining - due) * 100) / 100;
-                const balance = Math.round((totalRepayment - due * number) * 100) / 100;
-                const row = document.createElement('tr');
+            rows.forEach((row, index) => {
+                const number = index + 1;
+                principalTotal = round2(principalTotal + row.principal);
+                interestTotal = round2(interestTotal + row.interest);
+                const tr = document.createElement('tr');
                 const values = [
                     number,
                     `${frequency === 'weekly' ? 'Week' : 'Month'} ${number}`,
-                    due.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    '0.00',
-                    due.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    Math.max(0, balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    row.principal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    row.interest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    row.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    Math.max(0, row.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 ];
                 values.forEach(value => {
                     const cell = document.createElement('td');
                     cell.textContent = value;
-                    row.appendChild(cell);
+                    tr.appendChild(cell);
                 });
-                scheduleBody.appendChild(row);
-            }
+                scheduleBody.appendChild(tr);
+            });
 
             const frequencyLabel = frequency === 'weekly' ? 'Weekly' : 'Monthly';
             document.getElementById('schedule-frequency').textContent = `${installmentCount} ${frequencyLabel.toLowerCase()} installments`;
             document.getElementById('schedule-description').textContent = `${frequencyLabel} projection for the selected applicant and product`;
-            document.getElementById('schedule-principal-total').textContent = totalRepayment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('schedule-interest-total').textContent = '0.00';
+            document.getElementById('schedule-principal-total').textContent = principalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('schedule-interest-total').textContent = interestTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('schedule-repayment-total').textContent = totalRepayment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
@@ -491,7 +539,7 @@
                 document.getElementById('summary-insurance-fee').textContent = formatMoney(insuranceFee);
                 document.getElementById('summary-vat').textContent = formatMoney(vat);
                 document.getElementById('summary-security').textContent = formatMoney(securityAmount);
-                renderRepaymentSchedule(totalRepayment, duration, frequency);
+                renderRepaymentSchedule(principal, totalRepayment, duration, frequency);
             } else {
                 estimate.value = '';
                 charges.value = '';

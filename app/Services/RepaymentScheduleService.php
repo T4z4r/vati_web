@@ -7,6 +7,38 @@ use Carbon\CarbonInterface;
 
 class RepaymentScheduleService
 {
+    public function __construct(private LoanCalculatorService $calculator) {}
+
+    /**
+     * Resolve the approved tenure of a loan, falling back to a value derived
+     * from the installment count when the application is unavailable.
+     */
+    private function durationMonths(Loan $loan, int $count): int
+    {
+        $application = $loan->application;
+        if ($application && ((int) ($application->recommended_duration_months ?: $application->duration_months)) >= 1) {
+            return (int) ($application->recommended_duration_months ?: $application->duration_months);
+        }
+
+        return $loan->product->repayment_frequency === 'weekly'
+            ? (int) round($count * 12 / 52)
+            : $count;
+    }
+
+    /**
+     * Deterministic schedule rows for a loan, mirroring LoanCalculatorService.
+     * Interest-bearing loans use reducing-balance amortization of the principal.
+     */
+    public function rows(Loan $loan): array
+    {
+        $count = max(1, (int) $loan->number_of_installments);
+        $product = $loan->product;
+        $duration = $this->durationMonths($loan, $count);
+        $rate = $this->calculator->periodRate($product, $duration);
+
+        return $this->calculator->amortize((float) $loan->principal_amount, $rate, $count)['installments'];
+    }
+
     public function generate(Loan $loan, CarbonInterface $firstPaymentDate): void
     {
         $count = max(1, (int) $loan->number_of_installments);
@@ -35,27 +67,17 @@ class RepaymentScheduleService
             return;
         }
 
-        // Legacy interest-bearing loans keep the principal/interest split.
-        $remainingPrincipal = (float) $loan->principal_amount;
-        $remainingInterest = (float) $loan->interest_amount;
-        $cumulativeBalance = (float) $loan->total_repayment;
+        // Reducing-balance schedule: interest accrues on the outstanding principal.
         $weekly = $loan->product->repayment_frequency === 'weekly';
-
-        for ($i = 1; $i <= $count; $i++) {
-            $principal = $i === $count ? $remainingPrincipal : round((float) $loan->principal_amount / $count, 2);
-            $interest = $i === $count ? $remainingInterest : round((float) $loan->interest_amount / $count, 2);
-            $total = round($principal + $interest, 2);
+        foreach ($this->rows($loan) as $row) {
             $loan->installments()->create([
-                'installment_number' => $i,
-                'due_date' => $weekly ? $firstPaymentDate->copy()->addWeeks($i - 1) : $firstPaymentDate->copy()->addMonths($i - 1),
-                'principal_due' => $principal,
-                'interest_due' => $interest,
-                'total_due' => $total,
-                'outstanding_balance' => max(0, round($cumulativeBalance, 2)),
+                'installment_number' => $row['installment_number'],
+                'due_date' => $weekly ? $firstPaymentDate->copy()->addWeeks($row['installment_number'] - 1) : $firstPaymentDate->copy()->addMonths($row['installment_number'] - 1),
+                'principal_due' => $row['principal_due'],
+                'interest_due' => $row['interest_due'],
+                'total_due' => $row['total_due'],
+                'outstanding_balance' => max(0, round($row['outstanding_balance'], 2)),
             ]);
-            $remainingPrincipal = round($remainingPrincipal - $principal, 2);
-            $remainingInterest = round($remainingInterest - $interest, 2);
-            $cumulativeBalance = round($cumulativeBalance - $total, 2);
         }
     }
 }
