@@ -37,7 +37,7 @@ class OnboardMemberRequest extends FormRequest
             'guardian_name' => ['nullable', 'string', 'max:150'],
             'phone' => ['required', 'string', 'max:20', 'unique:members,phone'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
-            'national_id' => ['nullable', 'string', 'max:50', 'unique:members,national_id'],
+            'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', 'string', 'max:30'],

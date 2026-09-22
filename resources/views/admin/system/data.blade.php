@@ -153,6 +153,60 @@
     </div>
 </div>
 
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-head"><h2>{{ __('Correct VAT & Repayment Computation') }}</h2></div>
+    <div class="card-body">
+        <p style="margin-bottom: 1rem;">{{ __('Recompute VAT and fees on existing loan applications and loans and correct repayment amounts using current product rates. Loans with posted payments keep their installment schedules untouched.') }}</p>
+        <form id="vatForm" method="POST" action="{{ route('admin.system.data.vat-correct') }}">
+            @csrf
+            <input type="hidden" name="expected_phrase" value="CORRECT VAT">
+
+            <div class="form-grid">
+                <label>
+                    {{ __('Branch Filter') }}
+                    <select name="branch_id">
+                        <option value="">{{ __('All branches') }}</option>
+                        @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label style="justify-content: center;">
+                    <input type="checkbox" name="include_schedule" value="1" checked style="margin-right: 0.5rem;">
+                    {{ __('Regenerate repayment schedules where safe (no posted payments)') }}
+                </label>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" id="vatPreviewBtn">{{ __('Preview') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" id="vatPreviewCard" style="margin-top: 1rem; display: none;">
+    <div class="card-head"><h2>{{ __('Preview') }}</h2></div>
+    <div class="card-body">
+        <div id="vatPreviewContent"></div>
+
+        <div id="vatExecuteSection" style="display:none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #dee2e6);">
+            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <strong>{{ __('This updates the stored figures on the affected records.') }}</strong>
+                <p style="margin: 0.5rem 0 0;">{{ __('Type') }} <code>CORRECT VAT</code> {{ __('to confirm.') }}</p>
+            </div>
+            <div class="form-grid">
+                <label>
+                    {{ __('Confirmation Phrase') }}
+                    <input type="text" id="vatConfirmationInput" placeholder="CORRECT VAT" required>
+                </label>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-primary" id="vatExecuteBtn" disabled>{{ __('Correct VAT & Repayment') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const previewBtn = document.getElementById('previewBtn');
@@ -379,6 +433,98 @@ tableDeleteBtn.addEventListener('click', () => {
             hidden.value = tableConfirmationInput.value;
             tableForm.appendChild(hidden);
             tableForm.submit();
+        }
+    });
+});
+
+const vatForm = document.getElementById('vatForm');
+const vatPreviewBtn = document.getElementById('vatPreviewBtn');
+const vatPreviewCard = document.getElementById('vatPreviewCard');
+const vatConfirmationInput = document.getElementById('vatConfirmationInput');
+const vatExecuteBtn = document.getElementById('vatExecuteBtn');
+
+vatConfirmationInput.addEventListener('input', () => {
+    vatExecuteBtn.disabled = vatConfirmationInput.value !== 'CORRECT VAT';
+});
+
+vatPreviewBtn.addEventListener('click', async () => {
+    vatPreviewBtn.disabled = true;
+    vatPreviewBtn.textContent = '{{ __("Loading...") }}';
+
+    const formData = new FormData(vatForm);
+    formData.delete('include_schedule');
+    formData.delete('confirmation_phrase');
+    formData.delete('expected_phrase');
+    const params = new URLSearchParams();
+    for (const [k, v] of formData.entries()) { if (v) params.set(k, v); }
+
+    try {
+        const resp = await fetch('{{ route("admin.system.data.vat-correct.preview") }}?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json();
+
+        if (!data.success) { alert(data.message || 'Error'); return; }
+
+        const d = data.data;
+        vatPreviewCard.style.display = 'block';
+
+        let rows = [
+            ['{{ __("Loan applications needing VAT/fee correction") }}', d.applications],
+            ['{{ __("Loans needing VAT/fee correction") }}', d.loans],
+            ['{{ __("Loans needing repayment amount correction") }}', d.repayment],
+            ['{{ __("Repayment schedules to regenerate") }}', d.schedule],
+        ];
+        if (d.applications_skipped > 0) rows.push(['{{ __("Applications skipped (outside product limits)") }}', d.applications_skipped]);
+        if (d.loans_with_payments_skipped_for_schedule > 0) rows.push(['{{ __("Loans with posted payments (schedules kept)") }}', d.loans_with_payments_skipped_for_schedule]);
+
+        let html = '<div class="table-wrap"><table><thead><tr><th>{{ __("Item") }}</th><th style="text-align:right;">{{ __("Records") }}</th></tr></thead><tbody>';
+        rows.forEach(r => { html += '<tr><td>' + r[0] + '</td><td class="money" style="text-align:right;">' + r[1].toLocaleString() + '</td></tr>'; });
+        html += '</tbody></table></div>';
+
+        if (d.application_samples && d.application_samples.length) {
+            html += '<h3 style="margin-top: 1rem;">{{ __("Sample applications (old VAT → new VAT)") }}</h3><ul style="list-style: disc; padding-left: 1.5rem;">';
+            d.application_samples.forEach(s => { html += '<li>' + s.application_number + ': ' + s.old_vat + ' → ' + s.new_vat + '</li>'; });
+            html += '</ul>';
+        }
+        if (d.loan_samples && d.loan_samples.length) {
+            html += '<h3 style="margin-top: 1rem;">{{ __("Sample loans (old VAT → new VAT)") }}</h3><ul style="list-style: disc; padding-left: 1.5rem;">';
+            d.loan_samples.forEach(s => { html += '<li>' + s.loan_number + ': ' + s.old_vat + ' → ' + s.new_vat + '</li>'; });
+            html += '</ul>';
+        }
+
+        document.getElementById('vatPreviewContent').innerHTML = html;
+        const total = d.applications + d.loans + d.repayment + d.schedule;
+        document.getElementById('vatExecuteSection').style.display = total > 0 ? 'block' : 'none';
+        vatConfirmationInput.value = '';
+        vatExecuteBtn.disabled = true;
+    } catch (e) {
+        alert('Network error.');
+    } finally {
+        vatPreviewBtn.disabled = false;
+        vatPreviewBtn.textContent = '{{ __("Preview") }}';
+    }
+});
+
+vatExecuteBtn.addEventListener('click', () => {
+    Swal.fire({
+        title: '{{ __("Correct VAT & repayment figures?") }}',
+        text: '{{ __("Stored fee, VAT and repayment amounts on the affected records will be updated.") }}',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '{{ __("Yes, correct") }}',
+        cancelButtonText: '{{ __("Cancel") }}',
+        confirmButtonColor: '#2c4b6e',
+        cancelButtonColor: '#68736b',
+        reverseButtons: true,
+    }).then(result => {
+        if (result.isConfirmed) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'confirmation_phrase';
+            hidden.value = vatConfirmationInput.value;
+            vatForm.appendChild(hidden);
+            vatForm.submit();
         }
     });
 });

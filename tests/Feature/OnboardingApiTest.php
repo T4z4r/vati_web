@@ -155,4 +155,39 @@ class OnboardingApiTest extends TestCase
             ->assertJsonPath('data.loan_officer.id', $officer->id)
             ->assertJsonPath('data.loan_officer_id', $officer->id);
     }
+
+    public function test_member_onboarding_allows_missing_and_duplicate_national_ids(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $region = Region::create(['name' => 'Dar es Salaam']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Kinondoni']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'KIN-02', 'branch_name' => 'Kinondoni']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('super_admin');
+        Sanctum::actingAs($admin);
+        $groupId = $this->postJson('/api/v1/onboarding/groups', [
+            'branch_id' => $branch->id,
+            'group_code' => 'KIN-G02',
+            'group_name' => 'Dup Group',
+            'meeting_day' => 'Monday',
+            'location' => 'Kinondoni',
+        ])->json('data.id');
+
+        $sharedId = '19900101-12345-00001-00';
+
+        $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => $branch->id, 'group_id' => $groupId, 'first_name' => 'Asha', 'last_name' => 'Musa',
+            'phone' => '255700000010', 'national_id' => $sharedId,
+        ])->assertCreated();
+
+        $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => $branch->id, 'group_id' => $groupId, 'first_name' => 'Binti', 'last_name' => 'Juma',
+            'phone' => '255700000011', 'national_id' => $sharedId,
+        ])->assertCreated();
+
+        $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => $branch->id, 'group_id' => $groupId, 'first_name' => 'Neema', 'last_name' => 'Pili',
+            'phone' => '255700000012',
+        ])->assertCreated()->assertJsonPath('data.national_id', null);
+    }
 }

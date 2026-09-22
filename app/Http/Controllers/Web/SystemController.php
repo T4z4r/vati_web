@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\SystemSetting;
 use App\Services\DataPurgeService;
 use App\Services\SystemInfoService;
+use App\Services\VatCorrectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,8 @@ class SystemController extends Controller
 {
     public function __construct(
         private SystemInfoService $infoService,
-        private DataPurgeService $purgeService
+        private DataPurgeService $purgeService,
+        private VatCorrectionService $vatCorrectionService
     ) {}
 
     public function overview()
@@ -216,6 +218,50 @@ class SystemController extends Controller
                     'cascade' => $result['cascade'] ?? [],
                 ])
                 ->log("Data purge executed: {$request->entity} ({$result['deleted']} records)");
+
+            return redirect()->route('admin.system.data')->with('success', $result['message']);
+        } catch (\DomainException $e) {
+            return redirect()->route('admin.system.data')->with('error', $e->getMessage());
+        }
+    }
+
+    public function vatCorrectPreview(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'nullable|integer|exists:branches,id',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->vatCorrectionService->estimate($request->integer('branch_id')),
+        ]);
+    }
+
+    public function vatCorrect(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'nullable|integer|exists:branches,id',
+            'include_schedule' => 'nullable|boolean',
+            'confirmation_phrase' => 'required|same:expected_phrase',
+            'expected_phrase' => 'required',
+        ]);
+
+        try {
+            $result = $this->vatCorrectionService->correct(
+                $request->integer('branch_id'),
+                $request->boolean('include_schedule')
+            );
+
+            activity()
+                ->causedBy($request->user())
+                ->withProperties([
+                    'branch_id' => $request->integer('branch_id'),
+                    'applications' => $result['applications'],
+                    'loans' => $result['loans'],
+                    'repayment' => $result['repayment'],
+                    'schedule' => $result['schedule'],
+                ])
+                ->log('VAT computation corrected for existing loans and applications');
 
             return redirect()->route('admin.system.data')->with('success', $result['message']);
         } catch (\DomainException $e) {
