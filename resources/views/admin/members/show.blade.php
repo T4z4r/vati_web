@@ -334,7 +334,7 @@
             <div class="detail-grid" style="grid-template-columns:repeat(4,1fr)">
                 <div class="detail"><small>Project / business</small><strong>{{ $display($loan->business_name ?? $loan->application?->business_summary) }}</strong></div>
                 <div class="detail"><small>Loan purpose</small><strong>{{ $display($loan->application?->loan_purpose) }}</strong></div>
-                <div class="detail"><small>Interest rate</small><strong>{{ filled($loan->interest_rate) ? number_format((float) $loan->interest_rate, 2).'%' : '—' }}</strong></div>
+                <div class="detail"><small>Interest rate</small><strong>{{ filled($loan->interest_rate) ? number_format((float) $loan->interest_rate * 100, 2).'%' : '—' }}</strong></div>
                 <div class="detail"><small>Disbursement date</small><strong>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</strong></div>
                 <div class="detail"><small>First payment date</small><strong>{{ $loan->first_payment_date?->format('d M Y') ?? '—' }}</strong></div>
                 <div class="detail"><small>Maturity date</small><strong>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</strong></div>

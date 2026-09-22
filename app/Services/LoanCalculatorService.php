@@ -15,8 +15,8 @@ class LoanCalculatorService
     }
 
     /**
-     * Full-tenure reducing-balance interest rate (%) for a given duration,
-     * e.g. 21% over 6 months. Returns null when no tier applies.
+     * Monthly reducing-balance interest rate (as a factor, e.g. 0.036) for a
+     * given duration. Returns null when no tier applies.
      */
     public function interestTier(int $durationMonths): ?float
     {
@@ -27,9 +27,8 @@ class LoanCalculatorService
 
     /**
      * Reducing-balance interest rate charged per repayment period. The
-     * configured tier is the total interest across the whole tenure and is
-     * spread evenly across its months; weekly periods receive a proportional
-     * period rate.
+     * configured tier is a monthly rate used directly; weekly periods receive
+     * a proportional period rate.
      */
     public function periodRate(LoanProduct $product, int $durationMonths): float
     {
@@ -37,7 +36,7 @@ class LoanCalculatorService
         if ($tier === null || $durationMonths < 1) {
             return 0.0;
         }
-        $monthly = ($tier / 100) / $durationMonths;
+        $monthly = $tier;
 
         return $product->repayment_frequency === 'weekly' ? $monthly * 12 / 52 : $monthly;
     }

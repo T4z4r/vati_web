@@ -78,7 +78,7 @@
 <div class="section">Muhtasari wa mkopo / Loan summary</div>
 <table>
     <tr>
-        <td class="label">Kiwango cha riba / Interest rate</td><td>{{ number_format((float) ($loan->interest_rate ?: $loan->product?->annual_interest_rate), 2) }}%</td>
+        <td class="label">Kiwango cha riba / Interest rate</td><td>@php($rateOut = filled($loan->interest_rate) && (float) $loan->interest_rate !== 0.0 ? (float) $loan->interest_rate * 100 : (float) ($loan->product?->annual_interest_rate ?? 0)){{ number_format($rateOut, 2) }}%</td>
         <td class="label">Tarehe ya utoaji / Disbursement date</td><td>{{ $date($loan->disbursement_date) }}</td>
     </tr>
     <tr>

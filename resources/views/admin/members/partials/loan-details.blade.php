@@ -23,7 +23,7 @@
                 </div>
                 <div class="bg-white p-3 rounded">
                     <p class="text-xs text-gray-600">Kiwango cha Riba (Interest %)</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($loan->interest_rate, 2) }}%</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format((float) $loan->interest_rate * 100, 2) }}%</p>
                 </div>
                 <div class="bg-white p-3 rounded">
                     <p class="text-xs text-gray-600">Salio (Balance)</p>

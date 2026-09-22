@@ -111,7 +111,7 @@
         <div class="section">{{ $loan->loan_number }} · {{ $show($loan->product?->name) }}</div>
         <table>
             <tr><td class="label">Awamu / Cycle</td><td>{{ $show($loan->loan_cycle, 'Main loan cycle') }}</td><td class="label">Jina la biashara / Project</td><td>{{ $show($loan->business_name ?: $loan->application?->business_summary) }}</td></tr>
-            <tr><td class="label">Tarehe ya kutolewa</td><td>{{ $date($loan->disbursement_date) }}</td><td class="label">Kiwango cha riba</td><td>{{ number_format((float) ($loan->interest_rate ?: $loan->product?->annual_interest_rate), 2) }}%</td></tr>
+            <tr><td class="label">Tarehe ya kutolewa</td><td>{{ $date($loan->disbursement_date) }}</td><td class="label">Kiwango cha riba</td><td>@php($rateOut = filled($loan->interest_rate) && (float) $loan->interest_rate !== 0.0 ? (float) $loan->interest_rate * 100 : (float) ($loan->product?->annual_interest_rate ?? 0)){{ number_format($rateOut, 2) }}%</td></tr>
             <tr><td class="label">Kiasi cha mkopo</td><td class="right">TZS {{ $money($loan->principal_amount) }}</td><td class="label">Mkopo na riba</td><td class="right">TZS {{ $money($loan->total_repayment) }}</td></tr>
             <tr><td class="label">Kiasi kilichorekebishwa</td><td class="right">TZS {{ $money($loan->adjusted_principal_amount) }}</td><td class="label">Mkopo ulioongezwa</td><td class="right">TZS {{ $money($loan->increment_amount) }}</td></tr>
             <tr><td class="label">Mkopo kati / Refinancing</td><td class="right">TZS {{ $money($loan->refinancing_amount) }}</td><td class="label">Rejesho la wiki / Instalment</td><td class="right">TZS {{ $money($loan->weekly_installment ?: $loan->installment_amount) }}</td></tr>

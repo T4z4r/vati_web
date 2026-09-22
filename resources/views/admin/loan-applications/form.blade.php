@@ -411,10 +411,10 @@
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Full-tenure reducing-balance interest tiers, keyed by duration in months.
-        // Rates are the total interest charged over the whole tenure. They must
-        // mirror config/vati.php (interest_tiers) and LoanCalculatorService.
-        const interestTiers = { 6: 21, 8: 28, 10: 32 };
+        // Reducing-balance monthly interest factors (not percentages), keyed by
+        // duration in months. They must mirror config/vati.php (interest_tiers)
+        // and LoanCalculatorService.
+        const interestTiers = { 6: 0.445, 8: 0.036, 10: 0.0295 };
 
         function round2(value) {
             return Math.round(value * 100) / 100;
@@ -423,7 +423,7 @@
         function periodRateFor(duration, frequency) {
             const tier = interestTiers[duration];
             if (!tier || !duration) return 0;
-            const monthly = (tier / 100) / duration;
+            const monthly = tier;
             return frequency === 'weekly' ? monthly * 12 / 52 : monthly;
         }
 
