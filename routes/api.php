@@ -162,7 +162,7 @@ Route::prefix('v1')->group(function () {
         Route::post('loans/{loan}/disburse', [LoanDisbursementController::class, 'store']);
         Route::post('loans/{loan}/payments', [PaymentController::class, 'store']);
         Route::match(['POST', 'PUT', 'PATCH'], 'payments/{payment}', [PaymentController::class, 'update']);
-        Route::post('payments/{payment}/delete', [PaymentController::class, 'reverse']);
+        Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse']);
         Route::post('loans/{loan}/settle', [LoanSettlementController::class, 'store']);
         Route::post('members/{member}/passbook-replacements', [LoanAdministrationController::class, 'replacePassbook']);
         Route::post('loans/{loan}/default-notices', [LoanAdministrationController::class, 'defaultNotice']);
