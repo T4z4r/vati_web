@@ -134,7 +134,7 @@ Route::prefix('v1')->group(function () {
         Route::get('loan-applications/{loan_application}', [LoanApplicationController::class, 'show'])->name('loan-applications.show');
         Route::post('loan-applications', [LoanApplicationController::class, 'store'])->name('loan-applications.store');
         Route::match(['POST', 'PUT', 'PATCH'], 'loan-applications/{loan_application}', [LoanApplicationController::class, 'update'])->name('loan-applications.update');
-        Route::delete('loan-applications/{loan_application}', [LoanApplicationController::class, 'destroy'])->name('loan-applications.destroy');
+        Route::post('loan-applications/{loan_application}/delete', [LoanApplicationController::class, 'destroy'])->name('loan-applications.delete');
         Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationWorkflowController::class, 'submit']);
         Route::post('loan-applications/{loanApplication}/approve', [LoanApplicationWorkflowController::class, 'approve']);
         Route::post('loan-applications/{loanApplication}/reject', [LoanApplicationWorkflowController::class, 'reject']);

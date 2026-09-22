@@ -113,6 +113,30 @@ class ApiAccessTest extends TestCase
         $this->assertNotSoftDeleted('members', ['id' => $member->id]);
     }
 
+    public function test_delete_loan_application_allowed_before_recommendation(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        $application = LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'returned', 'created_by' => $user->id]);
+
+        $this->postJson("/api/v1/loan-applications/{$application->id}/delete")->assertNoContent();
+        $this->assertSoftDeleted('loan_applications', ['id' => $application->id]);
+    }
+
+    public function test_delete_loan_application_blocked_for_recommended_or_approved(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        foreach (['recommended', 'approved', 'disbursement_pending', 'disbursed'] as $status) {
+            $application = LoanApplication::create(['application_number' => 'APP-'.$status, 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => $status, 'created_by' => $user->id]);
+
+            $this->postJson("/api/v1/loan-applications/{$application->id}/delete")
+                ->assertStatus(409)
+                ->assertJsonPath('message', 'Only applications that are not recommended can be deleted.');
+            $this->assertNotSoftDeleted('loan_applications', ['id' => $application->id]);
+        }
+    }
+
     public function test_api_access_requires_authentication(): void
     {
         $this->getJson('/api/v1/groups')->assertUnauthorized();
