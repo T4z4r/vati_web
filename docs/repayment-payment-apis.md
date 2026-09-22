@@ -137,7 +137,7 @@ Completely undo a **posted** payment. All allocations are removed from the loan'
 the principal/interest balances are restored, and the payment is marked `reversed`. A reversed
 payment can **not** be edited or reversed again (re-post it instead).
 
-- **Method / URL:** `POST /api/v1/payments/{payment}/reverse`
+- **Method / URL:** `POST /api/v1/payments/{payment}/delete`
 
 ### Request body
 
@@ -199,7 +199,7 @@ Content-Type: application/json
 
 3. **Undo** if the payment should not exist at all:
    ```
-   POST /api/v1/payments/42/reverse     { "reason": "Posted against the wrong loan" }
+   POST /api/v1/payments/42/delete               { "reason": "Posted against the wrong loan" }
    ```
    → payment `status` becomes `reversed` and the loan balances are restored.
 

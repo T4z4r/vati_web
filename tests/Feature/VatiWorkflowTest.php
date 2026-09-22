@@ -273,7 +273,7 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('message', 'The new payment amount cannot exceed the outstanding loan balance.');
 
         // Undo the payment.
-        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Collected the wrong amount'])
+        $this->postJson("/api/v1/payments/{$paymentId}/delete", ['reason' => 'Collected the wrong amount'])
             ->assertOk()
             ->assertJsonPath('data.status', 'reversed');
         $this->assertSame('1000000.00', $loan->fresh()->total_balance);
@@ -284,7 +284,7 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('message', 'Only posted payments can be edited.');
 
         // A reversed payment cannot be reversed again.
-        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Double reversal attempt'])
+        $this->postJson("/api/v1/payments/{$paymentId}/delete", ['reason' => 'Double reversal attempt'])
             ->assertUnprocessable()
             ->assertJsonPath('message', 'Only posted payments can be reversed.');
     }

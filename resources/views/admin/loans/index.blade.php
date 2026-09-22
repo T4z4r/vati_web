@@ -41,8 +41,16 @@
                             <td><a class="table-link"
                                     href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a><br><small>{{ $loan->product->name }}</small>
                             </td>
-                            <td>{{ $loan->member->first_name }}
-                                {{ $loan->member->last_name }}<br><small>{{ $loan->group->group_name }}</small></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px">@include('admin.partials.member-photo', [
+                                    'member' => $loan->member,
+                                    'size' => 44,
+                                ])<div>
+                                        {{ $loan->member->first_name }}
+                                        {{ $loan->member->last_name }}<br><small>{{ $loan->group->group_name }}</small>
+                                    </div>
+                                </div>
+                            </td>
                             <td class="money">TZS {{ number_format($loan->principal_amount) }}</td>
                             <td class="money">TZS {{ number_format($loan->total_balance) }}</td>
                             <td class="money">TZS {{ number_format($loan->installment_amount) }}</td>

@@ -93,7 +93,7 @@ Route::prefix('v1')->group(function () {
         Route::post('groups', [GroupController::class, 'store']);
         Route::get('groups/{group}', [GroupController::class, 'show']);
         Route::match(['POST', 'PUT'], 'groups/{group}', [GroupController::class, 'update']);
-        Route::delete('groups/{group}', [GroupController::class, 'destroy']);
+        Route::post('groups/{group}/delete', [GroupController::class, 'destroy']);
         Route::get('groups/{group}/members', [GroupController::class, 'members']);
         Route::get('groups/{group}/dashboard', [GroupPortfolioController::class, 'dashboard']);
         Route::get('groups/{group}/statistics', [GroupPortfolioController::class, 'statistics']);
@@ -162,7 +162,7 @@ Route::prefix('v1')->group(function () {
         Route::post('loans/{loan}/disburse', [LoanDisbursementController::class, 'store']);
         Route::post('loans/{loan}/payments', [PaymentController::class, 'store']);
         Route::match(['POST', 'PUT', 'PATCH'], 'payments/{payment}', [PaymentController::class, 'update']);
-        Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse']);
+        Route::post('payments/{payment}/delete', [PaymentController::class, 'reverse']);
         Route::post('loans/{loan}/settle', [LoanSettlementController::class, 'store']);
         Route::post('members/{member}/passbook-replacements', [LoanAdministrationController::class, 'replacePassbook']);
         Route::post('loans/{loan}/default-notices', [LoanAdministrationController::class, 'defaultNotice']);

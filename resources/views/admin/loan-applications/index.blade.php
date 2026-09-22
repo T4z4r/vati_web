@@ -43,8 +43,17 @@
                             <td><a class="table-link"
                                     href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a>
                             </td>
-                            <td>{{ $application->member->first_name }} {{ $application->member->last_name }}<br><small
-                                    class="muted">{{ $application->group->group_name }}</small></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px">@include('admin.partials.member-photo', [
+                                    'member' => $application->member,
+                                    'size' => 44,
+                                ])<div>
+                                        {{ $application->member->first_name }}
+                                        {{ $application->member->last_name }}<br><small
+                                            class="muted">{{ $application->group->group_name }}</small>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $application->product->name }}</td>
                             <td class="money">TZS {{ number_format($application->requested_amount) }}</td>
                             <td>{{ $application->duration_months }} {{ __('months') }}</td>
