@@ -42,11 +42,12 @@ class GroupResource extends JsonResource
                 'first_name' => $m->first_name,
                 'last_name' => $m->last_name,
                 'phone' => $m->phone,
-                'photo_url' => $m->photo_path ? asset('storage/' . $m->photo_path) : null,
+                'photo_url' => $m->photo_path ? asset('storage/'.$m->photo_path) : null,
                 'status' => $m->status,
                 'current_loans_count' => $m->current_loans_count ?? 0,
                 'outstanding_loan_balance' => $m->outstanding_loan_balance ?? 0,
             ])->values()->all()),
+            'applications' => $this->whenLoaded('applications', fn () => LoanApplicationResource::collection($this->applications)),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

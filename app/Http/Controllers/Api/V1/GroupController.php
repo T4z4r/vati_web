@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Resources\GroupResource;
+use App\Models\LoanApplication;
 use App\Models\MemberGroup;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
@@ -37,6 +38,12 @@ class GroupController extends ApiController
             ], 'total_balance')
             ->latest()
             ->limit(20)
+            ->get());
+
+        $group->setRelation('applications', LoanApplication::query()
+            ->whereIn('member_id', $group->members()->pluck('id'))
+            ->with(['member', 'product'])
+            ->latest()
             ->get());
 
         return response()->json(['success' => true, 'data' => new GroupResource($group)]);
