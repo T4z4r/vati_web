@@ -219,6 +219,76 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonCount($loan->number_of_installments, 'data.loans.0.installments');
     }
 
+    public function test_payment_can_be_edited_and_reversed_via_api(): void
+    {
+        $borrower = $this->member();
+        $application = $this->application($borrower);
+
+        foreach ([$this->member(), $this->member()] as $witness) {
+            LoanGroupWitness::create(['loan_application_id' => $application->id, 'group_id' => $this->group->id, 'member_id' => $witness->id, 'confirmed_at' => now(), 'recorded_by' => $this->admin->id]);
+        }
+
+        $application = app(LoanApprovalService::class)->decide($application, $this->admin, 'approved');
+        $loan = $application->loan;
+        app(DisbursementService::class)->disburse($loan, $this->admin, ['method' => 'cash', 'first_payment_date' => today()->addWeek()]);
+        $loan->refresh();
+
+        Sanctum::actingAs($this->admin);
+        $this->assertSame('1000000.00', $loan->total_balance);
+
+        $response = $this->postJson("/api/v1/loans/{$loan->id}/payments", ['amount' => 100000, 'payment_method' => 'cash'])
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.amount', '100000.00')
+            ->assertJsonPath('data.status', 'posted')
+            ->assertJsonPath('loan.total_balance', '900000.00');
+        $paymentId = $response->json('data.id');
+
+        // Increase the repayment amount.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 150000, 'reason' => 'Collector entered a wrong amount'])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.amount', '150000.00')
+            ->assertJsonPath('data.status', 'posted')
+            ->assertJsonPath('loan.total_balance', '850000.00');
+
+        // Decrease the repayment amount again.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
+            ->assertOk()
+            ->assertJsonPath('data.amount', '80000.00')
+            ->assertJsonPath('loan.total_balance', '920000.00');
+
+        // The same amount is rejected.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'The new amount must be different from the current payment amount.');
+
+        // Zero / missing amount fails validation.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 0])->assertUnprocessable()->assertJsonValidationErrors('amount');
+        $this->patchJson("/api/v1/payments/{$paymentId}", [])->assertUnprocessable()->assertJsonValidationErrors('amount');
+
+        // An amount above the outstanding loan balance is rejected.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 99999999])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'The new payment amount cannot exceed the outstanding loan balance.');
+
+        // Undo the payment.
+        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Collected the wrong amount'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'reversed');
+        $this->assertSame('1000000.00', $loan->fresh()->total_balance);
+
+        // A reversed payment can no longer be edited.
+        $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 90000])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Only posted payments can be edited.');
+
+        // A reversed payment cannot be reversed again.
+        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Double reversal attempt'])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Only posted payments can be reversed.');
+    }
+
     public function test_api_branch_user_can_access_another_branch_member(): void
     {
         $otherArea = Area::create(['region_id' => $this->branch->area->region_id, 'name' => 'Ilala', 'code' => 'ILA']);

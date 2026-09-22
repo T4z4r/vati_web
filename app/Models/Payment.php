@@ -13,7 +13,7 @@ class Payment extends Model
 
     protected function casts(): array
     {
-        return ['paid_at' => 'datetime', 'reversed_at' => 'datetime', 'client_created_at' => 'datetime', 'server_received_at' => 'datetime'];
+        return ['amount' => 'decimal:2', 'paid_at' => 'datetime', 'reversed_at' => 'datetime', 'client_created_at' => 'datetime', 'server_received_at' => 'datetime'];
     }
 
     public function loan()

@@ -30,6 +30,30 @@ class PaymentController extends ApiController
         ], 201);
     }
 
+    public function update(Request $request, Payment $payment, PaymentService $service)
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'reason' => ['nullable', 'string'],
+        ]);
+
+        $payment = $service->editAmount($payment, $request->user(), (float) $data['amount'], $data['reason'] ?? null);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment amount edited successfully.',
+            'data' => $payment,
+            'loan' => [
+                'id' => $payment->loan->id,
+                'loan_number' => $payment->loan->loan_number,
+                'status' => $payment->loan->refresh()->status->value,
+                'principal_balance' => (string) $payment->loan->principal_balance,
+                'interest_balance' => (string) $payment->loan->interest_balance,
+                'total_balance' => (string) $payment->loan->total_balance,
+            ],
+        ]);
+    }
+
     public function reverse(Request $request, Payment $payment, PaymentService $service)
     {
         $data = $request->validate(['reason' => ['required', 'string', 'min:5']]);

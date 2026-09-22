@@ -79,72 +79,11 @@ class PaymentService
                 'client_created_at' => $data['client_created_at'] ?? null,
                 'server_received_at' => now(),
                 'sync_status' => 'synced',
+                'status' => 'posted',
                 'remarks' => $data['remarks'] ?? null,
             ]);
 
-            $remaining = round($amount, 2);
-            foreach ($installments as $installment) {
-                if ($remaining <= 0) {
-                    break;
-                }
-                $interestDue = max(0, (float) $installment->interest_due - (float) $installment->interest_paid - (float) $installment->interest_exemption);
-                $interest = min($remaining, $interestDue);
-                $remaining = round($remaining - $interest, 2);
-                $principalDue = max(0, (float) $installment->principal_due - (float) $installment->principal_paid);
-                $principal = min($remaining, $principalDue);
-                $remaining = round($remaining - $principal, 2);
-
-                if ($interest + $principal > 0) {
-                    $payment->allocations()->create([
-                        'loan_installment_id' => $installment->id,
-                        'principal_amount' => $principal,
-                        'interest_amount' => $interest,
-                    ]);
-                    $installment->principal_paid = round((float) $installment->principal_paid + $principal, 2);
-                    $installment->interest_paid = round((float) $installment->interest_paid + $interest, 2);
-                    $installment->total_paid = round((float) $installment->total_paid + $principal + $interest, 2);
-                    $effectiveDue = (float) $installment->total_due - (float) $installment->interest_exemption;
-                    $installment->status = (float) $installment->total_paid + 0.009 >= $effectiveDue ? 'paid' : 'partially_paid';
-                    $installment->save();
-                }
-            }
-
-            $interestPaid = round((float) $payment->allocations()->sum('interest_amount'), 2);
-            $principalPaid = round((float) $payment->allocations()->sum('principal_amount'), 2);
-
-            // Keep accepting repayments when an older or manually adjusted loan has a
-            // schedule that differs from its authoritative loan balances.
-            if ($remaining > 0.009) {
-                $residualInterest = min($remaining, max(0, round((float) $loan->interest_balance - $interestPaid, 2)));
-                $remaining = round($remaining - $residualInterest, 2);
-                $residualPrincipal = min($remaining, max(0, round((float) $loan->principal_balance - $principalPaid, 2)));
-                $remaining = round($remaining - $residualPrincipal, 2);
-
-                if ($residualInterest + $residualPrincipal > 0) {
-                    $payment->allocations()->create([
-                        'loan_installment_id' => null,
-                        'principal_amount' => $residualPrincipal,
-                        'interest_amount' => $residualInterest,
-                    ]);
-                    $interestPaid = round($interestPaid + $residualInterest, 2);
-                    $principalPaid = round($principalPaid + $residualPrincipal, 2);
-                }
-            }
-
-            if ($remaining > 0.009 || abs($amount - $principalPaid - $interestPaid) > 0.009) {
-                throw new DomainException('The repayment could not be fully allocated to the outstanding loan balance.');
-            }
-
-            $loan->principal_balance = max(0, round((float) $loan->principal_balance - $principalPaid, 2));
-            $loan->interest_balance = max(0, round((float) $loan->interest_balance - $interestPaid, 2));
-            $loan->total_balance = round($loan->principal_balance + $loan->interest_balance, 2);
-            if ($loan->total_balance <= 0.009) {
-                $loan->principal_balance = 0;
-                $loan->interest_balance = 0;
-                $loan->total_balance = 0;
-                $loan->status = LoanStatus::SETTLED;
-            }
-            $loan->save();
+            $this->allocate($payment, $loan, $installments, $amount);
 
             activity()->causedBy($user)->performedOn($loan)->withProperties(['amount' => $amount, 'payment_number' => $payment->payment_number])->log('Loan repayment posted');
             $this->notifications->send(
@@ -201,5 +140,146 @@ class PaymentService
 
             return $payment->refresh();
         });
+    }
+
+    public function editAmount(Payment $payment, User $user, float $newAmount, ?string $reason = null): Payment
+    {
+        $newAmount = round($newAmount, 2);
+        if ($newAmount <= 0) {
+            throw new DomainException('Payment amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use ($payment, $user, $newAmount, $reason) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            if ($payment->status !== 'posted') {
+                throw new DomainException('Only posted payments can be edited.');
+            }
+            $previousAmount = round((float) $payment->amount, 2);
+            if (abs($newAmount - $previousAmount) <= 0.009) {
+                throw new DomainException('The new amount must be different from the current payment amount.');
+            }
+
+            $loan = Loan::query()->lockForUpdate()->findOrFail($payment->loan_id);
+            if (! in_array($loan->status, [LoanStatus::ACTIVE, LoanStatus::OVERDUE, LoanStatus::SETTLED], true)) {
+                throw new DomainException('Payments can only be edited on active, overdue or settled loans.');
+            }
+
+            // Restore the outstanding balances that this payment had reduced.
+            foreach ($payment->allocations()->with('installment')->get() as $allocation) {
+                if ($allocation->installment) {
+                    $installment = $allocation->installment;
+                    $installment->principal_paid = max(0, round((float) $installment->principal_paid - (float) $allocation->principal_amount, 2));
+                    $installment->interest_paid = max(0, round((float) $installment->interest_paid - (float) $allocation->interest_amount, 2));
+                    $installment->total_paid = round($installment->principal_paid + $installment->interest_paid, 2);
+                    $installment->status = $installment->total_paid > 0 ? 'partially_paid' : ($installment->due_date->isPast() ? 'overdue' : 'upcoming');
+                    $installment->save();
+                }
+            }
+
+            $loan->principal_balance = round((float) $loan->principal_balance + (float) $payment->allocations()->sum('principal_amount'), 2);
+            $loan->interest_balance = round((float) $loan->interest_balance + (float) $payment->allocations()->sum('interest_amount'), 2);
+            $loan->total_balance = round($loan->principal_balance + $loan->interest_balance, 2);
+            $loan->status = $loan->installments()
+                ->whereDate('due_date', '<', today())
+                ->whereNotIn('status', ['paid', 'waived'])
+                ->exists() ? LoanStatus::OVERDUE : LoanStatus::ACTIVE;
+            $loan->save();
+
+            $payment->allocations()->delete();
+
+            $outstandingBalance = round((float) $loan->total_balance, 2);
+            if ($newAmount - $outstandingBalance > 0.009) {
+                throw new DomainException('The new payment amount cannot exceed the outstanding loan balance.');
+            }
+            $amount = min($newAmount, $outstandingBalance);
+
+            $installments = $loan->installments()
+                ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
+                ->orderBy('installment_number')
+                ->lockForUpdate()
+                ->get();
+
+            $this->allocate($payment, $loan, $installments, $amount);
+            $payment->update(['amount' => $amount]);
+
+            activity()->causedBy($user)->performedOn($payment)->withProperties(['previous_amount' => $previousAmount, 'amount' => $amount, 'reason' => $reason])->log('Loan repayment amount edited');
+            $this->notifications->send(
+                $this->notifications->applicationOriginators($loan->application),
+                'payment_edited',
+                'Payment edited',
+                "Payment {$payment->payment_number} for loan {$loan->loan_number} was changed from {$previousAmount} to {$amount}.",
+                'payment',
+                $payment->id
+            );
+
+            return $payment->load('allocations');
+        });
+    }
+
+    private function allocate(Payment $payment, Loan $loan, $installments, float $amount): void
+    {
+        $remaining = round($amount, 2);
+        foreach ($installments as $installment) {
+            if ($remaining <= 0) {
+                break;
+            }
+            $interestDue = max(0, (float) $installment->interest_due - (float) $installment->interest_paid - (float) $installment->interest_exemption);
+            $interest = min($remaining, $interestDue);
+            $remaining = round($remaining - $interest, 2);
+            $principalDue = max(0, (float) $installment->principal_due - (float) $installment->principal_paid);
+            $principal = min($remaining, $principalDue);
+            $remaining = round($remaining - $principal, 2);
+
+            if ($interest + $principal > 0) {
+                $payment->allocations()->create([
+                    'loan_installment_id' => $installment->id,
+                    'principal_amount' => $principal,
+                    'interest_amount' => $interest,
+                ]);
+                $installment->principal_paid = round((float) $installment->principal_paid + $principal, 2);
+                $installment->interest_paid = round((float) $installment->interest_paid + $interest, 2);
+                $installment->total_paid = round((float) $installment->total_paid + $principal + $interest, 2);
+                $effectiveDue = (float) $installment->total_due - (float) $installment->interest_exemption;
+                $installment->status = (float) $installment->total_paid + 0.009 >= $effectiveDue ? 'paid' : 'partially_paid';
+                $installment->save();
+            }
+        }
+
+        $interestPaid = round((float) $payment->allocations()->sum('interest_amount'), 2);
+        $principalPaid = round((float) $payment->allocations()->sum('principal_amount'), 2);
+
+        // Keep accepting repayments when an older or manually adjusted loan has a
+        // schedule that differs from its authoritative loan balances.
+        if ($remaining > 0.009) {
+            $residualInterest = min($remaining, max(0, round((float) $loan->interest_balance - $interestPaid, 2)));
+            $remaining = round($remaining - $residualInterest, 2);
+            $residualPrincipal = min($remaining, max(0, round((float) $loan->principal_balance - $principalPaid, 2)));
+            $remaining = round($remaining - $residualPrincipal, 2);
+
+            if ($residualInterest + $residualPrincipal > 0) {
+                $payment->allocations()->create([
+                    'loan_installment_id' => null,
+                    'principal_amount' => $residualPrincipal,
+                    'interest_amount' => $residualInterest,
+                ]);
+                $interestPaid = round($interestPaid + $residualInterest, 2);
+                $principalPaid = round($principalPaid + $residualPrincipal, 2);
+            }
+        }
+
+        if ($remaining > 0.009 || abs($amount - $principalPaid - $interestPaid) > 0.009) {
+            throw new DomainException('The repayment could not be fully allocated to the outstanding loan balance.');
+        }
+
+        $loan->principal_balance = max(0, round((float) $loan->principal_balance - $principalPaid, 2));
+        $loan->interest_balance = max(0, round((float) $loan->interest_balance - $interestPaid, 2));
+        $loan->total_balance = round($loan->principal_balance + $loan->interest_balance, 2);
+        if ($loan->total_balance <= 0.009) {
+            $loan->principal_balance = 0;
+            $loan->interest_balance = 0;
+            $loan->total_balance = 0;
+            $loan->status = LoanStatus::SETTLED;
+        }
+        $loan->save();
     }
 }

@@ -1,14 +1,16 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppDownloadController;
 use App\Http\Controllers\Api\V1\ApplicationComplianceController;
 use App\Http\Controllers\Api\V1\ApplicationDocumentController;
 use App\Http\Controllers\Api\V1\ApplicationExportController;
 use App\Http\Controllers\Api\V1\AreaController;
-use App\Http\Controllers\Api\V1\AppDownloadController;
+use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CreditReviewController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\DataPurgeController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\GroupPortfolioController;
 use App\Http\Controllers\Api\V1\GroupVisitController;
@@ -35,10 +37,8 @@ use App\Http\Controllers\Api\V1\PortfolioController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\SecurityAccountController;
 use App\Http\Controllers\Api\V1\SystemSettingsController;
-use App\Http\Controllers\Api\V1\AuditLogController;
-use App\Http\Controllers\Api\V1\DataPurgeController;
-use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\UserAttachmentController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -161,6 +161,7 @@ Route::prefix('v1')->group(function () {
         Route::get('loans/{loan}/export', [LoanExportController::class, 'download']);
         Route::post('loans/{loan}/disburse', [LoanDisbursementController::class, 'store']);
         Route::post('loans/{loan}/payments', [PaymentController::class, 'store']);
+        Route::match(['POST', 'PUT', 'PATCH'], 'payments/{payment}', [PaymentController::class, 'update']);
         Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse']);
         Route::post('loans/{loan}/settle', [LoanSettlementController::class, 'store']);
         Route::post('members/{member}/passbook-replacements', [LoanAdministrationController::class, 'replacePassbook']);

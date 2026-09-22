@@ -24,9 +24,10 @@ class RepaymentScheduleService
             // billed at the tiered per-day rate × 7-day weekly period.
             $remainingTotal = round((float) $loan->total_repayment, 2);
             $weeklyInstallment = $perDay > 0 ? round($perDay * 7, 2) : round($remainingTotal / $count, 2);
+            $weekly = $loan->product->repayment_frequency === 'weekly';
 
             for ($i = 1; $i <= $count; $i++) {
-                $total = $i === $count ? $remainingTotal : min($perInstallment, $remainingTotal);
+                $total = $i === $count ? $remainingTotal : min($weeklyInstallment, $remainingTotal);
                 $total = round($total, 2);
                 $loan->installments()->create([
                     'installment_number' => $i,
@@ -34,7 +35,7 @@ class RepaymentScheduleService
                     'principal_due' => $total,
                     'interest_due' => 0,
                     'total_due' => $total,
-                    'outstanding_balance' => max(0, round((float) $loan->total_repayment - (($i - 1) * $perInstallment), 2)),
+                    'outstanding_balance' => max(0, round((float) $loan->total_repayment - (($i - 1) * $weeklyInstallment), 2)),
                 ]);
                 $remainingTotal = round($remainingTotal - $total, 2);
             }
