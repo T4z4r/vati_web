@@ -66,8 +66,8 @@
                                         <form method="POST" action="{{ route('admin.members.destroy', $member) }}">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-danger"
-                                                data-confirm="{{ __('Delete this member? Members with loan history cannot be deleted.') }}"
-                                                data-force-text="{{ __('Delete forever') }}">{{ __('Delete') }}</button>
+                                                data-confirm="{{ __('Delete this member? Members with loan history cannot be deleted. Choosing \'Delete forever\' permanently deletes the member and ALL linked data.') }}"
+                                                data-force-text="{{ __('Delete forever') }}" data-trash-text="{{ __('Move to trash') }}">{{ __('Delete') }}</button>
                                         </form>
                                     @endcan
                                 </div>

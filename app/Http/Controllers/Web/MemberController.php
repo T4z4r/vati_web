@@ -332,16 +332,21 @@ class MemberController extends Controller
 
     public function destroy(Request $request, Member $member)
     {
-        if ($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists()) {
+        $force = $request->boolean('_force');
+
+        if (! $force && ($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists())) {
             return back()->with('error', 'This member has loan history and cannot be deleted.');
         }
 
-        $force = $request->boolean('_force');
-        $force ? $member->forceDelete() : $member->delete();
+        if ($force) {
+            app(\App\Services\MemberDeletionService::class)->forceDelete($member);
+        } else {
+            $member->delete();
+        }
 
-        activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force])->log($force ? 'Member permanently deleted' : 'Member deleted');
+        activity()->causedBy($request->user())->performedOn($member)->withProperties(['forced' => $force])->log($force ? 'Member permanently deleted with all linked data' : 'Member deleted');
 
-        return redirect()->route('admin.members.index')->with('success', $force ? 'Member permanently deleted.' : 'Member deleted.');
+        return redirect()->route('admin.members.index')->with('success', $force ? 'Member permanently deleted with all linked data.' : 'Member deleted.');
     }
 
     public function updateKyc(Request $request, Member $member)
