@@ -94,6 +94,35 @@ class ApiAccessTest extends TestCase
             ->assertJsonPath('data.verification_status', 'pending');
     }
 
+    public function test_delete_compliance_document_via_api(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        $application = LoanApplication::create(['application_number' => 'APP-1', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+        $document = $this->post("/api/v1/loan-applications/{$application->id}/documents", [
+            'document_type' => 'business_license',
+            'file' => UploadedFile::fake()->create('license.pdf', 100, 'application/pdf'),
+        ])->assertCreated()->json('data');
+
+        $this->postJson("/api/v1/loan-applications/{$application->id}/documents/{$document['id']}/delete")->assertNoContent();
+        $this->assertDatabaseMissing('loan_documents', ['id' => $document['id']]);
+    }
+
+    public function test_delete_compliance_document_of_other_application_returns_404(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create(['membership_number' => 'M1', 'branch_id' => $branch->id, 'group_id' => $group->id, 'first_name' => 'Asha', 'last_name' => 'Musa', 'phone' => '255710000001', 'created_by' => $user->id]);
+        $applicationA = LoanApplication::create(['application_number' => 'APP-A', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+        $applicationB = LoanApplication::create(['application_number' => 'APP-B', 'member_id' => $member->id, 'loan_product_id' => $product->id, 'group_id' => $group->id, 'branch_id' => $branch->id, 'requested_amount' => 1000, 'duration_months' => 1, 'status' => 'draft', 'created_by' => $user->id]);
+        $document = $this->post("/api/v1/loan-applications/{$applicationA->id}/documents", [
+            'document_type' => 'business_license',
+            'file' => UploadedFile::fake()->create('license.pdf', 100, 'application/pdf'),
+        ])->assertCreated()->json('data');
+
+        $this->postJson("/api/v1/loan-applications/{$applicationB->id}/documents/{$document['id']}/delete")->assertNotFound();
+        $this->assertDatabaseHas('loan_documents', ['id' => $document['id']]);
+    }
+
     public function test_member_without_loans_or_applications_can_be_deleted(): void
     {
         ['branch' => $branch, 'group' => $group, 'user' => $user] = $this->baseData();

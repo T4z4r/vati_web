@@ -149,6 +149,7 @@ Route::prefix('v1')->group(function () {
         Route::get('loan-applications/{loanApplication}/documents', [ApplicationDocumentController::class, 'index']);
         Route::post('loan-applications/{loanApplication}/documents', [ApplicationDocumentController::class, 'store']);
         Route::post('loan-applications/{loanApplication}/documents/{loanDocument}/verify', [ApplicationDocumentController::class, 'verify']);
+        Route::post('loan-applications/{loanApplication}/documents/{loanDocument}/delete', [ApplicationDocumentController::class, 'destroy'])->name('api.loan-applications.documents.delete');
         Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ApplicationDocumentController::class, 'download'])->name('api.loan-applications.documents.download');
         Route::get('loan-applications/{loanApplication}/export', [ApplicationExportController::class, 'download']);
         Route::post('loan-applications/{loanApplication}/cancel', [ApplicationComplianceController::class, 'cancel']);

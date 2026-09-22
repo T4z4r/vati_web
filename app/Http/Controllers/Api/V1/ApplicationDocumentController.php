@@ -53,6 +53,18 @@ class ApplicationDocumentController extends ApiController
         return Storage::disk('local')->download($loanDocument->file_path, $loanDocument->original_name ?: basename($loanDocument->file_path));
     }
 
+    public function destroy(Request $request, LoanApplication $loanApplication, LoanDocument $loanDocument)
+    {
+        $this->belongsTo($loanApplication, $loanDocument);
+        $path = $loanDocument->file_path;
+        $force = $request->boolean('force');
+        $force ? $loanDocument->forceDelete() : $loanDocument->delete();
+        Storage::disk('local')->delete($path);
+        activity()->causedBy($request->user())->performedOn($loanApplication)->withProperties(['forced' => $force, 'file_name' => $loanDocument->original_name])->log('Loan application document '.($force ? 'permanently ' : '').'deleted');
+
+        return response()->noContent();
+    }
+
     private function belongsTo(LoanApplication $application, LoanDocument $document): void
     {
         abort_unless($document->loan_application_id === $application->id, 404);
