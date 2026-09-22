@@ -30,8 +30,12 @@ class VatCorrectionService
         $receivable = round($principal - $security - $charges, 2);
         $count = max(1, (int) $loan->number_of_installments);
         $totalRepayment = round((float) $loan->total_repayment, 2);
-        $installmentAmount = intdiv((int) round($totalRepayment * 100), $count) / 100;
-        $weeklyInstallment = round($totalRepayment / $count, 2);
+        $application = $loan->application;
+        $duration = (int) ($application?->recommended_duration_months ?: $application?->duration_months ?: 0);
+        $installmentAmount = $duration > 0
+            ? $this->calculator->weeklyFactorAmount($principal, $duration, $count)
+            : round(((float) $loan->interest_amount) / $count, 2);
+        $weeklyInstallment = $installmentAmount;
 
         return [
             'processing_fee' => $processingFee,
@@ -324,6 +328,70 @@ class VatCorrectionService
                 'loans' => $loanChanges,
                 'repayment' => $repaymentChanges,
                 'schedule' => $scheduleChanges,
+                'message' => $message,
+            ];
+        });
+    }
+
+    /**
+     * Recompute and persist the figures for a single loan using the product's
+     * current rates, optionally regenerating its repayment schedule where safe.
+     *
+     * @return array{loan: int, corrected: bool, repayment: bool, schedule: bool, message: string}
+     */
+    public function correctLoan(Loan $loan, bool $includeSchedule = true): array
+    {
+        if (! $loan->product) {
+            throw new DomainException('This loan has no linked product; correction cannot be applied.');
+        }
+
+        return DB::transaction(function () use ($loan, $includeSchedule) {
+            $f = $this->loanFigures($loan);
+            $needsCorrection = $this->loanNeedsCorrection($loan);
+            $needsRepayment = $this->loanNeedsRepaymentCorrection($loan);
+
+            if ($needsCorrection || $needsRepayment) {
+                $loan->update([
+                    'processing_fee' => $f['processing_fee'],
+                    'calc_insurance_fee' => $f['insurance_fee'],
+                    'calc_vat' => $f['vat'],
+                    'calc_security_amount' => $f['security_amount'],
+                    'calc_charges' => $f['charges'],
+                    'calc_amount_receivable' => $f['amount_receivable'],
+                    'total_fees_and_vat' => $f['charges'],
+                    'installment_amount' => $f['installment_amount'],
+                    'weekly_installment' => $f['weekly_installment'],
+                ]);
+            }
+
+            $scheduleChanged = false;
+            if ($includeSchedule && $this->scheduleEligible($loan) && $this->loanNeedsScheduleCorrection($loan)) {
+                $loan->installments()->delete();
+                $this->schedule->generate($loan, $loan->first_payment_date);
+                $scheduleChanged = true;
+            }
+
+            if (! $needsCorrection && ! $needsRepayment && ! $scheduleChanged) {
+                $message = 'No outdated VAT or repayment figures were found — nothing to correct.';
+            } else {
+                $changes = [];
+                if ($needsCorrection) {
+                    $changes[] = 'figures corrected';
+                }
+                if ($needsRepayment) {
+                    $changes[] = 'repayment amounts corrected';
+                }
+                if ($scheduleChanged) {
+                    $changes[] = 'repayment schedule regenerated';
+                }
+                $message = 'Loan corrected ('.implode('; ', $changes).').';
+            }
+
+            return [
+                'loan' => $loan->id,
+                'corrected' => $needsCorrection || $needsRepayment,
+                'repayment' => $needsRepayment,
+                'schedule' => $scheduleChanged,
                 'message' => $message,
             ];
         });

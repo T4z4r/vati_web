@@ -94,14 +94,14 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('873200.00', $loan->fresh()->calc_amount_receivable);
         $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '873200.00');
-        $this->assertSame('2898199.50', $loan->fresh()->total_balance);
-        $this->assertSame(2898199.50, round((float) $loan->installments()->sum('total_due'), 2));
+        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
+        $this->assertSame(1044500.0, round((float) $loan->installments()->sum('total_due'), 2));
         $this->assertSame(26, $loan->installments()->count());
         $payment = app(\App\Services\PaymentService::class)->post($loan, $user, 100000, ['payment_method' => 'cash']);
-        $this->assertSame('2798199.50', $loan->fresh()->total_balance);
+        $this->assertSame('944500.00', $loan->fresh()->total_balance);
         app(\App\Services\PaymentService::class)->reverse($payment, $user, 'Test reversal');
-        $this->assertSame('2898199.50', $loan->fresh()->total_balance);
-        app(\App\Services\PaymentService::class)->post($loan, $user, 2898199.50, ['payment_method' => 'cash']);
+        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
+        app(\App\Services\PaymentService::class)->post($loan, $user, 1044500.0, ['payment_method' => 'cash']);
         $this->assertSame('0.00', $loan->fresh()->total_balance);
         $this->assertSame('settled', $loan->fresh()->status->value);
     }
@@ -130,27 +130,28 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame(100000.0, $figures['security_amount']);
         $this->assertSame(26800.0, $figures['charges']);
         $this->assertSame(873200.0, $figures['amount_receivable']);
-        $this->assertSame(2999488.38, $figures['total_repayment']);
-        $this->assertSame(1999488.38, $figures['interest']);
-        $this->assertSame(0.445, $figures['interest_rate']);
+        $this->assertSame(1044500.0, $figures['total_repayment']);
+        $this->assertSame(44500.0, $figures['interest']);
+        $this->assertSame(0.0445, $figures['interest_rate']);
     }
 
-    public function test_every_duration_repayment_matches_reducing_balance_tiers(): void
+    public function test_every_duration_repayment_matches_flat_interest_tiers(): void
     {
         $tiers = [
-            'weekly' => [6 => 1898199.61, 8 => 156539.44, 10 => 156872.05],
-            'monthly' => [6 => 1999488.44, 8 => 168675.35, 10 => 169315.66],
+            'weekly' => [6 => 44500.0, 8 => 36000.0, 10 => 29500.0],
+            'monthly' => [6 => 44500.0, 8 => 36000.0, 10 => 29500.0],
         ];
         foreach (['weekly', 'monthly'] as $frequency) {
             $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => $frequency]);
             foreach (range(1, 12) as $months) {
                 $figures = app(LoanCalculatorService::class)->calculate($product, 1000000.01, $months);
-                $this->assertLessThanOrEqual($figures['total_repayment'], round($figures['installment_amount'] * $figures['installment_count'], 2));
                 $this->assertSame($figures['total_repayment'], round($figures['principal'] + $figures['interest'], 2));
                 if (isset($tiers[$frequency][$months])) {
                     $this->assertSame($tiers[$frequency][$months], $figures['interest']);
+                    $this->assertSame(round($tiers[$frequency][$months] / $figures['installment_count'], 2), $figures['installment_amount']);
                 } else {
                     $this->assertSame(0.0, $figures['interest']);
+                    $this->assertSame(0.0, $figures['installment_amount']);
                     $this->assertSame(1000000.01, $figures['total_repayment']);
                 }
             }

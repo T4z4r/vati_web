@@ -411,10 +411,11 @@
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Reducing-balance monthly interest factors (not percentages), keyed by
-        // duration in months. They must mirror config/vati.php (interest_tiers)
-        // and LoanCalculatorService.
-        const interestTiers = { 6: 0.445, 8: 0.036, 10: 0.0295 };
+        // Flat interest factors (not percentages), keyed by duration in months.
+        // Each factor is the total interest over the whole tenure as a factor of
+        // the principal. They must mirror config/vati.php (interest_tiers) and
+        // LoanCalculatorService.
+        const interestTiers = { 6: 0.0445, 8: 0.036, 10: 0.0295 };
 
         function round2(value) {
             return Math.round(value * 100) / 100;
@@ -423,8 +424,7 @@
         function periodRateFor(duration, frequency) {
             const tier = interestTiers[duration];
             if (!tier || !duration) return 0;
-            const monthly = tier;
-            return frequency === 'weekly' ? monthly * 12 / 52 : monthly;
+            return Number(tier);
         }
 
         function amortizeRows(principal, duration, frequency) {
@@ -445,20 +445,28 @@
                 return rows;
             }
 
-            const growth = Math.pow(1 + rate, count);
-            const payment = round2((principal * rate * growth) / (growth - 1));
+            const totalInterest = round2(principal * rate);
+            const even = round2(principal / count);
+            const baseInterest = round2(totalInterest / count);
+            let allocatedInterest = 0;
             for (let i = 1; i <= count; i++) {
-                const interest = round2(remaining * rate);
-                let part = i === count ? remaining : Math.min(Math.max(0, payment - interest), remaining);
-                part = round2(part);
-                const total = round2(part + interest);
-                rows.push({ principal: part, interest, total, balance: round2(remaining - part) });
-                remaining = round2(remaining - part);
+                const principalPart = i === count ? remaining : Math.min(even, remaining);
+                const principalDone = round2(principalPart);
+                const interest = i === count ? round2(totalInterest - allocatedInterest) : baseInterest;
+                rows.push({
+                    principal: principalDone,
+                    interest,
+                    total: round2(principalDone + interest),
+                    balance: round2(remaining - principalDone),
+                });
+                remaining = round2(remaining - principalDone);
+                allocatedInterest = round2(allocatedInterest + interest);
             }
             return rows;
         }
 
-        // Reducing-balance lending: interest accrues on the outstanding principal.
+        // Flat-interest lending: the tier factor is the total interest over the
+        // whole tenure, spread evenly across the installments.
         function scheduledTotalFor(principal, duration, frequency) {
             const rows = amortizeRows(principal, duration, frequency);
             return round2(rows.reduce((sum, row) => sum + row.total, 0));

@@ -157,8 +157,9 @@ class VatCorrectionTest extends TestCase
         $this->assertAmount(26800, $application->calc_charges, 'application calc_charges');
         $this->assertAmount(100000, $application->calc_security_amount, 'application calc_security_amount');
         $this->assertAmount(873200, $application->calc_amount_receivable, 'application calc_amount_receivable');
-        $this->assertAmount(2999488.38, $application->calc_total_repayment, 'application calc_total_repayment');
-        $this->assertAmount(1999488.38, $application->calc_interest, 'application calc_interest');
+        // Flat factor (0.0445 over 6 months on 1,000,000).
+        $this->assertAmount(1044500.0, $application->calc_total_repayment, 'application calc_total_repayment');
+        $this->assertAmount(44500.0, $application->calc_interest, 'application calc_interest');
         $this->assertAmount(15000, $application->calc_insurance_fee, 'application calc_insurance_fee');
         $this->assertAmount(10000, $application->calc_processing_fee, 'application calc_processing_fee');
 
@@ -170,8 +171,8 @@ class VatCorrectionTest extends TestCase
         $this->assertAmount(100000, $loan->calc_security_amount, 'loan calc_security_amount');
         $this->assertAmount(873200, $loan->calc_amount_receivable, 'loan calc_amount_receivable');
         $this->assertAmount(26800, $loan->total_fees_and_vat, 'loan total_fees_and_vat');
-        $this->assertAmount(166666.66, $loan->installment_amount, 'loan installment_amount');
-        $this->assertAmount(166666.67, $loan->weekly_installment, 'loan weekly_installment');
+        $this->assertAmount(7416.67, $loan->installment_amount, 'loan installment_amount');
+        $this->assertAmount(7416.67, $loan->weekly_installment, 'loan weekly_installment');
 
         $this->assertSame(6, $loan->installments()->count());
         $this->assertSame(1000000.0, round((float) $loan->installments()->sum('total_due'), 2));
@@ -207,8 +208,8 @@ class VatCorrectionTest extends TestCase
 
         $loan->refresh();
         $this->assertAmount(1800, $loan->calc_vat, 'loan calc_vat');
-        $this->assertAmount(166666.66, $loan->installment_amount, 'loan installment_amount');
-        $this->assertAmount(166666.67, $loan->weekly_installment, 'loan weekly_installment');
+        $this->assertAmount(7416.67, $loan->installment_amount, 'loan installment_amount');
+        $this->assertAmount(7416.67, $loan->weekly_installment, 'loan weekly_installment');
     }
 
     public function test_correct_reports_nothing_to_correct_when_figures_are_current(): void
@@ -286,6 +287,36 @@ class VatCorrectionTest extends TestCase
         $this->assertDatabaseHas('activity_log', ['description' => 'VAT computation corrected for existing loans and applications']);
     }
 
+    public function test_super_admin_can_autocorrect_repayments_from_loan_applications_page(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $application = $this->outdatedApplication($fixtures, 'VAT-A-LIST');
+        $loan = $this->outdatedLoan($application, $fixtures, 'VAT-L-LIST');
+        $this->fillInstallments($loan);
+
+        $admin = User::factory()->create(['branch_id' => $fixtures['branch']->id]);
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->get(route('admin.loan-applications.index'))
+            ->assertOk()
+            ->assertSee(route('admin.loan-applications.correct-repayments'), false)
+            ->assertSee('Auto correct repayments');
+
+        $this->actingAs($admin)
+            ->from(route('admin.loan-applications.index'))
+            ->post(route('admin.loan-applications.correct-repayments'))
+            ->assertRedirect(route('admin.loan-applications.index'))
+            ->assertSessionHas('success');
+
+        $this->assertAmount(1044500.0, $application->refresh()->calc_total_repayment, 'application calc_total_repayment');
+        $this->assertAmount(44500.0, $application->calc_interest, 'application calc_interest');
+        $this->assertAmount(7416.67, $loan->refresh()->installment_amount, 'loan installment_amount');
+        $this->assertAmount(7416.67, $loan->weekly_installment, 'loan weekly_installment');
+        $this->assertDatabaseHas('activity_log', ['description' => 'Loan application repayment values autocorrected']);
+    }
+
     public function test_correct_requires_confirmation_phrase(): void
     {
         $this->seed(RolePermissionSeeder::class);
@@ -302,5 +333,75 @@ class VatCorrectionTest extends TestCase
                 'confirmation_phrase' => 'nope',
             ])
             ->assertSessionHasErrors('confirmation_phrase');
+    }
+
+    public function test_single_loan_can_be_corrected_from_web_by_super_admin(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $application = $this->outdatedApplication($fixtures, 'VAT-A-7');
+        $loan = $this->outdatedLoan($application, $fixtures, 'VAT-L-7');
+        $this->fillInstallments($loan);
+
+        $admin = User::factory()->create(['branch_id' => $fixtures['branch']->id]);
+        $admin->assignRole('super_admin');
+
+        $show = route('admin.loans.show', $loan);
+
+        $this->actingAs($admin)
+            ->from($show)
+            ->post(route('admin.loans.correct', $loan), ['include_schedule' => '1'])
+            ->assertRedirect($show)
+            ->assertSessionHas('success');
+
+        $loan->refresh();
+        $this->assertAmount(1800, $loan->calc_vat, 'loan calc_vat');
+        $this->assertAmount(26800, $loan->total_fees_and_vat, 'loan total_fees_and_vat');
+        $this->assertAmount(26800, $loan->calc_charges, 'loan calc_charges');
+        $this->assertAmount(873200, $loan->calc_amount_receivable, 'loan calc_amount_receivable');
+        $this->assertAmount(7416.67, $loan->installment_amount, 'loan installment_amount');
+        $this->assertAmount(7416.67, $loan->weekly_installment, 'loan weekly_installment');
+
+        $this->assertSame(6, $loan->installments()->count());
+        $this->assertSame(1000000.0, round((float) $loan->installments()->sum('total_due'), 2));
+        $this->assertDatabaseHas('activity_log', ['description' => 'Loan figures autocorrected from the loan page']);
+    }
+
+    public function test_single_loan_correct_is_restricted_to_super_admin(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $application = $this->outdatedApplication($fixtures, 'VAT-A-8');
+        $loan = $this->outdatedLoan($application, $fixtures, 'VAT-L-8');
+        $this->fillInstallments($loan);
+
+        $plain = User::factory()->create(['branch_id' => $fixtures['branch']->id]);
+
+        $this->actingAs($plain)
+            ->post(route('admin.loans.correct', $loan), ['include_schedule' => '1'])
+            ->assertForbidden();
+
+        $this->assertAmount(180000, $loan->refresh()->calc_vat, 'loan calc_vat must be untouched');
+    }
+
+    public function test_single_loan_correct_reports_nothing_when_up_to_date(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $application = $this->outdatedApplication($fixtures, 'VAT-A-9');
+        $loan = $this->outdatedLoan($application, $fixtures, 'VAT-L-9');
+        $this->fillInstallments($loan);
+
+        $admin = User::factory()->create(['branch_id' => $fixtures['branch']->id]);
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)->post(route('admin.loans.correct', $loan));
+
+        $show = route('admin.loans.show', $loan);
+        $this->actingAs($admin)
+            ->from($show)
+            ->post(route('admin.loans.correct', $loan))
+            ->assertRedirect($show)
+            ->assertSessionHas('success', 'No outdated VAT or repayment figures were found — nothing to correct.');
     }
 }

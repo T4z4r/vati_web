@@ -10,6 +10,7 @@ use App\Models\LoanSecurityTransaction;
 use App\Services\DisbursementService;
 use App\Services\ExportService;
 use App\Services\SettlementService;
+use App\Services\VatCorrectionService;
 use DomainException;
 use Illuminate\Http\Request;
 
@@ -77,6 +78,24 @@ class LoanController extends Controller
         }
 
         return back()->with('success', 'Loan settled successfully.');
+    }
+
+    public function correct(Request $request, Loan $loan, VatCorrectionService $service)
+    {
+        $includeSchedule = $request->boolean('include_schedule', true);
+
+        try {
+            $result = $service->correctLoan($loan, $includeSchedule);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        activity()
+            ->performedOn($loan)
+            ->withProperties(['loan_id' => $loan->id, 'autocorrect' => $result])
+            ->log('Loan figures autocorrected from the loan page');
+
+        return back()->with('success', $result['message']);
     }
 
     private function branchId(Request $request): ?int

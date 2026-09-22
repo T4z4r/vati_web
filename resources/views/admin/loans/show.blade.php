@@ -222,6 +222,23 @@
                 </div>
             @endif
             <br>
+            @if (auth()->user()->hasAnyRole(['super_admin', 'head_office_admin']))
+                <div class="card">
+                    <div class="card-head">
+                        <h2>{{ __('Automated correction') }}</h2>
+                    </div>
+                    <form class="card-body" method="POST" action="{{ route('admin.loans.correct', $loan) }}">@csrf<p
+                            class="muted">
+                            {{ __('Recalculate fee, VAT, security, repayment, and schedule figures using the current product configuration.') }}</p>
+                        <div class="form-grid"><label><input type="checkbox" name="include_schedule" value="1"
+                                    checked> {{ __('Regenerate the repayment schedule when safe') }}</label></div>
+                        <div class="form-actions"><button class="btn btn-gold"
+                                data-confirm="{{ __('Autocorrect the figures for this loan using the current configuration?') }}">{{ __('Autocorrect all figures') }}</button>
+                        </div>
+                    </form>
+                </div>
+                <br>
+            @endif
             <div class="card">
                 <div class="card-head">
                     <h2>{{ __('Loan details') }}</h2>

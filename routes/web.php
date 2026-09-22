@@ -78,6 +78,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
 
     Route::resource('loan-applications', LoanApplicationController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:create-loan-applications');
     Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');
+    Route::post('loan-applications/correct-repayments', [LoanApplicationController::class, 'correctRepayments'])->name('loan-applications.correct-repayments')->middleware('role:super_admin|head_office_admin');
     Route::get('loan-applications/{loanApplication}/export', [LoanApplicationController::class, 'export'])
         ->name('loan-applications.export')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationController::class, 'submit'])->name('loan-applications.submit')->middleware('permission:create-loan-applications');
@@ -99,6 +100,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loans/{loan}/installments', [LoanController::class, 'recordInstallment'])->name('loans.installments.store')->middleware('permission:collect-payments');
     Route::post('loans/{loan}/security-transactions', [LoanController::class, 'recordSecurityTransaction'])->name('loans.security-transactions.store')->middleware('permission:manage-security');
     Route::post('loans/{loan}/payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('permission:collect-payments');
+    Route::post('loans/{loan}/correct', [LoanController::class, 'correct'])->name('loans.correct')->middleware('role:super_admin|head_office_admin');
     Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse'])->name('payments.reverse')->middleware('permission:reverse-payments');
     Route::post('members/{member}/security', [SecurityController::class, 'store'])->name('security.store')->middleware('permission:manage-security');
     Route::post('members/{member}/passbook-replacements', [ComplianceController::class, 'passbook'])->name('members.passbook-replacements.store')->middleware('permission:replace-passbooks');

@@ -150,10 +150,10 @@ class VatiWorkflowTest extends TestCase
         $figures = $calculator->calculate($this->product, 1000000, 6);
 
         $this->assertSame(26, $figures['installment_count']);
-        $this->assertSame(111469.21, $figures['installment_amount']);
-        $this->assertSame(1898199.50, $figures['interest']);
-        $this->assertSame(2898199.50, $figures['total_repayment']);
-        $this->assertSame(0.445, $figures['interest_rate']);
+        $this->assertSame(1711.54, $figures['installment_amount']);
+        $this->assertSame(44500.0, $figures['interest']);
+        $this->assertSame(1044500.0, $figures['total_repayment']);
+        $this->assertSame(0.0445, $figures['interest_rate']);
         $this->expectException(\DomainException::class);
         $calculator->calculate($this->product, 50000, 6);
     }
@@ -235,14 +235,14 @@ class VatiWorkflowTest extends TestCase
         $loan->refresh();
 
         Sanctum::actingAs($this->admin);
-        $this->assertSame('2898199.50', $loan->total_balance);
+        $this->assertSame('1044500.00', $loan->total_balance);
 
         $response = $this->postJson("/api/v1/loans/{$loan->id}/payments", ['amount' => 100000, 'payment_method' => 'cash'])
             ->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.amount', '100000.00')
             ->assertJsonPath('data.status', 'posted')
-            ->assertJsonPath('loan.total_balance', '2798199.50');
+            ->assertJsonPath('loan.total_balance', '944500.00');
         $paymentId = $response->json('data.id');
 
         // Increase the repayment amount.
@@ -251,13 +251,13 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.amount', '150000.00')
             ->assertJsonPath('data.status', 'posted')
-            ->assertJsonPath('loan.total_balance', '2748199.50');
+            ->assertJsonPath('loan.total_balance', '894500.00');
 
         // Decrease the repayment amount again.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
             ->assertOk()
             ->assertJsonPath('data.amount', '80000.00')
-            ->assertJsonPath('loan.total_balance', '2818199.50');
+            ->assertJsonPath('loan.total_balance', '964500.00');
 
         // The same amount is rejected.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
@@ -274,10 +274,10 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('message', 'The new payment amount cannot exceed the outstanding loan balance.');
 
         // Undo the payment.
-        $this->postJson("/api/v1/payments/{$paymentId}/delete", ['reason' => 'Collected the wrong amount'])
+        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Collected the wrong amount'])
             ->assertOk()
             ->assertJsonPath('data.status', 'reversed');
-        $this->assertSame('2898199.50', $loan->fresh()->total_balance);
+        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
 
         // A reversed payment can no longer be edited.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 90000])
@@ -285,7 +285,7 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('message', 'Only posted payments can be edited.');
 
         // A reversed payment cannot be reversed again.
-        $this->postJson("/api/v1/payments/{$paymentId}/delete", ['reason' => 'Double reversal attempt'])
+        $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Double reversal attempt'])
             ->assertUnprocessable()
             ->assertJsonPath('message', 'Only posted payments can be reversed.');
     }

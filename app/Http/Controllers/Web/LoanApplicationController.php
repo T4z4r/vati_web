@@ -15,6 +15,7 @@ use App\Services\ExportService;
 use App\Services\LoanApprovalService;
 use App\Services\LoanCalculatorService;
 use App\Services\OnboardingService;
+use App\Services\VatCorrectionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Http\Request;
@@ -54,6 +55,30 @@ class LoanApplicationController extends Controller
             'VATI-loan-applications-'.now()->format('Ymd-His'),
             $format
         );
+    }
+
+    public function correctRepayments(Request $request, VatCorrectionService $service)
+    {
+        $branchId = $this->branchId($request);
+
+        try {
+            $result = $service->correct($branchId, true);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        activity()
+            ->causedBy($request->user())
+            ->withProperties([
+                'branch_id' => $branchId,
+                'applications' => $result['applications'],
+                'loans' => $result['loans'],
+                'repayment' => $result['repayment'],
+                'schedule' => $result['schedule'],
+            ])
+            ->log('Loan application repayment values autocorrected');
+
+        return back()->with('success', $result['message']);
     }
 
     public function create(Request $request)

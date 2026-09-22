@@ -11,6 +11,17 @@
             <a class="btn btn-primary" href="{{ route('admin.loan-applications.create') }}"><span class="ph ph-note-pencil" aria-hidden="true"></span> {{ __('New application') }}</a>
             <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export.list', ['format' => 'pdf'] + request()->query()) }}" title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>
             <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
+            @role('super_admin|head_office_admin')
+                <form method="POST" action="{{ route('admin.loan-applications.correct-repayments') }}">
+                    @csrf
+                    @if (request('branch_id'))
+                        <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
+                    @endif
+                    <button class="btn btn-secondary" data-confirm="{{ __('Recompute repayment values for loan applications and loans?') }}">
+                        <span class="ph ph-calculator" aria-hidden="true"></span> {{ __('Auto correct repayments') }}
+                    </button>
+                </form>
+            @endrole
         </div>
     </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
