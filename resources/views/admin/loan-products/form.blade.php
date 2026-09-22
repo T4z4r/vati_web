@@ -41,7 +41,7 @@
                         <option value="monthly" @selected($product->repayment_frequency === 'monthly')>{{ __('Monthly') }}</option>
                     </select></label><label>{{ __('Required group witnesses') }}<input type="number"
                         name="required_group_witnesses"
-                        value="{{ old('required_group_witnesses', $product->required_group_witnesses ?? 2) }}"
+                        value="{{ old('required_group_witnesses', $product->required_group_witnesses ?? 0) }}"
                         required></label><label>{{ __('Security (%)') }}<input type="number" step="0.0001"
                         name="security_percentage"
                         value="{{ old('security_percentage', $product->security_percentage ?? 10) }}"

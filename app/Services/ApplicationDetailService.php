@@ -70,7 +70,7 @@ class ApplicationDetailService
                 'approval' => [
                     'attachments_required' => false,
                     'applicant_evidence_required' => true,
-                    'complete_guarantors_required' => 2,
+                    'complete_guarantors_required' => 0,
                     'confirmed_group_witnesses_required' => $application->product->required_group_witnesses,
                 ],
             ],

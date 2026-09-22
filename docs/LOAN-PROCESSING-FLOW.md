@@ -121,7 +121,7 @@ insurance_percentage                     (% of principal, e.g. 1.5%)
 transaction_fee_percentage               (legacy, unused — always 0)
 membership_fee                           (legacy, unused — always 0)
 vat_percentage                           (% of principal, e.g. 0.18 = 0.18%)
-required_group_witnesses                 (default 2)
+required_group_witnesses                 (default 0 — optional)
 status                                   (active/inactive boolean)
 ```
 
@@ -1074,7 +1074,7 @@ repayment_frequency (default "weekly")
 security_percentage, processing_fee_percentage, insurance_percentage, transaction_fee_percentage (decimal 8,4; transaction fee is legacy/unused)
 membership_fee (decimal 18,2, legacy/unused)
 vat_percentage (decimal 8,4, % of principal, e.g. 0.18)
-required_group_witnesses (unsigned int, default 2)
+required_group_witnesses (unsigned int, default 0 — optional)
 status (boolean, default true)
 ```
 

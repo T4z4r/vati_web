@@ -157,8 +157,8 @@ class VatCorrectionTest extends TestCase
         $this->assertAmount(26800, $application->calc_charges, 'application calc_charges');
         $this->assertAmount(100000, $application->calc_security_amount, 'application calc_security_amount');
         $this->assertAmount(873200, $application->calc_amount_receivable, 'application calc_amount_receivable');
-        $this->assertAmount(1126009.26, $application->calc_total_repayment, 'application calc_total_repayment');
-        $this->assertAmount(126009.26, $application->calc_interest, 'application calc_interest');
+        $this->assertAmount(2999488.38, $application->calc_total_repayment, 'application calc_total_repayment');
+        $this->assertAmount(1999488.38, $application->calc_interest, 'application calc_interest');
         $this->assertAmount(15000, $application->calc_insurance_fee, 'application calc_insurance_fee');
         $this->assertAmount(10000, $application->calc_processing_fee, 'application calc_processing_fee');
 

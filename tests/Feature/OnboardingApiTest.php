@@ -111,7 +111,7 @@ class OnboardingApiTest extends TestCase
             ->assertJsonPath('data.group.id', $groupId)
             ->assertJsonPath('data.status', 'draft')
             ->assertJsonPath('data.requirements.submission.attachments_required', false)
-            ->assertJsonPath('data.requirements.approval.complete_guarantors_required', 2);
+            ->assertJsonPath('data.requirements.approval.complete_guarantors_required', 0);
 
         $applicationId = $applicationResponse->json('data.id');
         $this->assertDatabaseHas('loan_applications', ['id' => $applicationId, 'branch_id' => $branch->id, 'group_id' => $groupId, 'business_summary' => null]);

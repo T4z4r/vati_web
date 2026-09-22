@@ -82,7 +82,7 @@ POST /api/v1/onboarding/loan-applications
 
 Loan-application onboarding derives the branch and group from the active member, captures affordability and use-of-funds data, validates product limits and loan-cycle eligibility, and returns a draft application ready for the compliance-evidence workflow.
 
-The number of confirmed witnesses required before approval is configured with `loan_products.required_group_witnesses`.
+Group witnesses are optional. If required, the number of confirmed witnesses can be configured per product with `loan_products.required_group_witnesses`.
 
 Loan applications cannot be submitted until the active terms are accepted and the required applicant, guarantor, nominee, and document evidence is captured. Required checklist documents must be verified before approval, and an approved loan cannot be disbursed until its three-day cooling-off deadline has passed.
 

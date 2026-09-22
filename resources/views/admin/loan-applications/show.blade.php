@@ -101,7 +101,7 @@
 <div class="stats">
     <div class="stat gold"><small>Requested amount</small><strong>TZS {{ number_format($application->requested_amount) }}</strong></div>
     <div class="stat"><small>Loan terms</small><strong>{{ $application->term?->version ?? 'Not accepted' }}</strong><em>{{ $application->consented_at?->format('d M Y H:i') }}</em></div>
-    <div class="stat"><small>Guarantors</small><strong>{{ $application->guarantors->count() }} / 2</strong></div>
+    <div class="stat"><small>Guarantors</small><strong>{{ $application->guarantors->count() }} <em class="muted">(optional)</em></strong></div>
     <div class="stat"><small>Nominee allocation</small><strong>{{ number_format($application->member->nominees->sum('percentage'), 2) }}%</strong></div>
 </div>
 

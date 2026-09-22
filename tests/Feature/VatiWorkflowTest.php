@@ -338,7 +338,7 @@ class VatiWorkflowTest extends TestCase
         $this->assertSame($member->group_id, $application->group_id);
     }
 
-    public function test_witness_rules_and_approval_witness_requirement_are_enforced(): void
+    public function test_witness_rules_are_enforced_and_witnesses_are_optional(): void
     {
         Sanctum::actingAs($this->admin);
         $borrower = $this->member();
@@ -346,15 +346,13 @@ class VatiWorkflowTest extends TestCase
 
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $borrower->id])->assertUnprocessable();
         $first = $this->member();
-        $second = $this->member();
         $otherGroup = MemberGroup::create(['branch_id' => $this->branch->id, 'group_code' => 'KIN-G03', 'group_name' => 'Unrelated Group']);
         $outsider = $this->member($this->branch, $otherGroup);
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $outsider->id])->assertUnprocessable();
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $first->id])->assertCreated();
         $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $first->id])->assertUnprocessable()->assertJsonValidationErrors('member_id');
 
-        $this->postJson("/api/v1/loan-applications/{$application->id}/approve")->assertUnprocessable()->assertJsonPath('message', 'At least 2 confirmed group witnesses are required.');
-        $this->postJson("/api/v1/loan-applications/{$application->id}/group-witnesses", ['member_id' => $second->id])->assertCreated();
+        // Group witnesses are optional: approval succeeds even without meeting the product's required witness count.
         $this->postJson("/api/v1/loan-applications/{$application->id}/approve")->assertOk()->assertJsonPath('data.loan.group_id', $this->group->id);
     }
 
