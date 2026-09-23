@@ -30,7 +30,7 @@ class LoanProductController extends Controller
 
     public function show(LoanProduct $loanProduct)
     {
-        return view('admin.loan-products.show', ['product' => $loanProduct]);
+        return view('admin.loan-products.show', ['product' => $loanProduct->load(['applications.member', 'applications.group'])]);
     }
 
     public function edit(LoanProduct $loanProduct)
