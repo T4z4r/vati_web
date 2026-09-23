@@ -14,10 +14,9 @@ class LoanCalculatorService
             : max(1, $durationMonths);
     }
 
-    /**
-     * Flat interest factor (e.g. 0.036) for the whole tenure of a given
-     * duration, expressed as a factor of the principal. Returns null when no
-     * tier applies.
+/**
+     * Flat weekly interest factor (e.g. 0.0445) charged on the full principal
+     * per installment. Returns null when no tier applies.
      */
     public function interestTier(int $durationMonths): ?float
     {
@@ -27,9 +26,9 @@ class LoanCalculatorService
     }
 
     /**
-     * Flat interest factor charged over the whole tenure. The configured tier
-     * applies regardless of repayment frequency; weekly periods spread the same
-     * factor across the installment count.
+     * Per-installment flat factor applied to the full principal. The configured
+     * tier is a weekly factor; monthly installments scale it up (× 52 / 12) so
+     * the same duration repays the same total regardless of frequency.
      */
     public function periodRate(LoanProduct $product, int $durationMonths): float
     {
@@ -38,22 +37,14 @@ class LoanCalculatorService
             return 0.0;
         }
 
-        return $tier;
-    }
-
-    public function weeklyFactorAmount(float $principal, int $durationMonths, int $weeks): float
-    {
-        $factor = $this->interestTier($durationMonths) ?? 0.0;
-
-        return round($weeks > 0 ? ($principal * $factor) / $weeks : 0.0, 2);
+        return $product->repayment_frequency === 'monthly' ? $tier * 52 / 12 : $tier;
     }
 
     /**
-     * Build a flat amortization across $count equal installments. The rate is
-     * the total interest factor for the whole tenure: total interest is
-     * principal × factor, spread evenly across the installments and added to
-     * an equal share of principal. The last installment absorbs the rounding
-     * remainder.
+     * Build a flat amortization across $count equal installments. Each
+     * installment totals principal × factor (the per-period rate applied to the
+     * full principal); the principal is repaid in even shares with the balance
+     * as interest. The last installment absorbs the rounding remainder.
      */
     public function amortize(float $principal, float $periodRate, int $count): array
     {
@@ -87,18 +78,17 @@ class LoanCalculatorService
             ];
         }
 
-        $totalInterest = round($principal * $periodRate, 2);
-        $totalRepayment = round($principal + $totalInterest, 2);
+        $totalRepayment = round($principal * $periodRate * $count, 2);
+        $totalInterest = round($totalRepayment - $principal, 2);
 
+        $perPeriod = round($totalRepayment / $count, 2);
         $even = round($principal / $count, 2);
-        $baseInterest = round($totalInterest / $count, 2);
-        $allocatedInterest = 0.0;
 
         for ($i = 1; $i <= $count; $i++) {
             $principalPart = $i === $count ? $remaining : min($even, $remaining);
             $principalPart = round($principalPart, 2);
-            $interest = $i === $count ? round($totalInterest - $allocatedInterest, 2) : $baseInterest;
-            $total = round($principalPart + $interest, 2);
+            $total = $i === $count ? round($totalRepayment - $perPeriod * ($count - 1), 2) : $perPeriod;
+            $interest = round($total - $principalPart, 2);
 
             $rows[] = [
                 'installment_number' => $i,
@@ -108,7 +98,6 @@ class LoanCalculatorService
                 'outstanding_balance' => round($remaining - $principalPart, 2),
             ];
             $remaining = round($remaining - $principalPart, 2);
-            $allocatedInterest = round($allocatedInterest + $interest, 2);
         }
 
         return [
@@ -116,7 +105,7 @@ class LoanCalculatorService
             'principal' => $principal,
             'interest' => $totalInterest,
             'total_repayment' => $totalRepayment,
-            'installment_amount' => round($principal > 0 ? $totalRepayment / $count : 0.0, 2),
+            'installment_amount' => $perPeriod,
         ];
     }
 
@@ -152,7 +141,7 @@ class LoanCalculatorService
 
         return [
             'principal' => $principal,
-            'interest' => $this->weeklyFactorAmount($principal, $durationMonths, $installmentCount),
+            'interest' => $totalInterest,
             'total_interest' => $totalInterest,
             'interest_rate' => $tier ?? 0.0,
             'processing_fee' => round($processingFee, 2),
@@ -163,7 +152,7 @@ class LoanCalculatorService
             'amount_receivable' => $receivable,
             'total_repayment' => $totalRepayment,
             'installment_count' => $installmentCount,
-            'installment_amount' => $this->weeklyFactorAmount($principal, $durationMonths, $installmentCount),
+            'installment_amount' => intdiv((int) round($totalRepayment * 100), $installmentCount) / 100,
         ];
     }
 }

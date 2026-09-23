@@ -411,9 +411,9 @@
             return Math.max(1, Math.round(duration * 52 / 12));
         }
 
-        // Flat interest factors (not percentages), keyed by duration in months.
-        // Each factor is the total interest over the whole tenure as a factor of
-        // the principal. They must mirror config/vati.php (interest_tiers) and
+        // Flat weekly interest factors (not percentages), keyed by duration in
+        // months. Each factor is charged on the full principal per installment.
+        // They must mirror config/vati.php (interest_tiers) and
         // LoanCalculatorService.
         const interestTiers = { 6: 0.0445, 8: 0.036, 10: 0.0295 };
 
@@ -424,7 +424,7 @@
         function periodRateFor(duration, frequency) {
             const tier = interestTiers[duration];
             if (!tier || !duration) return 0;
-            return Number(tier);
+            return frequency === 'monthly' ? Number(tier) * 52 / 12 : Number(tier);
         }
 
         function amortizeRows(principal, duration, frequency) {
@@ -445,28 +445,26 @@
                 return rows;
             }
 
-            const totalInterest = round2(principal * rate);
+            const totalRepayment = round2(principal * rate * count);
+            const perPeriod = round2(totalRepayment / count);
             const even = round2(principal / count);
-            const baseInterest = round2(totalInterest / count);
-            let allocatedInterest = 0;
             for (let i = 1; i <= count; i++) {
                 const principalPart = i === count ? remaining : Math.min(even, remaining);
                 const principalDone = round2(principalPart);
-                const interest = i === count ? round2(totalInterest - allocatedInterest) : baseInterest;
+                const total = i === count ? round2(totalRepayment - perPeriod * (count - 1)) : perPeriod;
                 rows.push({
                     principal: principalDone,
-                    interest,
-                    total: round2(principalDone + interest),
+                    interest: round2(total - principalDone),
+                    total: round2(total),
                     balance: round2(remaining - principalDone),
                 });
                 remaining = round2(remaining - principalDone);
-                allocatedInterest = round2(allocatedInterest + interest);
             }
             return rows;
         }
 
-        // Flat-interest lending: the tier factor is the total interest over the
-        // whole tenure, spread evenly across the installments.
+        // Flat-interest lending: each installment is principal × factor, repaid
+        // over the tenure, so the scheduled total is principal × factor × count.
         function scheduledTotalFor(principal, duration, frequency) {
             const rows = amortizeRows(principal, duration, frequency);
             return round2(rows.reduce((sum, row) => sum + row.total, 0));
