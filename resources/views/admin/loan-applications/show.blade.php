@@ -23,8 +23,6 @@
     <div class="head-actions">
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
-    <div class="head-actions">
-        <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export', $application) }}">Pakua PDF ya ombi</a>
         @if(in_array($status, ['draft', 'submitted'], true))
             <a class="btn btn-secondary" href="{{ route('admin.loan-applications.edit', $application) }}">Hariri rasimu</a>
@@ -191,7 +189,7 @@
 
     <div>
         <div class="card">
-            <div class="card-head"><h2>Nyaraka za ombi la mkopo</h2><span>{{ $application->documents->count() }} zimepakiwa</span></div>
+            <div class="card-head"><h2>Viambatisho vya hiari</h2><span>{{ $application->documents->count() }} zimepakiwa</span></div>
             <div class="card-body">
                 @forelse($application->documents as $document)
                     <div class="detail" style="margin-bottom:10px"><small>{{ $document->getDocumentTypeLabel() }}</small><strong>{{ $document->verification_status }}</strong></div>
