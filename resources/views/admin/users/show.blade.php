@@ -3,13 +3,13 @@
 @section('content')
     <div class="page-head">
         <div>
-            <a class="btn btn-secondary" href="{{ route('admin.users.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ __('STAFF ACCOUNT') }}</p>
             <h1>{{ $user->name }}</h1>
             <p>{{ $user->email }}</p>
         </div>
-        <div class="head-actions"><span
-                class="badge {{ $user->status ? 'active' : 'inactive' }}">{{ $user->status ? __('Active') : __('Inactive') }}</span><a
+        <div class="head-actions">
+            <a class="btn btn-secondary" href="{{ route('admin.users.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
+            <span class="badge {{ $user->status ? 'active' : 'inactive' }}">{{ $user->status ? __('Active') : __('Inactive') }}</span><a
                 class="btn btn-primary" href="{{ route('admin.users.edit', $user) }}">{{ __('Edit') }}</a>
             @unless (auth()->id() === $user->id)
                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}">@csrf @method('DELETE')<button

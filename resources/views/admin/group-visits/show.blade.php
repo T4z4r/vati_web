@@ -3,12 +3,12 @@
 @section('content')
     <div class="page-head">
         <div>
-            <a class="btn btn-secondary" href="{{ route('admin.group-visits.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ __('GROUP VISIT') }}</p>
             <h1>{{ $visit->group->group_name }}</h1>
             <p>{{ $visit->visit_date->format('d M Y') }} &middot; {{ __('Recorded by') }} {{ $visit->user->name }}</p>
         </div>
         <div class="head-actions">
+            <a class="btn btn-secondary" href="{{ route('admin.group-visits.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <form method="POST" action="{{ route('admin.group-visits.destroy', $visit) }}">
                 @csrf @method('DELETE')
                 <button class="btn btn-danger" data-confirm="{{ __('Delete this visit record?') }}">{{ __('Delete') }}</button>

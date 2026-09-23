@@ -10,12 +10,12 @@
 
 <div class="page-head">
     <div>
-        <a class="btn btn-secondary" href="{{ route('admin.members.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
         <p class="eyebrow">{{ $member->membership_number }}</p>
         <h1>{{ $fullName }}</h1>
         <p>Kitabu cha Marejesho ya Mwanachama</p>
     </div>
     <div class="head-actions">
+        <a class="btn btn-secondary" href="{{ route('admin.members.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
         <span class="badge {{ $member->status }}">{{ ucfirst($member->status) }}</span>
         <a class="btn btn-gold" href="{{ route('admin.members.export', $member) }}">Pakua PDF ya mwanachama</a>
         @can('create-loan-applications')

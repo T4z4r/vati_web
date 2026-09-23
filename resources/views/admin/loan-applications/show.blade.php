@@ -15,12 +15,14 @@
     <div style="display:flex;align-items:center;gap:16px">
         @include('admin.partials.member-photo', ['member' => $member, 'size' => 88])
         <div>
-            <a class="btn btn-secondary" href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ $application->application_number }}</p>
             <h1>{{ $application->member->first_name }} {{ $application->member->last_name }}</h1>
             <p>{{ $application->product->name }} · {{ $application->group->group_name }}</p>
         </div>
     </div>
+    <div class="head-actions">
+        <a class="btn btn-secondary" href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
+        <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
     <div class="head-actions">
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export', $application) }}">Pakua PDF ya ombi</a>

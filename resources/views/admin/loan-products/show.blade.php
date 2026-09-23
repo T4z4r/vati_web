@@ -3,12 +3,13 @@
 @section('content')
     <div class="page-head">
         <div>
-            <a class="btn btn-secondary" href="{{ route('admin.loan-products.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ $product->code }}</p>
             <h1>{{ $product->name }}</h1>
             <p>{{ __('Loan product rules and pricing.') }}</p>
         </div>
-        <div class="head-actions"><a class="btn btn-primary"
+        <div class="head-actions">
+            <a class="btn btn-secondary" href="{{ route('admin.loan-products.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
+            <a class="btn btn-primary"
                 href="{{ route('admin.loan-products.edit', $product) }}">{{ __('Edit product') }}</a>
             <form method="POST" action="{{ route('admin.loan-products.destroy', $product) }}">@csrf @method('DELETE')<button
                     class="btn btn-danger"

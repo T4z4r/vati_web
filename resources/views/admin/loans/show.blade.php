@@ -4,12 +4,15 @@
     @php($status = $loan->status->value)
     <div class="page-head">
         <div style="display:flex;align-items:center;gap:16px">@include('admin.partials.member-photo', ['member' => $loan->member, 'size' => 88])<div>
-                <a class="btn btn-secondary" href="{{ route('admin.loans.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
                 <p class="eyebrow">{{ $loan->loan_number }}</p>
                 <h1>{{ $loan->member->first_name }} {{ $loan->member->last_name }}</h1>
                 <p>{{ $loan->product->name }} · {{ $loan->group->group_name }}</p>
             </div>
-        </div><span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
+        </div>
+        <div class="head-actions">
+            <a class="btn btn-secondary" href="{{ route('admin.loans.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
+            <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
+        </div>
     </div>
     <div class="stats">
         <div class="stat gold"><small>{{ __('Principal') }}</small><strong>TZS
