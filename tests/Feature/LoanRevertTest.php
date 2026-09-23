@@ -68,13 +68,13 @@ class LoanRevertTest extends TestCase
             'loan_product_id' => $fixtures['product']->id,
             'branch_id' => $fixtures['branch']->id,
             'principal_amount' => 1000000,
-            'interest_amount' => 1711.54,
-            'total_repayment' => 1044500,
+            'interest_amount' => 157000,
+            'total_repayment' => 1157000,
             'principal_balance' => 1000000,
-            'interest_balance' => 44500,
-            'total_balance' => 1044500,
+            'interest_balance' => 157000,
+            'total_balance' => 1157000,
             'number_of_installments' => 26,
-            'installment_amount' => 40173.07,
+            'installment_amount' => 44500,
         ]);
     }
 
@@ -118,7 +118,7 @@ class LoanRevertTest extends TestCase
             $loan->installments()->create([
                 'installment_number' => $i,
                 'due_date' => now()->addWeeks($i)->toDateString(),
-                'total_due' => 40173.07,
+                'total_due' => 44500,
             ]);
         }
         $admin = $this->superAdmin($fixtures['branch']);

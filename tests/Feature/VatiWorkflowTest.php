@@ -257,7 +257,7 @@ class VatiWorkflowTest extends TestCase
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
             ->assertOk()
             ->assertJsonPath('data.amount', '80000.00')
-            ->assertJsonPath('loan.total_balance', '964500.00');
+            ->assertJsonPath('loan.total_balance', '1077000.00');
 
         // The same amount is rejected.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])
@@ -277,7 +277,7 @@ class VatiWorkflowTest extends TestCase
         $this->postJson("/api/v1/payments/{$paymentId}/reverse", ['reason' => 'Collected the wrong amount'])
             ->assertOk()
             ->assertJsonPath('data.status', 'reversed');
-        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
+        $this->assertSame('1157000.00', $loan->fresh()->total_balance);
 
         // A reversed payment can no longer be edited.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 90000])
