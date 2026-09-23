@@ -1,77 +1,77 @@
-<div class="card">
-    <div class="card-head"><h2>Loan application identification</h2><span>LAF {{ $application->application_number }}</span></div>
-    <div class="card-body detail-grid">
-        <div class="detail"><small>Master roll / membership number</small><strong>{{ $member->membership_number }}</strong></div>
-        <div class="detail"><small>Branch / Tawi</small><strong>{{ $display($application->branch?->branch_name) }}</strong></div>
-        <div class="detail"><small>Area / Eneo</small><strong>{{ $display($application->branch?->area?->name) }}</strong></div>
-        <div class="detail"><small>Region / Mkoa</small><strong>{{ $display($application->branch?->area?->region?->name) }}</strong></div>
-        <div class="detail"><small>Group / Kikundi</small><strong>{{ $display($application->group?->group_name) }}</strong></div>
-        <div class="detail"><small>Application type</small><strong>{{ str($application->application_type)->replace('_', ' ')->title() }}</strong></div>
-        <div class="detail"><small>Application date</small><strong>{{ $application->created_at?->format('d M Y') }}</strong></div>
-        <div class="detail"><small>Submitted date</small><strong>{{ $application->submitted_at?->format('d M Y H:i') ?? 'Not submitted' }}</strong></div>
-        <div class="detail"><small>Loan disbursement date</small><strong>{{ $application->loan?->disbursement_date?->format('d M Y') ?? 'Not disbursed' }}</strong></div>
-    </div>
-</div>
+<h2 class="section-title">Loan application identification</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>Master roll / membership number</th><td>{{ $member->membership_number }}</td></tr>
+            <tr><th>Branch / Tawi</th><td>{{ $display($application->branch?->branch_name) }}</td></tr>
+            <tr><th>Area / Eneo</th><td>{{ $display($application->branch?->area?->name) }}</td></tr>
+            <tr><th>Region / Mkoa</th><td>{{ $display($application->branch?->area?->region?->name) }}</td></tr>
+            <tr><th>Group / Kikundi</th><td>{{ $display($application->group?->group_name) }}</td></tr>
+            <tr><th>Application type</th><td>{{ str($application->application_type)->replace('_', ' ')->title() }}</td></tr>
+            <tr><th>Application date</th><td>{{ $application->created_at?->format('d M Y') }}</td></tr>
+            <tr><th>Submitted date</th><td>{{ $application->submitted_at?->format('d M Y H:i') ?? 'Not submitted' }}</td></tr>
+            <tr><th>Loan disbursement date</th><td>{{ $application->loan?->disbursement_date?->format('d M Y') ?? 'Not disbursed' }}</td></tr>
+        </tbody>
+    </table>
 
 <br>
-<div class="card">
-    <div class="card-head"><h2>Applicant personal profile / Taarifa binafsi</h2><span>Auto-populated from member profile</span></div>
-    <div class="card-body detail-grid">
-        <div class="detail"><small>Applicant name</small><strong>{{ $fullName }}</strong></div>
-        <div class="detail"><small>Father / husband / legal guardian</small><strong>{{ $display($member->guardian_name) }}</strong></div>
-        <div class="detail"><small>Occupation</small><strong>{{ $display($member->occupation) }}</strong></div>
-        <div class="detail"><small>Age</small><strong>{{ $member->date_of_birth?->age ?? 'Not recorded' }}</strong></div>
-        <div class="detail"><small>Date of birth</small><strong>{{ $member->date_of_birth?->format('d M Y') ?? 'Not recorded' }}</strong></div>
-        <div class="detail"><small>Gender</small><strong>{{ $display($member->gender) }}</strong></div>
-        <div class="detail"><small>Religion</small><strong>Not recorded in member profile</strong></div>
-        <div class="detail"><small>Phone</small><strong>{{ $display($member->phone) }}</strong></div>
-        <div class="detail"><small>Alternate phone</small><strong>{{ $display($member->alternate_phone) }}</strong></div>
-        <div class="detail"><small>Nationality</small><strong>{{ $display($member->nationality) }}</strong></div>
-        <div class="detail"><small>National ID</small><strong>{{ $display($member->national_id) }}</strong></div>
-        <div class="detail"><small>Voter ID</small><strong>{{ $display($member->voter_id) }}</strong></div>
-        <div class="detail"><small>Marital status</small><strong>{{ $display($member->marital_status) }}</strong></div>
-        <div class="detail"><small>House number</small><strong>{{ $display($kyc?->house_number) }}</strong></div>
-        <div class="detail"><small>Permanent / current address</small><strong>{{ $display($member->physical_address) }}</strong></div>
-        <div class="detail"><small>Street / ward</small><strong>{{ $display(collect([$member->street, $member->ward])->filter()->implode(', ')) }}</strong></div>
-        <div class="detail"><small>District / region</small><strong>{{ $display(collect([$member->district, $member->region])->filter()->implode(', ')) }}</strong></div>
-        <div class="detail"><small>Nearest police station</small><strong>{{ $display($kyc?->police_station) }}</strong></div>
-        <div class="detail"><small>Business / work address</small><strong>{{ $display($kyc?->business_address) }}</strong></div>
-        <div class="detail"><small>M-Pesa / loan receiving number</small><strong>{{ $display($kyc?->mpesa_phone) }}</strong></div>
-        <div class="detail"><small>Bank account number</small><strong>{{ $display($kyc?->bank_account_number) }}</strong></div>
-        <div class="detail"><small>Bank account name</small><strong>{{ $display($kyc?->bank_account_name) }}</strong></div>
-        <div class="detail"><small>Bank name</small><strong>{{ $display($kyc?->bank_name) }}</strong></div>
-        <div class="detail"><small>Housing status</small><strong>{{ $display($kyc?->house_ownership_status) }}</strong></div>
-        <div class="detail"><small>Head of household</small><strong>{{ $display($kyc?->head_of_household) }}</strong></div>
-        <div class="detail"><small>Number of dependants</small><strong>{{ $kyc?->number_of_dependants ?? 0 }}</strong></div>
-        <div class="detail"><small>House roof</small><strong>{{ $display($kyc?->house_roof_type) }}</strong></div>
-        <div class="detail"><small>House fence</small><strong>{{ $display($kyc?->house_fence_type) }}</strong></div>
-        <div class="detail"><small>VATI family / group relationship</small><strong>Not recorded in member profile</strong></div>
-    </div>
-</div>
+<h2 class="section-title">Applicant personal profile / Taarifa binafsi</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>Applicant name</th><td>{{ $fullName }}</td></tr>
+            <tr><th>Father / husband / legal guardian</th><td>{{ $display($member->guardian_name) }}</td></tr>
+            <tr><th>Occupation</th><td>{{ $display($member->occupation) }}</td></tr>
+            <tr><th>Age</th><td>{{ $member->date_of_birth?->age ?? 'Not recorded' }}</td></tr>
+            <tr><th>Date of birth</th><td>{{ $member->date_of_birth?->format('d M Y') ?? 'Not recorded' }}</td></tr>
+            <tr><th>Gender</th><td>{{ $display($member->gender) }}</td></tr>
+            <tr><th>Religion</th><td>Not recorded in member profile</td></tr>
+            <tr><th>Phone</th><td>{{ $display($member->phone) }}</td></tr>
+            <tr><th>Alternate phone</th><td>{{ $display($member->alternate_phone) }}</td></tr>
+            <tr><th>Nationality</th><td>{{ $display($member->nationality) }}</td></tr>
+            <tr><th>National ID</th><td>{{ $display($member->national_id) }}</td></tr>
+            <tr><th>Voter ID</th><td>{{ $display($member->voter_id) }}</td></tr>
+            <tr><th>Marital status</th><td>{{ $display($member->marital_status) }}</td></tr>
+            <tr><th>House number</th><td>{{ $display($kyc?->house_number) }}</td></tr>
+            <tr><th>Permanent / current address</th><td>{{ $display($member->physical_address) }}</td></tr>
+            <tr><th>Street / ward</th><td>{{ $display(collect([$member->street, $member->ward])->filter()->implode(', ')) }}</td></tr>
+            <tr><th>District / region</th><td>{{ $display(collect([$member->district, $member->region])->filter()->implode(', ')) }}</td></tr>
+            <tr><th>Nearest police station</th><td>{{ $display($kyc?->police_station) }}</td></tr>
+            <tr><th>Business / work address</th><td>{{ $display($kyc?->business_address) }}</td></tr>
+            <tr><th>M-Pesa / loan receiving number</th><td>{{ $display($kyc?->mpesa_phone) }}</td></tr>
+            <tr><th>Bank account number</th><td>{{ $display($kyc?->bank_account_number) }}</td></tr>
+            <tr><th>Bank account name</th><td>{{ $display($kyc?->bank_account_name) }}</td></tr>
+            <tr><th>Bank name</th><td>{{ $display($kyc?->bank_name) }}</td></tr>
+            <tr><th>Housing status</th><td>{{ $display($kyc?->house_ownership_status) }}</td></tr>
+            <tr><th>Head of household</th><td>{{ $display($kyc?->head_of_household) }}</td></tr>
+            <tr><th>Number of dependants</th><td>{{ $kyc?->number_of_dependants ?? 0 }}</td></tr>
+            <tr><th>House roof</th><td>{{ $display($kyc?->house_roof_type) }}</td></tr>
+            <tr><th>House fence</th><td>{{ $display($kyc?->house_fence_type) }}</td></tr>
+            <tr><th>VATI family / group relationship</th><td>Not recorded in member profile</td></tr>
+        </tbody>
+    </table>
 
 <br>
-<div class="card">
-    <div class="card-head"><h2>Application terms and loan computation</h2><span>{{ $application->duration_months }} months</span></div>
-    <div class="card-body detail-grid">
-        <div class="detail"><small>Requested principal</small><strong>{{ $money($application->requested_amount) }}</strong></div>
-        <div class="detail"><small>Existing loan balance</small><strong>{{ $money($application->existing_loan_balance) }}</strong></div>
-        <div class="detail"><small>Refinancing amount</small><strong>{{ $money($application->refinancing_amount) }}</strong></div>
-        <div class="detail"><small>Top-up increment</small><strong>{{ $money($application->increment_amount) }}</strong></div>
-        <div class="detail"><small>Annual interest rate</small><strong>{{ number_format((float) $application->product->annual_interest_rate, 2) }}%</strong></div>
-        <div class="detail"><small>Interest amount</small><strong>{{ $money($figures['interest']) }}</strong></div>
-        <div class="detail"><small>Processing fee</small><strong>{{ $money($figures['processing_fee']) }}</strong></div>
-        <div class="detail"><small>Insurance</small><strong>{{ $money($figures['insurance_fee']) }}</strong></div>
-        <div class="detail"><small>VAT</small><strong>{{ $money($figures['vat']) }}</strong></div>
-        <div class="detail"><small>Total charges and VAT</small><strong>{{ $money($figures['charges']) }}</strong></div>
-        <div class="detail"><small>Security amount</small><strong>{{ $money($figures['security_amount']) }} ({{ number_format((float) $application->product->security_percentage, 2) }}%)</strong></div>
-        <div class="detail"><small>Amount receivable</small><strong>{{ $money($figures['amount_receivable']) }}</strong></div>
-        <div class="detail"><small>Principal plus interest</small><strong>{{ $money($figures['total_repayment']) }}</strong></div>
-        <div class="detail"><small>Repayment plan</small><strong>{{ $installmentCount }} {{ $application->product->repayment_frequency }} installments · {{ $money($figures['installment_amount']) }}</strong></div>
-        <div class="detail"><small>Current loan cycle</small><strong>{{ str($application->application_type)->replace('_', ' ')->title() }}</strong></div>
-        <div class="detail"><small>Loan purpose</small><strong>{{ $display($application->loan_purpose) }}</strong></div>
-        <div class="detail"><small>Business summary</small><strong>{{ $display($application->business_summary) }}</strong></div>
-    </div>
-</div>
+<h2 class="section-title">Application terms and loan computation</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>Requested principal</th><td class="money">{{ $money($application->requested_amount) }}</td></tr>
+            <tr><th>Existing loan balance</th><td class="money">{{ $money($application->existing_loan_balance) }}</td></tr>
+            <tr><th>Refinancing amount</th><td class="money">{{ $money($application->refinancing_amount) }}</td></tr>
+            <tr><th>Top-up increment</th><td class="money">{{ $money($application->increment_amount) }}</td></tr>
+            <tr><th>Annual interest rate</th><td>{{ number_format((float) $application->product->annual_interest_rate, 2) }}%</td></tr>
+            <tr><th>Interest amount</th><td class="money">{{ $money($figures['interest']) }}</td></tr>
+            <tr><th>Processing fee</th><td class="money">{{ $money($figures['processing_fee']) }}</td></tr>
+            <tr><th>Insurance</th><td class="money">{{ $money($figures['insurance_fee']) }}</td></tr>
+            <tr><th>VAT</th><td class="money">{{ $money($figures['vat']) }}</td></tr>
+            <tr><th>Total charges and VAT</th><td class="money">{{ $money($figures['charges']) }}</td></tr>
+            <tr><th>Security amount</th><td class="money">{{ $money($figures['security_amount']) }} ({{ number_format((float) $application->product->security_percentage, 2) }}%)</td></tr>
+            <tr><th>Amount receivable</th><td class="money">{{ $money($figures['amount_receivable']) }}</td></tr>
+            <tr><th>Principal plus interest</th><td class="money">{{ $money($figures['total_repayment']) }}</td></tr>
+            <tr><th>Repayment plan</th><td>{{ $installmentCount }} {{ $application->product->repayment_frequency }} installments · {{ $money($figures['installment_amount']) }}</td></tr>
+            <tr><th>Current loan cycle</th><td>{{ str($application->application_type)->replace('_', ' ')->title() }}</td></tr>
+            <tr><th>Loan purpose</th><td>{{ $display($application->loan_purpose) }}</td></tr>
+            <tr><th>Business summary</th><td>{{ $display($application->business_summary) }}</td></tr>
+        </tbody>
+    </table>
 
 <br>
 <div class="grid-2 grid-even">
@@ -95,22 +95,24 @@
 
 <br>
 <div class="grid-2 grid-even">
-    <div class="card">
-        <div class="card-head"><h2>Income and expenditure assessment</h2></div>
-        <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
-            <div class="detail"><small>Core business income</small><strong>{{ $money($application->assessment?->core_business_income) }}</strong></div>
-            <div class="detail"><small>Other / family income</small><strong>{{ $money($application->assessment?->other_income) }}</strong></div>
-            <div class="detail"><small>Business expenditure</small><strong>{{ $money($application->assessment?->business_expenses) }}</strong></div>
-            <div class="detail"><small>Household expenditure</small><strong>{{ $money($application->assessment?->household_expenses) }}</strong></div>
-            <div class="detail"><small>Monthly profit</small><strong>{{ $money($application->assessment?->monthly_profit) }}</strong></div>
-            <div class="detail"><small>Disposable income</small><strong>{{ $money($application->assessment?->disposable_income) }}</strong></div>
-            <div class="detail"><small>Other institution outstanding debt</small><strong>{{ $money($application->assessment?->existing_external_debt) }}</strong></div>
-            <div class="detail"><small>External institution / original amount</small><strong>Not recorded</strong></div>
-            <div class="detail"><small>Debt-service ratio</small><strong>{{ $application->assessment?->debt_service_ratio !== null ? number_format((float) $application->assessment->debt_service_ratio, 2).'%' : '—' }}</strong></div>
-            <div class="detail"><small>Assessment comment</small><strong>{{ $display($application->assessment?->assessment_comment) }}</strong></div>
-            <div class="detail"><small>Household income (member profile)</small><strong>{{ $money($kyc?->household_monthly_income) }}</strong></div>
-            <div class="detail"><small>Household expenses (member profile)</small><strong>{{ $money($kyc?->household_monthly_expenses) }}</strong></div>
-        </div>
+    <div>
+        <h2 class="section-title">Income and expenditure assessment</h2>
+        <table class="detail-table">
+            <tbody>
+                <tr><th>Core business income</th><td class="money">{{ $money($application->assessment?->core_business_income) }}</td></tr>
+                <tr><th>Other / family income</th><td class="money">{{ $money($application->assessment?->other_income) }}</td></tr>
+                <tr><th>Business expenditure</th><td class="money">{{ $money($application->assessment?->business_expenses) }}</td></tr>
+                <tr><th>Household expenditure</th><td class="money">{{ $money($application->assessment?->household_expenses) }}</td></tr>
+                <tr><th>Monthly profit</th><td class="money">{{ $money($application->assessment?->monthly_profit) }}</td></tr>
+                <tr><th>Disposable income</th><td class="money">{{ $money($application->assessment?->disposable_income) }}</td></tr>
+                <tr><th>Other institution outstanding debt</th><td class="money">{{ $money($application->assessment?->existing_external_debt) }}</td></tr>
+                <tr><th>External institution / original amount</th><td>Not recorded</td></tr>
+                <tr><th>Debt-service ratio</th><td>{{ $application->assessment?->debt_service_ratio !== null ? number_format((float) $application->assessment->debt_service_ratio, 2).'%' : '—' }}</td></tr>
+                <tr><th>Assessment comment</th><td>{{ $display($application->assessment?->assessment_comment) }}</td></tr>
+                <tr><th>Household income (member profile)</th><td class="money">{{ $money($kyc?->household_monthly_income) }}</td></tr>
+                <tr><th>Household expenses (member profile)</th><td class="money">{{ $money($kyc?->household_monthly_expenses) }}</td></tr>
+            </tbody>
+        </table>
     </div>
     <div class="card">
         <div class="card-head"><h2>Use of loan amount</h2><span>{{ $money($application->utilizations->sum('allocation_amount')) }}</span></div>
@@ -124,18 +126,17 @@
 
 @if($application->term || $application->consent_declaration)
 <br>
-<div class="card">
-    <div class="card-head"><h2>Applicant declaration and accepted terms</h2><span>{{ $application->term?->version ?? 'Captured declaration' }}</span></div>
-    <div class="card-body">
-        <div class="detail-grid">
-            <div class="detail"><small>Consent date</small><strong>{{ $application->consented_at?->format('d M Y H:i') ?? 'Not accepted' }}</strong></div>
-            <div class="detail"><small>Cancellation deadline</small><strong>{{ $application->cancellation_deadline?->format('d M Y H:i') ?? 'Not started' }}</strong></div>
-            <div class="detail"><small>Applicant signature</small><strong>{{ $application->applicant_signature_path ? 'Captured' : 'Missing' }}</strong></div>
-            <div class="detail"><small>Right thumbprint</small><strong>{{ $application->applicant_thumbprint_path ? 'Captured' : 'Missing' }}</strong></div>
-        </div>
-        <div style="margin-top:16px;padding:16px;background:#f8faf8;border-radius:8px;white-space:pre-wrap;font-size:11px;line-height:1.65">{{ $application->consent_declaration ?: $application->term?->body }}</div>
-    </div>
-</div>
+<h2 class="section-title">Applicant declaration and accepted terms</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>Terms version</th><td>{{ $application->term?->version ?? 'Captured declaration' }}</td></tr>
+            <tr><th>Consent date</th><td>{{ $application->consented_at?->format('d M Y H:i') ?? 'Not accepted' }}</td></tr>
+            <tr><th>Cancellation deadline</th><td>{{ $application->cancellation_deadline?->format('d M Y H:i') ?? 'Not started' }}</td></tr>
+            <tr><th>Applicant signature</th><td>{{ $application->applicant_signature_path ? 'Captured' : 'Missing' }}</td></tr>
+            <tr><th>Right thumbprint</th><td>{{ $application->applicant_thumbprint_path ? 'Captured' : 'Missing' }}</td></tr>
+        </tbody>
+    </table>
+    <div style="padding:16px;background:#f8faf8;border-radius:8px;white-space:pre-wrap;font-size:11px;line-height:1.65">{{ $application->consent_declaration ?: $application->term?->body }}</div>
 @endif
 
 <br>

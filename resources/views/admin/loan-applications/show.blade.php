@@ -109,15 +109,15 @@
 
 <div class="grid-2">
     <div>
-        <div class="card">
-            <div class="card-head"><h2>Utayari wa uzingatiaji</h2></div>
-            <div class="card-body detail-grid">
-                <div class="detail"><small>Applicant signature</small><strong>{{ $application->applicant_signature_path ? 'Captured' : 'Missing' }}</strong></div>
-                <div class="detail"><small>Applicant thumbprint</small><strong>{{ $application->applicant_thumbprint_path ? 'Captured' : 'Missing' }}</strong></div>
-                <div class="detail"><small>Cooling-off deadline</small><strong>{{ $application->cancellation_deadline?->format('d M Y H:i') ?? 'Not started' }}</strong></div>
-                <div class="detail"><small>Documents verified</small><strong>{{ $application->documents->where('verification_status', 'verified')->count() }} / {{ $application->documents->where('is_required', true)->count() }}</strong></div>
-            </div>
-        </div>
+        <h2 class="section-title">Utayari wa uzingatiaji</h2>
+            <table class="detail-table">
+                <tbody>
+                    <tr><th>Applicant signature</th><td>{{ $application->applicant_signature_path ? 'Captured' : 'Missing' }}</td></tr>
+                    <tr><th>Applicant thumbprint</th><td>{{ $application->applicant_thumbprint_path ? 'Captured' : 'Missing' }}</td></tr>
+                    <tr><th>Cooling-off deadline</th><td>{{ $application->cancellation_deadline?->format('d M Y H:i') ?? 'Not started' }}</td></tr>
+                    <tr><th>Documents verified</th><td>{{ $application->documents->where('verification_status', 'verified')->count() }} / {{ $application->documents->where('is_required', true)->count() }}</td></tr>
+                </tbody>
+            </table>
 
         <br><div class="card">
             <div class="card-head"><h2>Taarifa za wateule</h2><span>{{ number_format($member->nominees->sum('percentage'), 2) }}%</span></div>
@@ -235,9 +235,13 @@
                 @empty<tr><td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No recommendations or approvals recorded.</td></tr>@endforelse
             </tbody></table></div>
             @if($application->assignedCreditOfficer || $application->latestCreditReview)
-                <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
-                    <div class="detail"><small>Assigned credit officer</small><strong>{{ $display($application->assignedCreditOfficer?->name) }}</strong></div>
-                    <div class="detail"><small>Latest credit review</small><strong>{{ $display($application->latestCreditReview?->decision) }} · {{ $display($application->latestCreditReview?->overall_risk) }}</strong></div>
+                <div class="card-body">
+                    <table class="detail-table">
+                        <tbody>
+                            <tr><th>Assigned credit officer</th><td>{{ $display($application->assignedCreditOfficer?->name) }}</td></tr>
+                            <tr><th>Latest credit review</th><td>{{ $display($application->latestCreditReview?->decision) }} · {{ $display($application->latestCreditReview?->overall_risk) }}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             @endif
         </div>

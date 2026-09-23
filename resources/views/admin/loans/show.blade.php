@@ -25,16 +25,16 @@
                 {{ number_format($loan->installment_amount) }}</strong><em>{{ $loan->number_of_installments }}
                 {{ __('installments') }}</em></div>
     </div>
-    <div class="card" style="margin-bottom:24px">
-        <div class="card-head"><h2>{{ __('Fees and charges') }}</h2></div>
-        <div class="card-body form-grid">
-            <div><small>{{ __('Processing fee') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->processing_fee, 2) }}</strong></div>
-            <div><small>{{ __('Insurance fee') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_insurance_fee, 2) }}</strong></div>
-            <div><small>{{ __('VAT') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_vat, 2) }}</strong></div>
-            <div><small>{{ __('Security amount') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->calc_security_amount, 2) }}</strong></div>
-            <div><small>{{ __('Amount receivable after deductions') }}</small><strong class="d-block">TZS {{ number_format((float) $loan->amount_receivable, 2) }}</strong></div>
-        </div>
-    </div>
+    <h2 class="section-title">{{ __('Fees and charges') }}</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>{{ __('Processing fee') }}</th><td class="money">TZS {{ number_format((float) $loan->processing_fee, 2) }}</td></tr>
+            <tr><th>{{ __('Insurance fee') }}</th><td class="money">TZS {{ number_format((float) $loan->calc_insurance_fee, 2) }}</td></tr>
+            <tr><th>{{ __('VAT') }}</th><td class="money">TZS {{ number_format((float) $loan->calc_vat, 2) }}</td></tr>
+            <tr><th>{{ __('Security amount') }}</th><td class="money">TZS {{ number_format((float) $loan->calc_security_amount, 2) }}</td></tr>
+            <tr><th>{{ __('Amount receivable after deductions') }}</th><td class="money">TZS {{ number_format((float) $loan->amount_receivable, 2) }}</td></tr>
+        </tbody>
+    </table>
     @if ($status === 'pending_disbursement')
         <div class="card">
             <div class="card-head">
@@ -251,23 +251,23 @@
                 </div>
                 <br>
             @endif
-            <div class="card">
-                <div class="card-head">
-                    <h2>{{ __('Loan details') }}</h2>
-                </div>
-                <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
-                    <div class="detail">
-                        <small>{{ __('Disbursed') }}</small><strong>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</strong>
-                    </div>
-                    <div class="detail">
-                        <small>{{ __('Maturity') }}</small><strong>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</strong>
-                    </div>
-                    <div class="detail"><small>{{ __('Principal balance') }}</small><strong>TZS
-                            {{ number_format($loan->principal_balance) }}</strong></div>
-                    <div class="detail"><small>{{ __('Interest balance') }}</small><strong>TZS
-                            {{ number_format($loan->interest_balance) }}</strong></div>
-                </div>
-            </div>
+            <h2 class="section-title">{{ __('Loan details') }}</h2>
+                <table class="detail-table">
+                    <tbody>
+                        <tr>
+                            <th>{{ __('Disbursed') }}</th><td>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('Maturity') }}</th><td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('Principal balance') }}</th><td class="money">TZS {{ number_format($loan->principal_balance) }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('Interest balance') }}</th><td class="money">TZS {{ number_format($loan->interest_balance) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
         </div>
     </div>
     <br>

@@ -13,24 +13,24 @@
     </div>
 
     <div class="grid-2 grid-even">
-        <div class="card">
-            <div class="card-head">
-                <h2>{{ __('Profile details') }}</h2>
-            </div>
-            <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
-                <div class="detail">
-                    <small>{{ __('Full name') }}</small><strong>{{ $user->name }}</strong>
-                </div>
-                <div class="detail">
-                    <small>{{ __('Email address') }}</small><strong>{{ $user->email }}</strong>
-                </div>
-                <div class="detail">
-                    <small>{{ __('Role') }}</small><strong>{{ ucwords(str_replace('_', ' ', $user->roles->first()?->name ?? __('Unassigned'))) }}</strong>
-                </div>
-                <div class="detail">
-                    <small>{{ __('Branch') }}</small><strong>{{ $user->branch?->branch_name ?? __('Organization-wide') }}</strong>
-                </div>
-            </div>
+        <div>
+            <h2 class="section-title">{{ __('Profile details') }}</h2>
+            <table class="detail-table">
+                <tbody>
+                    <tr>
+                        <th>{{ __('Full name') }}</th><td>{{ $user->name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('Email address') }}</th><td>{{ $user->email }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('Role') }}</th><td>{{ ucwords(str_replace('_', ' ', $user->roles->first()?->name ?? __('Unassigned'))) }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('Branch') }}</th><td>{{ $user->branch?->branch_name ?? __('Organization-wide') }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="card">

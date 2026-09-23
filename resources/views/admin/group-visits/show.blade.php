@@ -14,20 +14,19 @@
             </form>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body detail-grid">
-            <div class="detail"><small>{{ __('Group') }}</small><strong><a href="{{ route('admin.groups.show', $visit->group) }}">{{ $visit->group->group_name }}</a></strong></div>
-            <div class="detail"><small>{{ __('Visit date') }}</small><strong>{{ $visit->visit_date->format('d M Y') }}</strong></div>
-            <div class="detail"><small>{{ __('Officer') }}</small><strong>{{ $visit->user->name }}</strong></div>
-            <div class="detail"><small>{{ __('Purpose') }}</small><strong>{{ $visit->purpose ?: __('Not specified') }}</strong></div>
-            <div class="detail"><small>{{ __('Location') }}</small><strong>{{ $visit->location ?: __('Not specified') }}</strong></div>
-            <div class="detail"><small>{{ __('Recorded at') }}</small><strong>{{ $visit->created_at->format('d M Y H:i') }}</strong></div>
-        </div>
-    </div>
+    <h2 class="section-title">{{ __('Visit details') }}</h2>
+    <table class="detail-table">
+        <tbody>
+            <tr><th>{{ __('Group') }}</th><td><a href="{{ route('admin.groups.show', $visit->group) }}">{{ $visit->group->group_name }}</a></td></tr>
+            <tr><th>{{ __('Visit date') }}</th><td>{{ $visit->visit_date->format('d M Y') }}</td></tr>
+            <tr><th>{{ __('Officer') }}</th><td>{{ $visit->user->name }}</td></tr>
+            <tr><th>{{ __('Purpose') }}</th><td>{{ $visit->purpose ?: __('Not specified') }}</td></tr>
+            <tr><th>{{ __('Location') }}</th><td>{{ $visit->location ?: __('Not specified') }}</td></tr>
+            <tr><th>{{ __('Recorded at') }}</th><td>{{ $visit->created_at->format('d M Y H:i') }}</td></tr>
+        </tbody>
+    </table>
     @if($visit->notes)
-        <div class="card">
-            <div class="card-head"><h2>{{ __('Notes') }}</h2></div>
-            <div class="card-body"><p>{{ $visit->notes }}</p></div>
-        </div>
+        <h2 class="section-title">{{ __('Notes') }}</h2>
+        <p>{{ $visit->notes }}</p>
     @endif
 @endsection

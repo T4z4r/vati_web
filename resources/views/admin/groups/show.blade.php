@@ -84,20 +84,24 @@
                 </table>
             </div>
         </div>
-        <div class="card">
-            <div class="card-head">
-                <h2>{{ __('Operating details') }}</h2>
-            </div>
-            <div class="card-body detail-grid" style="grid-template-columns:1fr 1fr">
-                <div class="detail">
-                    <small>{{ __('Loan officer') }}</small><strong>{{ $group->loanOfficer?->name ?? __('Unassigned') }}</strong>
-                </div>
-                <div class="detail"><small>{{ __('Branch') }}</small><strong>{{ $group->branch->branch_name }}</strong>
-                </div>
-                <div class="detail"><small>{{ __('Ward') }}</small><strong>{{ $group->ward ?: '—' }}</strong></div>
-                <div class="detail"><small>{{ __('District') }}</small><strong>{{ $group->district ?: '—' }}</strong>
-                </div>
-            </div>
+        <div>
+            <h2 class="section-title">{{ __('Operating details') }}</h2>
+            <table class="detail-table">
+                <tbody>
+                    <tr>
+                        <th>{{ __('Loan officer') }}</th><td>{{ $group->loanOfficer?->name ?? __('Unassigned') }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('Branch') }}</th><td>{{ $group->branch->branch_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('Ward') }}</th><td>{{ $group->ward ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ __('District') }}</th><td>{{ $group->district ?: '—' }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 @endsection
