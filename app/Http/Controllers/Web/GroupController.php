@@ -7,7 +7,9 @@ use App\Models\Branch;
 use App\Models\MemberGroup;
 use App\Models\User;
 use App\Services\ExportService;
+use App\Services\GroupDeletionService;
 use App\Services\NumberGeneratorService;
+use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -94,13 +96,13 @@ class GroupController extends Controller
         return redirect()->route('admin.groups.show', $group)->with('success', 'Group updated successfully.');
     }
 
-    public function destroy(MemberGroup $group)
+    public function destroy(MemberGroup $group, GroupDeletionService $service)
     {
-        if ($group->members()->exists() || $group->loanApplications()->exists() || $group->loans()->exists()) {
-            return back()->with('error', 'This group has members or lending history and cannot be deleted.');
+        try {
+            $service->forceDelete($group);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $group->delete();
 
         return redirect()->route('admin.groups.index')->with('success', 'Group deleted.');
     }

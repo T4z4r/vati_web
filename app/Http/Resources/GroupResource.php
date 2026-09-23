@@ -23,6 +23,7 @@ class GroupResource extends JsonResource
             'status' => $this->status,
             'members_count' => $this->whenCounted('members'),
             'loans_count' => $this->whenCounted('loans'),
+            'visits_count' => $this->whenCounted('visits'),
             'loan_applications_count' => $this->whenCounted('loanApplications'),
             'branch' => $this->whenLoaded('branch', fn () => [
                 'id' => $this->branch->id,

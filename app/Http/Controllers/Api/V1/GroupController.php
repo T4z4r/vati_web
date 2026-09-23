@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Resources\GroupResource;
 use App\Models\LoanApplication;
 use App\Models\MemberGroup;
+use App\Services\GroupDeletionService;
 use App\Services\NumberGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -64,10 +65,10 @@ class GroupController extends ApiController
         return response()->json(['success' => true, 'message' => 'Group updated successfully.', 'data' => $group->refresh()]);
     }
 
-    public function destroy(Request $request, MemberGroup $group)
+    public function destroy(Request $request, MemberGroup $group, GroupDeletionService $service)
     {
-        activity()->useLog('groups')->causedBy($request->user())->withProperties(['deleted_group' => ['id' => $group->id, 'name' => $group->group_name]])->log('Group deleted');
-        $group->delete();
+        $service->forceDelete($group);
+        activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['deleted_group' => ['id' => $group->id, 'name' => $group->group_name]])->log('Group deleted');
 
         return response()->noContent();
     }

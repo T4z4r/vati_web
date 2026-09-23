@@ -15,7 +15,7 @@
                 <form method="POST" action="{{ route('admin.groups.destroy', $group) }}">
                     @csrf @method('DELETE')
                     <button class="btn btn-danger"
-                        data-confirm="{{ __('Delete this group? Groups with members or lending history cannot be deleted.') }}">{{ __('Delete') }}</button>
+                        data-confirm="{{ __('Delete this group? Only groups with no members and no recorded visits can be deleted.') }}">{{ __('Delete') }}</button>
                 </form>
             @endcan
         </div>
