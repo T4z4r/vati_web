@@ -3,6 +3,7 @@
 @section('content')
     <div class="page-head">
         <div>
+            <a class="btn btn-secondary" href="{{ route('admin.groups.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ $group->group_code }}</p>
             <h1>{{ $group->group_name }}</h1>
             <p>{{ $group->branch->branch_name }} &middot; {{ $group->location ?: __('Location not recorded') }}</p>

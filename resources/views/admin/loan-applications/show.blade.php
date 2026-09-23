@@ -15,6 +15,7 @@
     <div style="display:flex;align-items:center;gap:16px">
         @include('admin.partials.member-photo', ['member' => $member, 'size' => 88])
         <div>
+            <a class="btn btn-secondary" href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ $application->application_number }}</p>
             <h1>{{ $application->member->first_name }} {{ $application->member->last_name }}</h1>
             <p>{{ $application->product->name }} · {{ $application->group->group_name }}</p>

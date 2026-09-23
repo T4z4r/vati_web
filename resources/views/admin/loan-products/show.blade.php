@@ -3,6 +3,7 @@
 @section('content')
     <div class="page-head">
         <div>
+            <a class="btn btn-secondary" href="{{ route('admin.loan-products.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ $product->code }}</p>
             <h1>{{ $product->name }}</h1>
             <p>{{ __('Loan product rules and pricing.') }}</p>

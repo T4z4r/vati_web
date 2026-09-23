@@ -3,6 +3,7 @@
 @section('content')
     <div class="page-head">
         <div>
+            <a class="btn btn-secondary" href="{{ route('admin.users.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
             <p class="eyebrow">{{ __('STAFF ACCOUNT') }}</p>
             <h1>{{ $user->name }}</h1>
             <p>{{ $user->email }}</p>
