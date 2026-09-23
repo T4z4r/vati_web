@@ -150,9 +150,9 @@ class VatiWorkflowTest extends TestCase
         $figures = $calculator->calculate($this->product, 1000000, 6);
 
         $this->assertSame(26, $figures['installment_count']);
-        $this->assertSame(1711.54, $figures['installment_amount']);
-        $this->assertSame(1711.54, $figures['interest']);
-        $this->assertSame(1044500.0, $figures['total_repayment']);
+        $this->assertSame(44500.0, $figures['installment_amount']);
+        $this->assertSame(157000.0, $figures['interest']);
+        $this->assertSame(1157000.0, $figures['total_repayment']);
         $this->assertSame(0.0445, $figures['interest_rate']);
         $this->expectException(\DomainException::class);
         $calculator->calculate($this->product, 50000, 6);
@@ -235,14 +235,14 @@ class VatiWorkflowTest extends TestCase
         $loan->refresh();
 
         Sanctum::actingAs($this->admin);
-        $this->assertSame('1044500.00', $loan->total_balance);
+        $this->assertSame('1157000.00', $loan->total_balance);
 
         $response = $this->postJson("/api/v1/loans/{$loan->id}/payments", ['amount' => 100000, 'payment_method' => 'cash'])
             ->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.amount', '100000.00')
             ->assertJsonPath('data.status', 'posted')
-            ->assertJsonPath('loan.total_balance', '944500.00');
+            ->assertJsonPath('loan.total_balance', '1057000.00');
         $paymentId = $response->json('data.id');
 
         // Increase the repayment amount.
@@ -251,7 +251,7 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.amount', '150000.00')
             ->assertJsonPath('data.status', 'posted')
-            ->assertJsonPath('loan.total_balance', '894500.00');
+            ->assertJsonPath('loan.total_balance', '1007000.00');
 
         // Decrease the repayment amount again.
         $this->patchJson("/api/v1/payments/{$paymentId}", ['amount' => 80000])

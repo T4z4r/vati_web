@@ -94,14 +94,14 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('873200.00', $loan->fresh()->calc_amount_receivable);
         $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '873200.00');
-        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
-        $this->assertSame(1044500.0, round((float) $loan->installments()->sum('total_due'), 2));
+        $this->assertSame('1157000.00', $loan->fresh()->total_balance);
+        $this->assertSame(1157000.0, round((float) $loan->installments()->sum('total_due'), 2));
         $this->assertSame(26, $loan->installments()->count());
         $payment = app(\App\Services\PaymentService::class)->post($loan, $user, 100000, ['payment_method' => 'cash']);
-        $this->assertSame('944500.00', $loan->fresh()->total_balance);
+        $this->assertSame('1057000.00', $loan->fresh()->total_balance);
         app(\App\Services\PaymentService::class)->reverse($payment, $user, 'Test reversal');
-        $this->assertSame('1044500.00', $loan->fresh()->total_balance);
-        app(\App\Services\PaymentService::class)->post($loan, $user, 1044500.0, ['payment_method' => 'cash']);
+        $this->assertSame('1157000.00', $loan->fresh()->total_balance);
+        app(\App\Services\PaymentService::class)->post($loan, $user, 1157000.0, ['payment_method' => 'cash']);
         $this->assertSame('0.00', $loan->fresh()->total_balance);
         $this->assertSame('settled', $loan->fresh()->status->value);
     }
@@ -130,16 +130,24 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame(100000.0, $figures['security_amount']);
         $this->assertSame(26800.0, $figures['charges']);
         $this->assertSame(873200.0, $figures['amount_receivable']);
-        $this->assertSame(1044500.0, $figures['total_repayment']);
-        $this->assertSame(7416.67, $figures['interest']);
+        $this->assertSame(1157000.0, $figures['total_repayment']);
+        $this->assertSame(157000.0, $figures['interest']);
         $this->assertSame(0.0445, $figures['interest_rate']);
     }
 
     public function test_every_duration_repayment_matches_flat_interest_tiers(): void
     {
         $tiers = [
-            'weekly' => [6 => 44500.0, 8 => 36000.0, 10 => 29500.0],
-            'monthly' => [6 => 44500.0, 8 => 36000.0, 10 => 29500.0],
+            'weekly' => [
+                6 => ['total' => 1157000.01, 'interest' => 157000.0, 'installment' => 44500.0],
+                8 => ['total' => 1260000.01, 'interest' => 260000.0, 'installment' => 36000.0],
+                10 => ['total' => 1268500.01, 'interest' => 268500.0, 'installment' => 29500.0],
+            ],
+            'monthly' => [
+                6 => ['total' => 1157000.01, 'interest' => 157000.0, 'installment' => 192833.33],
+                8 => ['total' => 1248000.01, 'interest' => 248000.0, 'installment' => 156000.0],
+                10 => ['total' => 1278333.35, 'interest' => 278333.34, 'installment' => 127833.33],
+            ],
         ];
         foreach (['weekly', 'monthly'] as $frequency) {
             $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => $frequency]);
@@ -147,8 +155,10 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
                 $figures = app(LoanCalculatorService::class)->calculate($product, 1000000.01, $months);
                 $this->assertSame($figures['total_repayment'], round($figures['principal'] + $figures['total_interest'], 2));
                 if (isset($tiers[$frequency][$months])) {
-                    $this->assertSame(round($tiers[$frequency][$months] / $figures['installment_count'], 2), $figures['interest']);
-                    $this->assertSame(round($tiers[$frequency][$months] / $figures['installment_count'], 2), $figures['installment_amount']);
+                    $tier = $tiers[$frequency][$months];
+                    $this->assertSame($tier['total'], $figures['total_repayment']);
+                    $this->assertSame($tier['interest'], $figures['interest']);
+                    $this->assertSame($tier['installment'], $figures['installment_amount']);
                 } else {
                     $this->assertSame(0.0, $figures['interest']);
                     $this->assertSame(0.0, $figures['installment_amount']);
