@@ -68,12 +68,12 @@ class LoanRevertTest extends TestCase
             'loan_product_id' => $fixtures['product']->id,
             'branch_id' => $fixtures['branch']->id,
             'principal_amount' => 1000000,
-            'interest_amount' => 157000,
-            'total_repayment' => 1157000,
+            'interest_amount' => 68000,
+            'total_repayment' => 1068000,
             'principal_balance' => 1000000,
-            'interest_balance' => 157000,
-            'total_balance' => 1157000,
-            'number_of_installments' => 26,
+            'interest_balance' => 68000,
+            'total_balance' => 1068000,
+            'number_of_installments' => 24,
             'installment_amount' => 44500,
         ]);
     }
@@ -114,7 +114,7 @@ class LoanRevertTest extends TestCase
         $application->update(['status' => 'disbursed']);
         $loan->update(['status' => 'active']);
         LoanDisbursement::create(['loan_id' => $loan->id, 'amount' => 873200, 'method' => 'cash', 'status' => 'completed']);
-        for ($i = 1; $i <= 26; $i++) {
+        for ($i = 1; $i <= 24; $i++) {
             $loan->installments()->create([
                 'installment_number' => $i,
                 'due_date' => now()->addWeeks($i)->toDateString(),

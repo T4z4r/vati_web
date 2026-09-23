@@ -10,7 +10,7 @@ class LoanCalculatorService
     public function installmentCount(LoanProduct $product, int $durationMonths): int
     {
         return $product->repayment_frequency === 'weekly'
-            ? max(1, (int) round($durationMonths * 52 / 12))
+            ? max(1, $durationMonths * 4)
             : max(1, $durationMonths);
     }
 
@@ -27,8 +27,9 @@ class LoanCalculatorService
 
     /**
      * Per-installment flat factor applied to the full principal. The configured
-     * tier is a weekly factor; monthly installments scale it up (× 52 / 12) so
-     * the same duration repays the same total regardless of frequency.
+     * tier is a weekly factor; monthly installments scale it up (× 4, one month
+     * equals four weeks) so the same duration repays the same total regardless
+     * of frequency.
      */
     public function periodRate(LoanProduct $product, int $durationMonths): float
     {
@@ -37,7 +38,7 @@ class LoanCalculatorService
             return 0.0;
         }
 
-        return $product->repayment_frequency === 'monthly' ? $tier * 52 / 12 : $tier;
+        return $product->repayment_frequency === 'monthly' ? $tier * 4 : $tier;
     }
 
     /**

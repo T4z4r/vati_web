@@ -11,6 +11,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -79,6 +80,20 @@ class GroupForceDeleteTest extends TestCase
             ->assertJsonPath('message', 'This group has members or recorded visits and cannot be deleted.');
 
         $this->assertDatabaseHas('member_groups', ['id' => $group->id]);
+    }
+
+    public function test_api_force_deletes_group_with_leftover_memberships_from_removed_members(): void
+    {
+        [$admin, $branch, $group] = $this->seedWorld();
+        $member = $this->member($branch, $group, $admin->id);
+        DB::table('group_memberships')->insert(['member_id' => $member->id, 'group_id' => $group->id, 'joined_at' => today(), 'status' => 'active']);
+        $member->delete();
+
+        $this->postJson("/api/v1/groups/{$group->id}/delete")
+            ->assertNoContent();
+
+        $this->assertDatabaseMissing('member_groups', ['id' => $group->id]);
+        $this->assertDatabaseMissing('group_memberships', ['group_id' => $group->id]);
     }
 
     public function test_web_force_deletes_group_without_members_or_visits(): void

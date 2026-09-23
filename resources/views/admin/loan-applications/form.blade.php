@@ -408,7 +408,7 @@
         }
 
         function weeklyInstallmentsFor(duration) {
-            return Math.max(1, Math.round(duration * 52 / 12));
+            return Math.max(1, duration * 4);
         }
 
         // Flat weekly interest factors (not percentages), keyed by duration in
@@ -424,7 +424,7 @@
         function periodRateFor(duration, frequency) {
             const tier = interestTiers[duration];
             if (!tier || !duration) return 0;
-            return frequency === 'monthly' ? Number(tier) * 52 / 12 : Number(tier);
+            return frequency === 'monthly' ? Number(tier) * 4 : Number(tier);
         }
 
         function amortizeRows(principal, duration, frequency) {

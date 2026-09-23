@@ -438,7 +438,7 @@ POST /api/v1/loan-applications/{id}/reject
    - `principal_amount` = `recommended_amount` (falls back to `requested_amount`)
    - `number_of_installments` = `recommended_duration_months` (falls back to `duration_months`)
    - All financial figures calculated via `LoanCalculatorService::calculate()`
-   - Weekly frequency: installments = `round(duration_months * 52 / 12)`
+   - Weekly frequency: installments = `duration_months * 4` (one month equals four weeks)
    - Monthly frequency: installments = `duration_months`
    - `installment_amount` = `total_repayment / number_of_installments`
    - `interest_amount` = `0` (interest-free lending)

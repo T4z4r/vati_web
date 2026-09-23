@@ -128,9 +128,7 @@ class LoanApplicationController extends Controller
         $used = $loanApplication->groupWitnesses->pluck('member_id')->push($loanApplication->member_id);
         $eligible = $loanApplication->group->members()->where('status', 'active')->whereNotIn('id', $used)->whereHas('activeGroupMembership', fn ($q) => $q->where('group_id', $loanApplication->group_id))->orderBy('first_name')->get();
         $figures = $calculator->calculate($loanApplication->product, (float) $loanApplication->requested_amount, (int) $loanApplication->duration_months);
-        $installmentCount = $loanApplication->product->repayment_frequency === 'weekly'
-            ? max(1, (int) round($loanApplication->duration_months * 52 / 12))
-            : $loanApplication->duration_months;
+        $installmentCount = $figures['installment_count'];
 
         return view('admin.loan-applications.show', [
             'application' => $loanApplication,
