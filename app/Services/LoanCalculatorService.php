@@ -9,9 +9,14 @@ class LoanCalculatorService
 {
     public function installmentCount(LoanProduct $product, int $durationMonths): int
     {
-        return $product->repayment_frequency === 'weekly'
-            ? max(1, $durationMonths * 4)
-            : max(1, $durationMonths);
+        if ($product->repayment_frequency === 'weekly') {
+            $customWeeks = config('vati.installment_weeks', []);
+            if (isset($customWeeks[$durationMonths])) {
+                return max(1, $customWeeks[$durationMonths]);
+            }
+            return max(1, $durationMonths * 4);
+        }
+        return max(1, $durationMonths);
     }
 
 /**

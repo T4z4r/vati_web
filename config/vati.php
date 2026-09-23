@@ -14,4 +14,13 @@ return [
         8 => 0.036,
         10 => 0.0295,
     ],
+
+    // Custom weeks per duration mapping for weekly repayment loans.
+    // Overrides the default 4 weeks/month calculation.
+    'installment_weeks' => [
+        6 => 25,
+        8 => 32,
+        10 => 40,
+        12 => 50,
+    ],
 ];
