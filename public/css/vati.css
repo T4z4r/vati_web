@@ -1082,22 +1082,28 @@ textarea {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 26px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
 }
 .detail-table:last-child {
     margin-bottom: 0;
 }
 .detail-table th,
 .detail-table td {
-    padding: 8px 0;
+    padding: 12px 16px;
     vertical-align: top;
     text-align: left;
-    border: 0;
+    border-bottom: 1px solid var(--border);
     font-size: 12px;
     background: #fff;
 }
+.detail-table tbody tr:last-child th,
+.detail-table tbody tr:last-child td {
+    border-bottom: 0;
+}
 .detail-table th {
     width: 300px;
-    padding-right: 18px;
     color: var(--muted);
     font-size: 9px;
     font-weight: 600;
