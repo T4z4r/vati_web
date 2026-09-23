@@ -38,6 +38,8 @@ class LoanResource extends JsonResource
             'interest_rate' => $this->interest_rate,
             'principal_amount' => $this->principal_amount,
             'adjusted_principal_amount' => $this->adjusted_principal_amount,
+            'interest_amount' => $this->interest_amount,
+            'principal_plus_interest' => number_format(round((float) $this->principal_amount + (float) $this->interest_amount, 2), 2, '.', ''),
             'total_repayment' => $this->total_repayment,
             'principal_balance' => $this->principal_balance,
             'total_balance' => $this->total_balance,
