@@ -138,7 +138,7 @@ class LoanCalculatorService
 
         // Fees and security are withheld at issuance, never added to debt.
         $totalRepayment = round($figures['total_repayment'], 2);
-        $interest = round($figures['interest'], 2);
+        $totalInterest = round($figures['interest'], 2);
 
         $processingFee = round($principal * ((float) $product->processing_fee_percentage / 100), 2);
         $insuranceFee = round($principal * ((float) $product->insurance_percentage / 100), 2);
@@ -152,7 +152,8 @@ class LoanCalculatorService
 
         return [
             'principal' => $principal,
-            'interest' => $interest,
+            'interest' => $this->weeklyFactorAmount($principal, $durationMonths, $installmentCount),
+            'total_interest' => $totalInterest,
             'interest_rate' => $tier ?? 0.0,
             'processing_fee' => round($processingFee, 2),
             'insurance_fee' => round($insuranceFee, 2),

@@ -159,7 +159,7 @@ class VatCorrectionTest extends TestCase
         $this->assertAmount(873200, $application->calc_amount_receivable, 'application calc_amount_receivable');
         // Flat factor (0.0445 over 6 months on 1,000,000).
         $this->assertAmount(1044500.0, $application->calc_total_repayment, 'application calc_total_repayment');
-        $this->assertAmount(44500.0, $application->calc_interest, 'application calc_interest');
+        $this->assertAmount(7416.67, $application->calc_interest, 'application calc_interest');
         $this->assertAmount(15000, $application->calc_insurance_fee, 'application calc_insurance_fee');
         $this->assertAmount(10000, $application->calc_processing_fee, 'application calc_processing_fee');
 
@@ -311,7 +311,7 @@ class VatCorrectionTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertAmount(1044500.0, $application->refresh()->calc_total_repayment, 'application calc_total_repayment');
-        $this->assertAmount(44500.0, $application->calc_interest, 'application calc_interest');
+        $this->assertAmount(7416.67, $application->calc_interest, 'application calc_interest');
         $this->assertAmount(7416.67, $loan->refresh()->installment_amount, 'loan installment_amount');
         $this->assertAmount(7416.67, $loan->weekly_installment, 'loan weekly_installment');
         $this->assertDatabaseHas('activity_log', ['description' => 'Loan application repayment values autocorrected']);

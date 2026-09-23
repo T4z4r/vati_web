@@ -48,6 +48,9 @@ class LoanApprovalService
                 // The starting debt is principal plus reducing-balance interest,
                 // with the principal and interest balances tracked separately.
                 $totalRepayment = round((float) $figures['total_repayment'], 2);
+                // interest_amount is the per-installment interest; the balance
+                // keeps the full interest owed over the whole tenure.
+                $totalInterest = round((float) $figures['total_interest'], 2);
                 Loan::create([
                     'loan_number' => $this->numbers->loan(),
                     'loan_application_id' => $application->id,
@@ -60,7 +63,7 @@ class LoanApprovalService
                     'interest_rate' => $figures['interest_rate'],
                     'total_repayment' => $totalRepayment,
                     'principal_balance' => $figures['principal'],
-                    'interest_balance' => $figures['interest'],
+                    'interest_balance' => $totalInterest,
                     'total_balance' => $totalRepayment,
                     'number_of_installments' => $installments,
                     'installment_amount' => $figures['installment_amount'],

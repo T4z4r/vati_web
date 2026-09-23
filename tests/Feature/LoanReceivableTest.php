@@ -131,7 +131,7 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame(26800.0, $figures['charges']);
         $this->assertSame(873200.0, $figures['amount_receivable']);
         $this->assertSame(1044500.0, $figures['total_repayment']);
-        $this->assertSame(44500.0, $figures['interest']);
+        $this->assertSame(7416.67, $figures['interest']);
         $this->assertSame(0.0445, $figures['interest_rate']);
     }
 
@@ -145,9 +145,9 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
             $product = new LoanProduct(['minimum_amount' => 1, 'maximum_amount' => 2000000, 'minimum_duration_months' => 1, 'maximum_duration_months' => 12, 'repayment_frequency' => $frequency]);
             foreach (range(1, 12) as $months) {
                 $figures = app(LoanCalculatorService::class)->calculate($product, 1000000.01, $months);
-                $this->assertSame($figures['total_repayment'], round($figures['principal'] + $figures['interest'], 2));
+                $this->assertSame($figures['total_repayment'], round($figures['principal'] + $figures['total_interest'], 2));
                 if (isset($tiers[$frequency][$months])) {
-                    $this->assertSame($tiers[$frequency][$months], $figures['interest']);
+                    $this->assertSame(round($tiers[$frequency][$months] / $figures['installment_count'], 2), $figures['interest']);
                     $this->assertSame(round($tiers[$frequency][$months] / $figures['installment_count'], 2), $figures['installment_amount']);
                 } else {
                     $this->assertSame(0.0, $figures['interest']);

@@ -151,7 +151,7 @@ class VatiWorkflowTest extends TestCase
 
         $this->assertSame(26, $figures['installment_count']);
         $this->assertSame(1711.54, $figures['installment_amount']);
-        $this->assertSame(44500.0, $figures['interest']);
+        $this->assertSame(1711.54, $figures['interest']);
         $this->assertSame(1044500.0, $figures['total_repayment']);
         $this->assertSame(0.0445, $figures['interest_rate']);
         $this->expectException(\DomainException::class);

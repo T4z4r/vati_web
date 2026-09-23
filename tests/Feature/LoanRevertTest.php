@@ -68,7 +68,7 @@ class LoanRevertTest extends TestCase
             'loan_product_id' => $fixtures['product']->id,
             'branch_id' => $fixtures['branch']->id,
             'principal_amount' => 1000000,
-            'interest_amount' => 44500,
+            'interest_amount' => 1711.54,
             'total_repayment' => 1044500,
             'principal_balance' => 1000000,
             'interest_balance' => 44500,
