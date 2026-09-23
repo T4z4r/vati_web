@@ -1093,11 +1093,11 @@ textarea {
     text-align: left;
     border: 0;
     font-size: 12px;
+    background: #fff;
 }
 .detail-table th {
     width: 300px;
     padding-right: 18px;
-    background: transparent;
     color: var(--muted);
     font-size: 9px;
     font-weight: 600;
