@@ -33,7 +33,11 @@ class VatCorrectionService
         $application = $loan->application;
         $duration = (int) ($application?->recommended_duration_months ?: $application?->duration_months ?: 0);
         $installmentAmount = $duration > 0
-            ? $this->calculator->weeklyFactorAmount($principal, $duration, $count)
+            ? $this->calculator->perPeriodAmount(
+                $principal,
+                $this->calculator->periodRate($product, $duration),
+                $count
+            )
             : round(((float) $loan->interest_amount) / $count, 2);
         $weeklyInstallment = $installmentAmount;
 
