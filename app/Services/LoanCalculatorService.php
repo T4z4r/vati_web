@@ -41,6 +41,24 @@ class LoanCalculatorService
     }
 
     /**
+     * Display installment amount for a flat loan: floor(total / count). A
+     * rate of zero returns an even share of the principal.
+     */
+    public function perPeriodAmount(float $principal, float $periodRate, int $count): float
+    {
+        $count = max(1, $count);
+        $principal = round($principal, 2);
+
+        if ($periodRate <= 0) {
+            return round($principal / $count, 2);
+        }
+
+        $totalRepayment = round($principal * $periodRate * $count, 2);
+
+        return intdiv((int) round($totalRepayment * 100), $count) / 100;
+    }
+
+    /**
      * Build a flat amortization across $count equal installments. Each
      * installment totals principal × factor (the per-period rate applied to the
      * full principal); the principal is repaid in even shares with the balance
@@ -152,7 +170,9 @@ class LoanCalculatorService
             'amount_receivable' => $receivable,
             'total_repayment' => $totalRepayment,
             'installment_count' => $installmentCount,
-            'installment_amount' => intdiv((int) round($totalRepayment * 100), $installmentCount) / 100,
+            'installment_amount' => $tier === null
+                ? 0.0
+                : $this->perPeriodAmount($principal, $periodRate, $installmentCount),
         ];
     }
 }
