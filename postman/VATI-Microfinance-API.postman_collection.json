@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "e76df713-1cda-4a85-a77d-f0c4a9a49f54",
         "name": "VATI Microfinance API",
-        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nThe collection automatically stores IDs returned by create/approve/payment requests. Validation errors use HTTP 422; unauthenticated requests use HTTP 401.",
+        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nLatest notes: dashboard `total_issued_amount` and management `total_disbursements` include disbursed principal plus interest (`total_repayment`) for completed disbursements. Validation errors use HTTP 422; unauthenticated requests use HTTP 401.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -143,6 +143,16 @@
             "key": "password_reset_token",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "user_attachment_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "audit_log_id",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
@@ -248,7 +258,7 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/dashboard?branch_id={{branch_id}}",
-                        "description": "Response blocks are role-aware. Credit officers receive queues/targets; administrators receive approval and portfolio metrics."
+                        "description": "Response blocks are role-aware. Credit officers receive queues/targets; administrators receive approval and portfolio metrics. Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
                     },
                     "response": []
                 },
@@ -257,7 +267,8 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/portfolio/summary?branch_id={{branch_id}}&from=2026-08-01&to=2026-08-31"
+                        "url": "{{base_url}}/api/v1/portfolio/summary?branch_id={{branch_id}}&from=2026-08-01&to=2026-08-31",
+                        "description": "Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
                     },
                     "response": []
                 },
@@ -704,7 +715,8 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/dashboard"
+                        "url": "{{base_url}}/api/v1/dashboard",
+                        "description": "Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
                     },
                     "response": []
                 }
@@ -1203,6 +1215,17 @@
                     "response": []
                 },
                 {
+                    "name": "Group Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/groups/{{group_id}}/statistics",
+                        "description": "Returns group-level portfolio statistics including members, active loans, disbursed principal, collections, outstanding portfolio, and PAR metrics."
+                    },
+                    "response": [],
+                    "description": "Returns group-level portfolio statistics including members, active loans, disbursed principal, collections, outstanding portfolio, and PAR metrics."
+                },
+                {
                     "name": "Group Members",
                     "request": {
                         "method": "GET",
@@ -1436,6 +1459,17 @@
                     "response": []
                 },
                 {
+                    "name": "Get Member Document Metadata",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}",
+                        "description": "Returns metadata for one member document. Use Download Member Document for the file bytes."
+                    },
+                    "response": [],
+                    "description": "Returns metadata for one member document. Use Download Member Document for the file bytes."
+                },
+                {
                     "name": "Upload Member Document",
                     "request": {
                         "method": "POST",
@@ -1534,9 +1568,9 @@
                 {
                     "name": "[Destructive] Delete Member Document",
                     "request": {
-                        "method": "DELETE",
+                        "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}"
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}/delete"
                     },
                     "response": []
                 }
@@ -1635,10 +1669,10 @@
                             }
                         ],
                         "url": "{{base_url}}/api/v1/loan-calculator",
-                        "description": "Returns the full loan computation. Fees: processing fee (1% of principal), insurance (1.5% of principal), VAT (0.18% of principal); security (10% of principal) is held as collateral and deducted from the amount receivable, not charged. Weekly repayment installments use fixed factors per duration — 6 months: 0.0445, 8 months: 0.0360, 12 months: 0.0295 — so each weekly payment = principal x factor (e.g. TZS 1,000,000 over 6 months = 26 weekly payments of TZS 44,500, total repayment TZS 1,157,000). Response keys include `installment_count` and `installment_amount`.",
+                        "description": "Returns the full loan computation. Fees: processing fee (1% of principal by default), insurance (1.5% of principal), VAT (0.18% of principal); security (10% of principal) is held as collateral and deducted from the amount receivable, not charged. Weekly/monthly repayment installments use fixed factors for supported durations: 6 months 0.0445, 8 months 0.0360, 10 months 0.0295. Response keys include `installment_count`, `installment_amount`, `total_interest`, `total_repayment`, and `amount_receivable`.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"amount\": 1000000,\n  \"duration_months\": 12\n}",
+                            "raw": "{\n  \"loan_product_id\": \"{{loan_product_id}}\",\n  \"amount\": 1000000,\n  \"duration_months\": 10\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1937,6 +1971,63 @@
                     "response": []
                 },
                 {
+                    "name": "Upload Compliance Document Evidence",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/compliance/documents",
+                        "description": "Uploads required compliance evidence for the application. Allowed document types match application document uploads.",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document_type",
+                                    "value": "member_identity",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "remarks",
+                                    "value": "Compliance evidence uploaded from Postman",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "description": "Uploads required compliance evidence for the application. Allowed document types match application document uploads."
+                },
+                {
+                    "name": "Verify Compliance Document Evidence",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/compliance/documents/{{loan_document_id}}/verify",
+                        "description": "Verifies or rejects a compliance document attached to the loan application.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"decision\": \"verified\",\n  \"remarks\": \"Compliance evidence accepted\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "description": "Verifies or rejects a compliance document attached to the loan application."
+                },
+                {
                     "name": "Cancel Application",
                     "request": {
                         "method": "POST",
@@ -2077,6 +2168,32 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "Edit Payment Amount",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/payments/{{payment_id}}",
+                        "description": "Edits a posted payment amount and recalculates loan balances. Requires an existing payment_id.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 120000,\n  \"reason\": \"Corrected amount after reconciliation\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "description": "Edits a posted payment amount and recalculates loan balances. Requires an existing payment_id."
                 },
                 {
                     "name": "Settle Loan",
@@ -2282,9 +2399,9 @@
                 {
                     "name": "[Destructive] Delete Draft Application",
                     "request": {
-                        "method": "DELETE",
+                        "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}"
+                        "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/delete"
                     },
                     "response": []
                 },
@@ -2300,18 +2417,18 @@
                 {
                     "name": "[Destructive] Delete Member",
                     "request": {
-                        "method": "DELETE",
+                        "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/members/{{member_id}}"
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/delete"
                     },
                     "response": []
                 },
                 {
                     "name": "[Destructive] Delete Group",
                     "request": {
-                        "method": "DELETE",
+                        "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/groups/{{group_id}}"
+                        "url": "{{base_url}}/api/v1/groups/{{group_id}}/delete"
                     },
                     "response": []
                 },
@@ -2440,11 +2557,143 @@
                 {
                     "name": "[Destructive] Delete Group Visit",
                     "request": {
-                        "method": "DELETE",
+                        "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}"
+                        "url": "{{base_url}}/api/v1/group-visits/{{group_visit_id}}/delete"
                     },
                     "response": []
+                }
+            ]
+        },
+        {
+            "name": "System Administration",
+            "description": "Administrative API endpoints for settings, audit logs, and data purge operations. These require elevated roles/permissions.",
+            "item": [
+                {
+                    "name": "Get System Settings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/system/settings"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update System Settings",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/system/settings",
+                        "description": "Updates string-based system settings. Send only keys you want to change.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"settings\": {\n    \"company.name\": \"VATI Microfinance Limited\",\n    \"notifications.sms_enabled\": \"1\"\n  }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "description": "Updates string-based system settings. Send only keys you want to change."
+                },
+                {
+                    "name": "List Audit Logs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/system/audit-logs?from=&to=&user_id=&subject_type=&search=&log_name=&per_page=25"
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const body = pm.response.json();",
+                                    "if (pm.response.code === 200 && body.data && body.data.length) { pm.collectionVariables.set(\"audit_log_id\", body.data[0].id); }"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Audit Log",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/system/audit-logs/{{audit_log_id}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Data Purge Summary",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/system/data/summary"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Preview Data Purge",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/system/data/preview",
+                        "description": "Previews records and validation constraints before a purge. Entity values: members, groups, applications, loans, loan_products.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"entity\": \"applications\",\n  \"from\": \"2026-01-01\",\n  \"to\": \"2026-12-31\",\n  \"branch_id\": \"{{branch_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "description": "Previews records and validation constraints before a purge. Entity values: members, groups, applications, loans, loan_products."
+                },
+                {
+                    "name": "[Destructive] Purge Data",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/system/data/purge",
+                        "description": "Irreversibly deletes records when the confirmation phrase matches the server requirement. Run preview first.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"entity\": \"applications\",\n  \"confirmation_phrase\": \"DELETE APPLICATIONS\",\n  \"from\": \"2026-01-01\",\n  \"to\": \"2026-12-31\",\n  \"branch_id\": \"{{branch_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "description": "Irreversibly deletes records when the confirmation phrase matches the server requirement. Run preview first."
                 }
             ]
         },

@@ -20,6 +20,8 @@ class LoanApplication extends Model
             'submitted_at' => 'datetime',
             'consented_at' => 'datetime',
             'cancellation_deadline' => 'datetime',
+            'application_date' => 'date',
+            'expected_disbursement_date' => 'date',
             'recommended_amount' => 'decimal:2',
         ];
     }

@@ -69,6 +69,8 @@
                 <tr><th>Jinsia</th><td>{{ $display($member->gender) }}</td></tr>
                 <tr><th>Hali ya ndoa</th><td>{{ $display($member->marital_status) }}</td></tr>
                 <tr><th>Kazi</th><td>{{ $display($member->occupation) }}</td></tr>
+                <tr><th>Religion / Dini</th><td>{{ $display($member->religion) }}</td></tr>
+                <tr><th>Business/work area</th><td>{{ $display($member->business_work_area) }}</td></tr>
                 <tr><th>Uraia</th><td>{{ $display($member->nationality) }}</td></tr>
                 <tr><th>Admission date / Tarehe ya kujiunga</th><td>{{ $member->admission_date?->format('d M Y') ?? '—' }}</td></tr>
                 <tr><th>Tarehe ya kutolewa kitabu</th><td>{{ $member->passbook_issue_date?->format('d M Y') ?? '—' }}</td></tr>
@@ -82,6 +84,13 @@
         <table class="detail-table">
             <tbody>
                 <tr><th>Physical address / Anuani ya makazi</th><td>{{ $display($member->physical_address) }}</td></tr>
+                <tr><th>Permanent house/block</th><td>{{ $display($member->permanent_house_number) }}</td></tr>
+                <tr><th>Permanent area</th><td>{{ $display($member->permanent_area) }}</td></tr>
+                <tr><th>Permanent street</th><td>{{ $display($member->permanent_street) }}</td></tr>
+                <tr><th>Permanent P.O. box</th><td>{{ $display($member->permanent_postal_address) }}</td></tr>
+                <tr><th>Permanent police station</th><td>{{ $display($member->permanent_police_station) }}</td></tr>
+                <tr><th>Permanent district</th><td>{{ $display($member->permanent_district) }}</td></tr>
+                <tr><th>Permanent region</th><td>{{ $display($member->permanent_region) }}</td></tr>
                 <tr><th>Region / Mkoa</th><td>{{ $display($member->region) }}</td></tr>
                 <tr><th>District / Wilaya</th><td>{{ $display($member->district) }}</td></tr>
                 <tr><th>Ward / Kata</th><td>{{ $display($member->ward) }}</td></tr>
@@ -89,6 +98,8 @@
                 <tr><th>Issuing branch address</th><td>{{ $display($member->branch?->address) }}</td></tr>
                 <tr><th>Issued / registered by</th><td>{{ $display($member->createdBy?->name) }}</td></tr>
                 <tr><th>Branch manager</th><td>{{ $display($member->branch?->manager?->name) }}</td></tr>
+                <tr><th>Family member in VATI</th><td>{{ $member->has_vati_family_member ? $display($member->vati_family_member_name) : 'No' }}</td></tr>
+                <tr><th>Family member in group</th><td>{{ $member->family_member_is_group_member ? $display($member->group_family_member_name) : 'No' }}</td></tr>
                 <tr><th>Record created</th><td>{{ $member->created_at?->format('d M Y H:i') ?? '—' }}</td></tr>
             </tbody>
         </table>
@@ -151,6 +162,13 @@
                     <label>Bank name<input name="bank_name" value="{{ $member->kyc?->bank_name }}"></label>
                     <label>House number<input name="house_number" value="{{ $member->kyc?->house_number }}"></label>
                     <label>Nearest police station<input name="police_station" value="{{ $member->kyc?->police_station }}"></label>
+                    <label>Current house/block<input name="current_house_number" value="{{ $member->kyc?->current_house_number }}"></label>
+                    <label>Current area<input name="current_area" value="{{ $member->kyc?->current_area }}"></label>
+                    <label>Current street<input name="current_street" value="{{ $member->kyc?->current_street }}"></label>
+                    <label>Current P.O. box<input name="current_postal_address" value="{{ $member->kyc?->current_postal_address }}"></label>
+                    <label>Current police station<input name="current_police_station" value="{{ $member->kyc?->current_police_station }}"></label>
+                    <label>Current district<input name="current_district" value="{{ $member->kyc?->current_district }}"></label>
+                    <label>Current region<input name="current_region" value="{{ $member->kyc?->current_region }}"></label>
                     <label>Monthly household income<input type="number" step="0.01" name="household_monthly_income" value="{{ $member->kyc?->household_monthly_income }}"></label>
                     <label>Monthly household expenses<input type="number" step="0.01" name="household_monthly_expenses" value="{{ $member->kyc?->household_monthly_expenses }}"></label>
                     <label>Number of dependants<input type="number" name="number_of_dependants" value="{{ $member->kyc?->number_of_dependants }}"></label>
@@ -175,6 +193,13 @@
                 <tr><th>Bank name</th><td>{{ $display($member->kyc?->bank_name) }}</td></tr>
                 <tr><th>House number</th><td>{{ $display($member->kyc?->house_number) }}</td></tr>
                 <tr><th>Nearest police station</th><td>{{ $display($member->kyc?->police_station) }}</td></tr>
+                <tr><th>Current house/block</th><td>{{ $display($member->kyc?->current_house_number) }}</td></tr>
+                <tr><th>Current area</th><td>{{ $display($member->kyc?->current_area) }}</td></tr>
+                <tr><th>Current street</th><td>{{ $display($member->kyc?->current_street) }}</td></tr>
+                <tr><th>Current P.O. box</th><td>{{ $display($member->kyc?->current_postal_address) }}</td></tr>
+                <tr><th>Current police station</th><td>{{ $display($member->kyc?->current_police_station) }}</td></tr>
+                <tr><th>Current district</th><td>{{ $display($member->kyc?->current_district) }}</td></tr>
+                <tr><th>Current region</th><td>{{ $display($member->kyc?->current_region) }}</td></tr>
                 <tr><th>Monthly income</th><td class="money">{{ $money($member->kyc?->household_monthly_income) }}</td></tr>
                 <tr><th>Monthly expenses</th><td class="money">{{ $money($member->kyc?->household_monthly_expenses) }}</td></tr>
                 <tr><th>Number of dependants</th><td>{{ $member->kyc?->number_of_dependants ?? 0 }}</td></tr>

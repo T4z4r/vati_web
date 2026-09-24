@@ -88,8 +88,11 @@
                         value="{{ old('requested_amount', $application->requested_amount) }}" required></label>
                 <label>Muda (miezi)<input id="months" type="number" min="1" name="duration_months"
                         value="{{ old('duration_months', $application->duration_months) }}" required></label>
-                <label>Tarehe ya ombi (Application date)<input type="date" name="created_at"
-                        value="{{ old('created_at', $application->created_at?->toDateString() ?? now()->toDateString()) }}"></label>
+                <label>Tarehe ya ombi (Application date)<input type="date" name="application_date"
+                        value="{{ old('application_date', $application->application_date?->toDateString() ?? $application->created_at?->toDateString() ?? now()->toDateString()) }}"></label>
+                <label>Tarehe tarajiwa ya kutoa mkopo (Expected disbursement date)<input type="date"
+                        name="expected_disbursement_date"
+                        value="{{ old('expected_disbursement_date', $application->expected_disbursement_date?->toDateString()) }}"></label>
                 <label>Makadirio ya jumla ya marejesho<input id="estimate" readonly
                         placeholder="Chagua bidhaa na masharti"></label>
                 <label>Makadirio ya gharama<input id="charges" readonly placeholder="Chagua bidhaa na masharti"></label>
@@ -134,6 +137,7 @@
                         <div class="detail"><small>Umri</small><strong data-member-field="age">—</strong></div>
                         <div class="detail"><small>Tarehe ya kuzaliwa</small><strong data-member-field="date_of_birth">—</strong></div>
                         <div class="detail"><small>Jinsia</small><strong data-member-field="gender">—</strong></div>
+                        <div class="detail"><small>Dini</small><strong data-member-field="religion">—</strong></div>
                         <div class="detail"><small>Hali ya ndoa</small><strong data-member-field="marital_status">—</strong></div>
                         <div class="detail"><small>Uraia</small><strong data-member-field="nationality">—</strong></div>
                         <div class="detail"><small>Simu</small><strong data-member-field="phone">—</strong></div>
@@ -149,6 +153,8 @@
                     <div class="detail-grid">
                         <div class="detail"><small>Namba ya nyumba</small><strong data-member-field="house_number">—</strong></div>
                         <div class="detail"><small>Anwani ya makazi</small><strong data-member-field="physical_address">—</strong></div>
+                        <div class="detail"><small>Anwani ya kudumu</small><strong data-member-field="permanent_address_details">—</strong></div>
+                        <div class="detail"><small>Anwani ya sasa</small><strong data-member-field="current_address_details">—</strong></div>
                         <div class="detail"><small>Mtaa / kata</small><strong data-member-field="member_location">—</strong></div>
                         <div class="detail"><small>Wilaya / mkoa</small><strong data-member-field="member_region">—</strong></div>
                         <div class="detail"><small>Kituo cha polisi kilicho karibu</small><strong data-member-field="police_station">—</strong></div>
@@ -162,6 +168,7 @@
                         <div class="detail"><small>Mapato ya kaya kwa mwezi</small><strong data-member-field="household_monthly_income">—</strong></div>
                         <div class="detail"><small>Matumizi ya kaya kwa mwezi</small><strong data-member-field="household_monthly_expenses">—</strong></div>
                         <div class="detail"><small>Salio la mkopo wa VATI</small><strong data-member-field="current_loan_balance">—</strong></div>
+                        <div class="detail"><small>Ndugu VATI / kikundi</small><strong data-member-field="vati_family">—</strong></div>
                         <div class="detail"><small>Familia / mali / wateule</small><strong data-member-field="record_counts">—</strong></div>
                     </div>
                     <p class="muted" style="margin:16px 0 0">Sahihisha taarifa zisizo sahihi kwenye wasifu wa mwanachama kabla ya kuunda ombi hili.</p>
@@ -241,6 +248,14 @@
                 <label>Deni la nje lililopo<input type="number" min="0"
                         name="assessment[existing_external_debt]"
                         value="{{ old('assessment.existing_external_debt', $assessment?->existing_external_debt ?? 0) }}"></label>
+                <label>Taasisi/Mkopeshaji wa nje<input name="assessment[external_lender_name]"
+                        value="{{ old('assessment.external_lender_name', $assessment?->external_lender_name) }}"></label>
+                <label>Jumla ya mkopo wa nje<input type="number" min="0"
+                        name="assessment[external_loan_total_amount]"
+                        value="{{ old('assessment.external_loan_total_amount', $assessment?->external_loan_total_amount ?? 0) }}"></label>
+                <label>Salio la mkopo wa nje<input type="number" min="0"
+                        name="assessment[external_loan_outstanding_amount]"
+                        value="{{ old('assessment.external_loan_outstanding_amount', $assessment?->external_loan_outstanding_amount ?? 0) }}"></label>
                 <label class="full">Maoni ya tathmini
                     <textarea name="assessment[assessment_comment]">{{ old('assessment.assessment_comment', $assessment?->assessment_comment) }}</textarea>
                 </label>
@@ -369,12 +384,15 @@
                 group_meeting: text(profile.meeting_day, profile.group_location),
                 member_location: text(profile.street, profile.ward),
                 member_region: text(profile.district, profile.region),
+                permanent_address_details: text(profile.permanent_house_number, profile.permanent_area, profile.permanent_street, profile.permanent_postal_address, profile.permanent_police_station, profile.permanent_district, profile.permanent_region),
+                current_address_details: text(profile.current_house_number, profile.current_area, profile.current_street, profile.current_postal_address, profile.current_police_station, profile.current_district, profile.current_region),
                 business_profile: text(profile.business_name, profile.business_type, profile.business_address),
                 bank_profile: text(profile.bank_account_number, profile.bank_account_name, profile.bank_name),
                 house_structure: text(profile.house_roof_type, profile.house_fence_type),
                 household_monthly_income: formatMoney(profile.household_monthly_income || 0),
                 household_monthly_expenses: formatMoney(profile.household_monthly_expenses || 0),
                 current_loan_balance: formatMoney(profile.current_loan_balance || 0),
+                vati_family: text(profile.has_vati_family_member ? profile.vati_family_member_name || 'Family member in VATI' : 'No VATI family member', profile.family_member_is_group_member ? profile.group_family_member_name || 'Family member in group' : null),
                 record_counts: `${profile.family_members_count} family · ${profile.assets_count} assets · ${profile.nominees_count} nominees`,
             };
 

@@ -23,6 +23,8 @@ class StoreLoanApplicationRequest extends FormRequest
             'application_type' => ['nullable', Rule::in(['main', 'refinance', 'top_up'])],
             'requested_amount' => ['required', 'numeric', 'min:'.($product?->minimum_amount ?? 0), 'max:'.($product?->maximum_amount ?? PHP_INT_MAX)],
             'duration_months' => ['required', 'integer', 'min:'.($product?->minimum_duration_months ?? 1), 'max:'.($product?->maximum_duration_months ?? 120)],
+            'application_date' => ['nullable', 'date'],
+            'expected_disbursement_date' => ['nullable', 'date'],
             'loan_purpose' => ['nullable', 'string'],
             'business_summary' => ['nullable', 'string', 'max:5000'],
             'assessment' => ['nullable', 'array'],
@@ -30,6 +32,10 @@ class StoreLoanApplicationRequest extends FormRequest
             'assessment.other_income' => ['nullable', 'numeric', 'min:0'],
             'assessment.business_expenses' => ['nullable', 'numeric', 'min:0'],
             'assessment.household_expenses' => ['nullable', 'numeric', 'min:0'],
+            'assessment.existing_external_debt' => ['nullable', 'numeric', 'min:0'],
+            'assessment.external_lender_name' => ['nullable', 'string', 'max:150'],
+            'assessment.external_loan_total_amount' => ['nullable', 'numeric', 'min:0'],
+            'assessment.external_loan_outstanding_amount' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

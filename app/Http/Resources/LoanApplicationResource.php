@@ -35,6 +35,8 @@ class LoanApplicationResource extends JsonResource
             'application_number' => $this->application_number,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'application_date' => $this->application_date?->toDateString(),
+            'expected_disbursement_date' => $this->expected_disbursement_date?->toDateString(),
             'member' => new MemberResource($this->whenLoaded('member')),
             'product' => $this->whenLoaded('product'),
             'group' => $this->whenLoaded('group'),

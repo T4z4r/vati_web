@@ -131,6 +131,8 @@
                         @endforeach
                     </select>
                 </label>
+                <label>Dini (Religion)<input name="religion"
+                        value="{{ old('religion', $member->religion) }}" placeholder="Religion"></label>
                 <label>Hali ya Ndoa (Marital Status)<select name="marital_status">
                         <option value="">Select</option>
                         @foreach (['Single', 'Married', 'Divorced', 'Widowed'] as $value)
@@ -143,6 +145,9 @@
                         placeholder="Business, employment, etc."></label>
                 <label>Taifa (Nationality)<input name="nationality"
                         value="{{ old('nationality', $member->nationality ?? 'Tanzania') }}" placeholder="Country"></label>
+                <label>Eneo la Biashara/Kazi (Business/Work Area)<input name="business_work_area"
+                        value="{{ old('business_work_area', $member->business_work_area) }}"
+                        placeholder="Applicant business or work area"></label>
             </div>
 
             <!-- ADDRESS INFORMATION -->
@@ -151,6 +156,20 @@
                 <label>Anuani ya makazi (Physical Address)
                     <textarea name="physical_address" placeholder="Full residential address">{{ old('physical_address', $member->physical_address) }}</textarea>
                 </label>
+                <label>Namba ya Nyumba/Kitalu (Permanent House/Block)<input name="permanent_house_number"
+                        value="{{ old('permanent_house_number', $member->permanent_house_number) }}"></label>
+                <label>Eneo la Kudumu (Permanent Area)<input name="permanent_area"
+                        value="{{ old('permanent_area', $member->permanent_area) }}"></label>
+                <label>Mtaa wa Kudumu (Permanent Street)<input name="permanent_street"
+                        value="{{ old('permanent_street', $member->permanent_street) }}"></label>
+                <label>S.L.P ya Kudumu (Permanent P.O. Box)<input name="permanent_postal_address"
+                        value="{{ old('permanent_postal_address', $member->permanent_postal_address) }}"></label>
+                <label>Kituo cha Polisi cha Karibu (Permanent Police Station)<input name="permanent_police_station"
+                        value="{{ old('permanent_police_station', $member->permanent_police_station) }}"></label>
+                <label>Wilaya ya Kudumu (Permanent District)<input name="permanent_district"
+                        value="{{ old('permanent_district', $member->permanent_district) }}"></label>
+                <label>Mkoa wa Kudumu (Permanent Region)<input name="permanent_region"
+                        value="{{ old('permanent_region', $member->permanent_region) }}"></label>
                 <label>Kanda/Mkoa (Region)<input name="region" value="{{ old('region', $member->region) }}"
                         placeholder="e.g., Dar es Salaam"></label>
                 <label>Wilaya (District)<input name="district" value="{{ old('district', $member->district) }}"
@@ -193,6 +212,38 @@
                 <label>Namba ya Simu ya M-Pesa (M-Pesa Phone)<input name="kyc[mpesa_phone]"
                         value="{{ old('kyc.mpesa_phone', $member->kyc?->mpesa_phone) }}"
                         placeholder="Mobile money number"></label>
+                <label>Namba ya Nyumba ya Sasa (Current House/Block)<input name="kyc[current_house_number]"
+                        value="{{ old('kyc.current_house_number', $member->kyc?->current_house_number) }}"></label>
+                <label>Eneo la Sasa (Current Area)<input name="kyc[current_area]"
+                        value="{{ old('kyc.current_area', $member->kyc?->current_area) }}"></label>
+                <label>Mtaa wa Sasa (Current Street)<input name="kyc[current_street]"
+                        value="{{ old('kyc.current_street', $member->kyc?->current_street) }}"></label>
+                <label>S.L.P ya Sasa (Current P.O. Box)<input name="kyc[current_postal_address]"
+                        value="{{ old('kyc.current_postal_address', $member->kyc?->current_postal_address) }}"></label>
+                <label>Kituo cha Polisi cha Sasa (Current Police Station)<input name="kyc[current_police_station]"
+                        value="{{ old('kyc.current_police_station', $member->kyc?->current_police_station) }}"></label>
+                <label>Wilaya ya Sasa (Current District)<input name="kyc[current_district]"
+                        value="{{ old('kyc.current_district', $member->kyc?->current_district) }}"></label>
+                <label>Mkoa wa Sasa (Current Region)<input name="kyc[current_region]"
+                        value="{{ old('kyc.current_region', $member->kyc?->current_region) }}"></label>
+            </div>
+
+            <h3 class="section-title" style="margin-top:20px">VATI Family / Group Relationship</h3>
+            <div class="form-grid">
+                <label>Family member in VATI?<select name="has_vati_family_member">
+                        @foreach ([0 => 'No', 1 => 'Yes'] as $value => $label)
+                            <option value="{{ $value }}" @selected((string) old('has_vati_family_member', (int) $member->has_vati_family_member) === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select></label>
+                <label>VATI family member name<input name="vati_family_member_name"
+                        value="{{ old('vati_family_member_name', $member->vati_family_member_name) }}"></label>
+                <label>Family member in this group?<select name="family_member_is_group_member">
+                        @foreach ([0 => 'No', 1 => 'Yes'] as $value => $label)
+                            <option value="{{ $value }}" @selected((string) old('family_member_is_group_member', (int) $member->family_member_is_group_member) === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select></label>
+                <label>Group family member name<input name="group_family_member_name"
+                        value="{{ old('group_family_member_name', $member->group_family_member_name) }}"></label>
             </div>
 
             <!-- BANK ACCOUNT INFORMATION -->

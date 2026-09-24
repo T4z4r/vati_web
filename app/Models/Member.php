@@ -14,7 +14,13 @@ class Member extends Model
 
     protected function casts(): array
     {
-        return ['date_of_birth' => 'date', 'admission_date' => 'date', 'passbook_issue_date' => 'date'];
+        return [
+            'date_of_birth' => 'date',
+            'admission_date' => 'date',
+            'passbook_issue_date' => 'date',
+            'has_vati_family_member' => 'boolean',
+            'family_member_is_group_member' => 'boolean',
+        ];
     }
 
     public function branch()
