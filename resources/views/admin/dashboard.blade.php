@@ -56,7 +56,7 @@
             </div>
             <div class="stat">
                 <span class="ph ph-bank stat-icon" aria-hidden="true"></span>
-                <small>{{ __('Total issued') }}</small><strong>TZS {{ number_format($totalIssuedAmount) }}</strong><em>{{ __('All disbursed principal') }}</em>
+                <small>{{ __('Total issued') }}</small><strong>TZS {{ number_format($totalIssuedAmount) }}</strong><em>{{ __('Disbursed principal and interest') }}</em>
             </div>
         </section>
         <section class="grid-2">

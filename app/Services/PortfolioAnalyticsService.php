@@ -42,8 +42,9 @@ class PortfolioAnalyticsService
         if ($branchId) {
             $totalIssuedQuery->where('branch_id', $branchId);
         }
-        $totalIssuedAmount = (float) \App\Models\LoanDisbursement::where('status', 'completed')
-            ->whereIn('loan_id', $totalIssuedQuery->select('id'))->sum('amount');
+        $totalIssuedAmount = (float) $totalIssuedQuery
+            ->whereHas('disbursement', fn (Builder $query) => $query->where('status', 'completed'))
+            ->sum('total_repayment');
 
         return [
             'as_of' => now()->toDateString(),

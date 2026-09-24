@@ -325,7 +325,7 @@ class WebPortalTest extends TestCase
             ->assertSee(__('Repayment profit / loss'))
             ->assertSee(__('Total loan disbursement'))
             ->assertSee(__('Total loan applications'))
-            ->assertSee(number_format((float) $loan->principal_amount, 2))
+            ->assertSee(number_format((float) $loan->total_repayment, 2))
             ->assertSee(number_format($partialAmount, 2))
             ->assertSee(number_format($realizedRepaymentIncome, 2))
             ->assertSee(number_format(1000000, 2));

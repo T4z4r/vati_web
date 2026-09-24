@@ -64,6 +64,7 @@
             <span class="ph ph-bank stat-icon" aria-hidden="true"></span>
             <small>{{ __('Total issued') }}</small>
             <strong>TZS {{ number_format((float) $portfolio['total_issued_amount']) }}</strong>
+            <em>{{ __('Disbursed principal and interest') }}</em>
         </div>
     </section>
 

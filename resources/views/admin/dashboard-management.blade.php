@@ -55,7 +55,7 @@
                     <div class="stat">
                         <span class="ph ph-arrow-up-right stat-icon" aria-hidden="true"></span>
                         <small>{{ __('Total loan disbursement') }}</small><strong>TZS
-                            {{ number_format($managementSummary['totalDisbursements'], 2) }}</strong><em>{{ __('Principal released to members') }}</em>
+                            {{ number_format($managementSummary['totalDisbursements'], 2) }}</strong><em>{{ __('Disbursed principal and interest') }}</em>
                     </div>
                     <div class="stat">
                         <span class="ph ph-clipboard-text stat-icon" aria-hidden="true"></span>

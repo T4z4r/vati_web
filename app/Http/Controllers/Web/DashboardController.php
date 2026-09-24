@@ -91,7 +91,10 @@ class DashboardController extends Controller
             'collectionRate' => $expected > 0 ? round($collected / $expected * 100, 1) : 0,
             'overdueLoans' => (clone $loans)->where('status', 'overdue')->count(),
             'pendingApplications' => (clone $applications)->whereNotIn('status', ['approved', 'rejected', 'disbursed', 'cancelled'])->count(),
-            'totalIssuedAmount' => \App\Models\LoanDisbursement::where('status', 'completed')->whereIn('loan_id', (clone $loans)->where('status', '!=', 'cancelled')->select('id'))->sum('amount'),
+            'totalIssuedAmount' => (float) (clone $loans)
+                ->where('status', '!=', 'cancelled')
+                ->whereHas('disbursement', fn ($q) => $q->where('status', 'completed'))
+                ->sum('total_repayment'),
         ];
 
         return view($isManagement ? 'admin.dashboard-management' : 'admin.dashboard', $data);
@@ -114,7 +117,9 @@ class DashboardController extends Controller
             'repaymentIncome' => $repaymentIncome,
             'repaymentLoss' => $repaymentLoss,
             'repaymentProfitLoss' => $repaymentIncome - $repaymentLoss,
-            'totalDisbursements' => (float) (clone $loans)->whereNotNull('disbursement_date')->sum('principal_amount'),
+            'totalDisbursements' => (float) (clone $loans)
+                ->whereHas('disbursement', fn ($q) => $q->where('status', 'completed'))
+                ->sum('total_repayment'),
             'totalApplications' => (clone $applications)->count(),
             'requestedForDisbursement' => (float) (clone $applications)->whereNotIn('status', ['rejected', 'cancelled'])->sum('requested_amount'),
         ];
