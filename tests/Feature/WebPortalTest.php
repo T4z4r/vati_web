@@ -5,11 +5,13 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\GroupMembership;
+use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\LoanTerm;
 use App\Models\Member;
 use App\Models\MemberGroup;
+use App\Models\Payment;
 use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -87,6 +89,33 @@ class WebPortalTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee(__('Management financial summary'));
+    }
+
+    public function test_web_dashboard_interest_received_uses_posted_branch_payments(): void
+    {
+        $this->loanWithPayment($this->branch, $this->group, 'INT-A', 'posted', 12500, 1500);
+        $this->loanWithPayment($this->branch, $this->group, 'INT-B', 'reversed', 45000, 500);
+
+        $otherBranch = Branch::create(['area_id' => $this->branch->area_id, 'branch_code' => 'DSM-002', 'branch_name' => 'Other Branch']);
+        $otherGroup = MemberGroup::create(['branch_id' => $otherBranch->id, 'group_code' => 'OTH-G01', 'group_name' => 'Other Group']);
+        $this->loanWithPayment($otherBranch, $otherGroup, 'INT-C', 'posted', 70000, 0);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard', ['branch_id' => $this->branch->id]))
+            ->assertOk()
+            ->assertSee(__('Interest received'))
+            ->assertSee(number_format(12500, 2))
+            ->assertViewHas('interestReceived', 12500.0);
+
+        $cashier = User::factory()->create(['branch_id' => $this->branch->id]);
+        $cashier->assignRole('cashier');
+
+        $this->actingAs($cashier)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(__('Interest received'))
+            ->assertDontSee(__('Management financial summary'))
+            ->assertViewHas('interestReceived', 12500.0);
     }
 
     public function test_admin_forms_load_select2_and_placeholder_enhancements(): void
@@ -484,6 +513,65 @@ class WebPortalTest extends TestCase
 
         $this->assertDatabaseCount('member_assets', 1);
         $this->assertDatabaseHas('asset_types', ['name' => 'Mbuzi', 'category' => 'Livestock']);
+    }
+
+    private function loanWithPayment(Branch $branch, MemberGroup $group, string $suffix, string $status, float $interest, float $penalty): Payment
+    {
+        $member = Member::create([
+            'membership_number' => 'VATI-M-'.$suffix,
+            'branch_id' => $branch->id,
+            'group_id' => $group->id,
+            'first_name' => 'Interest',
+            'last_name' => $suffix,
+            'phone' => '255713'.str_pad($suffix, 6, '0', STR_PAD_LEFT),
+            'created_by' => $this->admin->id,
+        ]);
+        $application = LoanApplication::create([
+            'application_number' => 'VATI-A-'.$suffix,
+            'member_id' => $member->id,
+            'loan_product_id' => $this->product->id,
+            'group_id' => $group->id,
+            'branch_id' => $branch->id,
+            'requested_amount' => 100000,
+            'duration_months' => 6,
+            'status' => 'disbursed',
+            'created_by' => $this->admin->id,
+        ]);
+        $loan = Loan::create([
+            'loan_number' => 'VATI-L-'.$suffix,
+            'loan_application_id' => $application->id,
+            'member_id' => $member->id,
+            'group_id' => $group->id,
+            'loan_product_id' => $this->product->id,
+            'branch_id' => $branch->id,
+            'principal_amount' => 100000,
+            'interest_amount' => 20000,
+            'total_repayment' => 120000,
+            'principal_balance' => 100000,
+            'interest_balance' => 20000,
+            'total_balance' => 120000,
+            'number_of_installments' => 6,
+            'installment_amount' => 20000,
+            'status' => 'active',
+        ]);
+        $payment = Payment::create([
+            'payment_number' => 'VATI-PAY-'.$suffix,
+            'member_id' => $member->id,
+            'loan_id' => $loan->id,
+            'branch_id' => $branch->id,
+            'amount' => 100000 + $penalty,
+            'payment_method' => 'cash',
+            'paid_at' => now(),
+            'status' => $status,
+        ]);
+        $payment->allocations()->create([
+            'loan_installment_id' => null,
+            'principal_amount' => 100000 - $interest,
+            'interest_amount' => $interest,
+            'penalty_amount' => $penalty,
+        ]);
+
+        return $payment;
     }
 
     private function member(string $name, string $phone): Member

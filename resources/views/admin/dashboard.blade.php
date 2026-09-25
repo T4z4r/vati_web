@@ -46,6 +46,11 @@
             <div class="stat"><span class="ph ph-currency-circle-dollar stat-icon"
                     aria-hidden="true"></span><small>{{ __('Collected today') }}</small><strong>TZS
                     {{ number_format($collected) }}</strong><em>{{ __('Posted payments') }}</em></div>
+            <div class="stat">
+                <span class="ph ph-money stat-icon" aria-hidden="true"></span>
+                <small>{{ __('Interest received') }}</small><strong>TZS
+                {{ number_format($interestReceived, 2) }}</strong><em>{{ __('Posted payments') }}</em>
+            </div>
             <div class="stat danger">
                 <span class="ph ph-warning stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Overdue loans') }}</small><strong>{{ number_format($overdueLoans) }}</strong><em>{{ __('Requires follow-up') }}</em>

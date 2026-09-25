@@ -43,6 +43,11 @@
                             {{ number_format($managementSummary['totalPayments'], 2) }}</strong><em>{{ number_format($managementSummary['totalPaymentCount']) }}
                             {{ __('payments received') }}</em>
                     </div>
+                    <div class="stat">
+                        <span class="ph ph-coins stat-icon" aria-hidden="true"></span>
+                        <small>{{ __('Interest received') }}</small><strong>TZS
+                            {{ number_format($interestReceived, 2) }}</strong><em>{{ __('Posted payments') }}</em>
+                    </div>
                     <div class="stat {{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'gold' : 'danger' }}">
                         <span class="ph {{ $managementSummary['repaymentProfitLoss'] >= 0 ? 'ph-trend-up' : 'ph-trend-down' }} stat-icon"
                             aria-hidden="true"></span>

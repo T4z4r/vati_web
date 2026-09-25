@@ -69,9 +69,12 @@ class DashboardController extends Controller
         $loanIds = (clone $activeLoans)->select('id');
         $expected = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereDate('due_date', today())->sum('total_due');
         $collected = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereDate('paid_at', today())->sum('amount');
+        $postedPayments = Payment::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->where('status', 'posted');
+        $interestReceived = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
+            ->selectRaw('COALESCE(SUM(interest_amount), 0) as total')->value('total');
         $isManagement = $request->user()->can('view-management-dashboard');
         $managementSummary = $isManagement
-            ? $this->managementSummary($loans, $applications, $activeLoans, $branchId)
+            ? $this->managementSummary($postedPayments, $loans, $applications, $activeLoans)
             : null;
         $recentPayments = Payment::with(['member', 'loan'])->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->latest('paid_at')->limit(8)->get();
 
@@ -88,6 +91,7 @@ class DashboardController extends Controller
             'activeLoanCount' => (clone $activeLoans)->count(),
             'expected' => $expected,
             'collected' => $collected,
+            'interestReceived' => $interestReceived,
             'collectionRate' => $expected > 0 ? round($collected / $expected * 100, 1) : 0,
             'overdueLoans' => (clone $loans)->where('status', 'overdue')->count(),
             'pendingApplications' => (clone $applications)->whereNotIn('status', ['approved', 'rejected', 'disbursed', 'cancelled'])->count(),
@@ -100,10 +104,9 @@ class DashboardController extends Controller
         return view($isManagement ? 'admin.dashboard-management' : 'admin.dashboard', $data);
     }
 
-    private function managementSummary($loans, $applications, $activeLoans, ?int $branchId): array
+    private function managementSummary($postedPayments, $loans, $applications, $activeLoans): array
     {
         $allLoanIds = (clone $loans)->select('id');
-        $postedPayments = Payment::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->where('status', 'posted');
         $postedPaymentIds = (clone $postedPayments)->select('id');
         $repaymentIncome = (float) PaymentAllocation::whereIn('payment_id', clone $postedPaymentIds)
             ->selectRaw('COALESCE(SUM(interest_amount + penalty_amount), 0) as total')->value('total');
