@@ -147,7 +147,7 @@ class WebPortalTest extends TestCase
         ], 'family_members' => [
             ['name' => 'Baraka Musa', 'gender' => 'Male', 'age' => 12, 'relationship' => 'Son', 'education' => 'Primary'],
             ['name' => 'Neema Musa', 'gender' => 'Female', 'age' => 9, 'relationship' => 'Daughter', 'education' => 'Primary'],
-        ], 'assets' => [
+        ], 'asset_matrix' => [
             ['name' => 'Television', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 350000, 'description' => 'Working condition'],
             ['name' => 'Goats', 'category' => 'Livestock', 'quantity' => 3, 'estimated_value' => 450000],
         ]])->assertRedirect();
@@ -163,7 +163,7 @@ class WebPortalTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
             ->assertDownload('VATI-member-'.$member->membership_number.'.pdf');
-        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Applicant Family Members')->assertSee('Family Assets')->assertSee('Baraka Musa')->assertSee('Television');
+        $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('Current member photograph')->assertSee('Nominees / Wateule')->assertSee('Applicant Family Members')->assertSee('Taarifa ya Rasimali za Familia')->assertSee('Runinga')->assertSee('Jokofu')->assertSee('Idadi (Number)')->assertSee('Thamani (Value/Price)')->assertSee('asset_matrix[0][quantity]', false)->assertSee('Baraka Musa')->assertSee('Television');
         $this->put(route('admin.members.update', $member), [
             'branch_id' => $this->branch->id,
             'group_id' => $this->group->id,
@@ -343,6 +343,53 @@ class WebPortalTest extends TestCase
                 'Payments received',
                 'Guarantors',
             ]);
+    }
+
+    public function test_family_asset_matrix_is_rendered_and_submitted(): void
+    {
+        Storage::fake('public');
+        $this->actingAs($this->admin);
+
+        $this->get(route('admin.members.create'))->assertOk()
+            ->assertSee('Taarifa ya Rasimali za Familia')
+            ->assertSee('Runinga')
+            ->assertSee('Jokofu')
+            ->assertSee('Nyinginezo')
+            ->assertSee('Idadi (Number)')
+            ->assertSee('Thamani (Value/Price)')
+            ->assertSee('asset_matrix[0][quantity]', false);
+
+        $this->post('/admin/members', [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Matrix',
+            'last_name' => 'Member',
+            'phone' => '255712000044',
+            'asset_matrix' => [
+                ['name' => 'Runinga', 'category' => 'Equipment', 'quantity' => 2, 'estimated_value' => 100000, 'description' => 'Working plough'],
+                ['name' => "Ng'ombe", 'category' => 'Livestock', 'quantity' => 4, 'estimated_value' => 2000000],
+            ],
+        ])->assertRedirect();
+
+        $member = Member::firstOrFail();
+        $this->assertDatabaseCount('member_assets', 2);
+        $this->assertDatabaseHas('asset_types', ['name' => 'Runinga', 'category' => 'Equipment']);
+        $this->assertDatabaseHas('member_assets', ['member_id' => $member->id, 'quantity' => 2, 'estimated_value' => 100000]);
+
+        $this->put(route('admin.members.update', $member), [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Matrix',
+            'last_name' => 'Member',
+            'phone' => '255712000044',
+            'status' => 'active',
+            'asset_matrix' => [
+                ['name' => 'Mbuzi', 'category' => 'Livestock', 'quantity' => 3, 'estimated_value' => 900000],
+            ],
+        ])->assertRedirect(route('admin.members.show', $member));
+
+        $this->assertDatabaseCount('member_assets', 1);
+        $this->assertDatabaseHas('asset_types', ['name' => 'Mbuzi', 'category' => 'Livestock']);
     }
 
     private function member(string $name, string $phone): Member

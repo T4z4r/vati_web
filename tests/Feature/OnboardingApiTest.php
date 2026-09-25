@@ -17,6 +17,43 @@ class OnboardingApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_onboarding_accepts_asset_matrix_payload(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $region = Region::create(['name' => 'Dar es Salaam', 'code' => 'DSM-MATRIX']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Kigamboni', 'code' => 'KGM-MATRIX']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'KGM-M01', 'branch_name' => 'Kigamboni']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('super_admin');
+        Sanctum::actingAs($admin);
+
+        $groupId = $this->postJson('/api/v1/onboarding/groups', [
+            'branch_id' => $branch->id,
+            'group_code' => 'KGM-GMATRIX',
+            'group_name' => 'Matrix Group',
+            'meeting_day' => 'Monday',
+            'meeting_time' => '10:00',
+            'location' => 'Kigamboni Market',
+        ])->assertCreated()->json('data.id');
+
+        $memberId = $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => $branch->id,
+            'group_id' => $groupId,
+            'first_name' => 'Matrix',
+            'last_name' => 'Onboarding',
+            'phone' => '255712000099',
+            'asset_matrix' => [
+                ['name' => 'Sofa', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 500000],
+                ['name' => 'Television', 'category' => 'Household', 'quantity' => 2, 'estimated_value' => 700000, 'description' => 'Working'],
+                ['name' => '', 'category' => '', 'quantity' => '', 'estimated_value' => '', 'description' => ''],
+            ],
+        ])->assertCreated()->json('data.id');
+
+        $this->assertDatabaseCount('member_assets', 2);
+        $this->assertDatabaseHas('asset_types', ['name' => 'Sofa', 'category' => 'Household']);
+        $this->assertDatabaseHas('member_assets', ['member_id' => $memberId, 'quantity' => 2, 'estimated_value' => 700000]);
+    }
+
     public function test_group_and_member_can_be_onboarded_with_kyc_membership_and_nominees(): void
     {
         $this->seed(RolePermissionSeeder::class);
@@ -66,7 +103,7 @@ class OnboardingApiTest extends TestCase
             'family_members' => [
                 ['name' => 'Juma Musa', 'gender' => 'Male', 'age' => 14, 'relationship' => 'Son', 'education' => 'Secondary'],
             ],
-            'assets' => [
+            'asset_matrix' => [
                 ['name' => 'Sofa', 'category' => 'Household', 'quantity' => 1, 'estimated_value' => 500000],
             ],
         ])->assertCreated()->assertJsonPath('message', 'Member onboarding completed.')

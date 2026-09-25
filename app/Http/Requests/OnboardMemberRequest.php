@@ -9,6 +9,12 @@ class OnboardMemberRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        if ($this->has('asset_matrix') && ! $this->has('assets')) {
+            $this->merge([
+                'assets' => StoreMemberRequest::normalizeAssetMatrix((array) $this->input('asset_matrix', [])),
+            ]);
+        }
+
         foreach (['family_members', 'assets'] as $collection) {
             if ($this->has($collection)) {
                 $this->merge([

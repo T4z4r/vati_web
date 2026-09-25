@@ -24,15 +24,78 @@
         while (count($familyRows) < 2) {
             $familyRows[] = [];
         }
-        $assetRows = old('assets', $member->assets?->map(fn ($asset) => [
+        $defaultAssetColumns = [
+            ['label' => 'Runinga', 'name' => 'Runinga', 'category' => 'Equipment', 'editable' => false],
+            ['label' => 'Jokofu', 'name' => 'Jokofu', 'category' => 'Equipment', 'editable' => false],
+            ['label' => 'Sofa', 'name' => 'Sofa', 'category' => 'Household', 'editable' => false],
+            ['label' => 'Kitanda', 'name' => 'Kitanda', 'category' => 'Household', 'editable' => false],
+            ['label' => 'Redio', 'name' => 'Redio', 'category' => 'Household', 'editable' => false],
+            ['label' => "Ng'ombe", 'name' => "Ng'ombe", 'category' => 'Livestock', 'editable' => false],
+            ['label' => 'Mbuzi', 'name' => 'Mbuzi', 'category' => 'Livestock', 'editable' => false],
+            ['label' => 'Kuku', 'name' => 'Kuku', 'category' => 'Livestock', 'editable' => false],
+            ['label' => 'Nyinginezo', 'name' => '', 'category' => '', 'editable' => true],
+            ['label' => '…', 'name' => '', 'category' => '', 'editable' => true],
+            ['label' => '…', 'name' => '', 'category' => '', 'editable' => true],
+        ];
+        $assetMatrix = old('asset_matrix', $member->assets?->map(fn ($asset) => [
             'name' => $asset->assetType?->name,
             'category' => $asset->assetType?->category,
             'quantity' => $asset->quantity,
             'estimated_value' => $asset->estimated_value,
             'description' => $asset->description,
         ])->values()->all() ?? []);
-        while (count($assetRows) < 2) {
-            $assetRows[] = [];
+        $assetMatrix = is_array($assetMatrix) ? array_values($assetMatrix) : [];
+        $assetColumns = array_map(static fn (array $column): array => [
+            'label' => $column['label'],
+            'name' => $column['name'],
+            'category' => $column['category'],
+            'quantity' => '',
+            'estimated_value' => '',
+            'description' => '',
+            'editable' => $column['editable'],
+        ], $defaultAssetColumns);
+        $unassignedAssets = [];
+        foreach ($assetMatrix as $asset) {
+            if (! is_array($asset)) {
+                continue;
+            }
+            $name = trim((string) ($asset['name'] ?? ''));
+            if ($name === '' && ! collect($asset)->except('category')->contains(fn ($value) => filled($value))) {
+                continue;
+            }
+            $matched = false;
+            foreach ($assetColumns as $index => $column) {
+                if ($column['name'] !== '' && strcasecmp($column['name'], $name) === 0) {
+                    $assetColumns[$index] = [...$column, ...$asset, 'name' => $column['name']];
+                    $matched = true;
+                    break;
+                }
+            }
+            if (! $matched) {
+                $unassignedAssets[] = $asset;
+            }
+        }
+        foreach ($unassignedAssets as $asset) {
+            $target = null;
+            foreach ($assetColumns as $index => $column) {
+                if ($column['name'] === '' && $column['editable']) {
+                    $target = $index;
+                    break;
+                }
+            }
+            if ($target !== null) {
+                $assetColumns[$target] = [...$assetColumns[$target], ...$asset];
+            } else {
+                $assetColumns[] = [
+                    'label' => '…',
+                    'name' => (string) ($asset['name'] ?? ''),
+                    'category' => $asset['category'] ?? '',
+                    'quantity' => $asset['quantity'] ?? '',
+                    'estimated_value' => $asset['estimated_value'] ?? '',
+                    'description' => $asset['description'] ?? '',
+                    'editable' => true,
+                ];
+            }
         }
     @endphp
     <div class="page-head">
@@ -297,36 +360,53 @@
             </div>
             <button type="button" class="btn btn-secondary" id="add-family-member" style="margin-top:10px"><span class="ph ph-user-plus" aria-hidden="true"></span> Add family member</button>
 
-            <h3 id="family-assets" class="section-title" style="margin-top:25px">Family Assets / Taarifa ya Rasimali za Familia</h3>
-            <p class="muted">Optional. Record household assets, quantities and their estimated values.</p>
-            <datalist id="common-assets">
-                @foreach(['Television', 'Refrigerator', 'Sofa', 'Bed', 'Radio', 'Cattle', 'Goats', 'Chickens', 'Land', 'House', 'Vehicle', 'Business equipment'] as $assetName)<option value="{{ $assetName }}">@endforeach
-            </datalist>
+            <h3 id="family-assets" class="section-title" style="margin-top:25px">Taarifa ya Rasimali za Familia (Family Assets)</h3>
+            <p class="muted">Jaza jina la kila rasimali, idadi yake na thamani yake. Jina la ziada linaweza kuingizwa katika Nyinginezo.</p>
             <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Asset/item</th><th>Category</th><th>Quantity</th><th>Estimated value (TZS)</th><th>Description</th><th></th></tr></thead>
-                    <tbody id="family-assets-body">
-                        @foreach($assetRows as $index => $asset)
-                            <tr>
-                                <td><input list="common-assets" name="assets[{{ $index }}][name]" value="{{ $asset['name'] ?? '' }}" placeholder="Asset name"></td>
-                                <td><input name="assets[{{ $index }}][category]" value="{{ $asset['category'] ?? '' }}" placeholder="Household, livestock..."></td>
-                                <td><input type="number" min="1" name="assets[{{ $index }}][quantity]" value="{{ $asset['quantity'] ?? '' }}" placeholder="1"></td>
-                                <td><input type="number" min="0" step="0.01" name="assets[{{ $index }}][estimated_value]" value="{{ $asset['estimated_value'] ?? '' }}"></td>
-                                <td><input name="assets[{{ $index }}][description]" value="{{ $asset['description'] ?? '' }}"></td>
-                                <td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td>
-                            </tr>
-                        @endforeach
+                <table style="min-width: 1500px">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 170px">Jina (Name)</th>
+                            @foreach ($assetColumns as $index => $column)
+                                <th style="min-width: 110px">
+                                    <span>{{ $column['label'] }}</span>
+                                    @if ($column['editable'])
+                                        <input name="asset_matrix[{{ $index }}][name]" value="{{ $column['name'] }}" placeholder="Jina la rasimali">
+                                    @else
+                                        <input type="hidden" name="asset_matrix[{{ $index }}][name]" value="{{ $column['name'] }}">
+                                    @endif
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Kategoria (Category)</th>
+                            @foreach ($assetColumns as $index => $column)
+                                <td><input name="asset_matrix[{{ $index }}][category]" value="{{ $column['category'] }}" placeholder="e.g. Household"></td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <th scope="row">Idadi (Number)</th>
+                            @foreach ($assetColumns as $index => $column)
+                                <td><input type="number" min="1" name="asset_matrix[{{ $index }}][quantity]" value="{{ $column['quantity'] }}" placeholder="0"></td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <th scope="row">Thamani (Value/Price)</th>
+                            @foreach ($assetColumns as $index => $column)
+                                <td><input type="number" min="0" step="0.01" name="asset_matrix[{{ $index }}][estimated_value]" value="{{ $column['estimated_value'] }}" placeholder="TZS"></td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <th scope="row">Maelezo (Description)</th>
+                            @foreach ($assetColumns as $index => $column)
+                                <td><input name="asset_matrix[{{ $index }}][description]" value="{{ $column['description'] }}" placeholder="Maelezo ya ziada"></td>
+                            @endforeach
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn btn-secondary" id="add-family-asset" style="margin-top:10px"><span class="ph ph-house-line" aria-hidden="true"></span> Add family asset</button>
-
-            <template id="family-member-row-template">
-                <tr><td><input name="family_members[__INDEX__][name]" placeholder="Full name"></td><td><select name="family_members[__INDEX__][gender]" data-select2="false"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></td><td><input type="number" min="0" max="150" name="family_members[__INDEX__][age]"></td><td><input name="family_members[__INDEX__][relationship]" placeholder="e.g. Child"></td><td><input name="family_members[__INDEX__][education]"></td><td><input name="family_members[__INDEX__][marital_status]"></td><td><input name="family_members[__INDEX__][occupation]"></td><td><input name="family_members[__INDEX__][secondary_occupation]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
-            </template>
-            <template id="family-asset-row-template">
-                <tr><td><input list="common-assets" name="assets[__INDEX__][name]" placeholder="Asset name"></td><td><input name="assets[__INDEX__][category]" placeholder="Household, livestock..."></td><td><input type="number" min="1" name="assets[__INDEX__][quantity]" placeholder="1"></td><td><input type="number" min="0" step="0.01" name="assets[__INDEX__][estimated_value]"></td><td><input name="assets[__INDEX__][description]"></td><td><button type="button" class="btn btn-sm btn-danger remove-repeat-row">Remove</button></td></tr>
-            </template>
 
             <h3 id="nominees" class="section-title" style="margin-top:25px"><span class="ph ph-users-three" aria-hidden="true"></span> Nominees / Wateule</h3>
             <p class="muted">Optional. Leave all rows blank if no nominee is being recorded. If provided, percentage shares must total exactly 100%.</p>
@@ -381,7 +461,6 @@
             const photoPreview = document.getElementById('member-photo-preview');
             const photoPlaceholder = document.getElementById('member-photo-placeholder');
             let familyIndex = {{ count($familyRows) }};
-            let assetIndex = {{ count($assetRows) }};
 
             function appendRepeatRow(bodyId, templateId, index) {
                 const markup = document.getElementById(templateId).innerHTML.replaceAll('__INDEX__', index);
@@ -389,7 +468,6 @@
             }
 
             document.getElementById('add-family-member').addEventListener('click', () => appendRepeatRow('family-members-body', 'family-member-row-template', familyIndex++));
-            document.getElementById('add-family-asset').addEventListener('click', () => appendRepeatRow('family-assets-body', 'family-asset-row-template', assetIndex++));
             document.addEventListener('click', event => {
                 if (event.target.classList.contains('remove-repeat-row')) event.target.closest('tr').remove();
             });

@@ -21,6 +21,12 @@ class StoreMemberRequest extends FormRequest
             ]);
         }
 
+        if ($this->has('asset_matrix') && ! $this->has('assets')) {
+            $this->merge([
+                'assets' => self::normalizeAssetMatrix((array) $this->input('asset_matrix', [])),
+            ]);
+        }
+
         foreach (['family_members', 'assets'] as $collection) {
             if ($this->has($collection)) {
                 $this->merge([
@@ -65,6 +71,36 @@ class StoreMemberRequest extends FormRequest
                 }
             }
         }
+    }
+
+    public static function normalizeAssetMatrix(array $matrix): array
+    {
+        $assets = [];
+
+        foreach ($matrix as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $name = trim((string) ($row['name'] ?? ''));
+            $quantity = $row['quantity'] ?? null;
+            $estimatedValue = $row['estimated_value'] ?? null;
+            $description = $row['description'] ?? null;
+
+            if ($name === '' || (! filled($quantity) && ! filled($estimatedValue) && ! filled($description))) {
+                continue;
+            }
+
+            $assets[] = array_filter([
+                'name' => $name,
+                'category' => filled($row['category'] ?? null) ? $row['category'] : null,
+                'quantity' => filled($quantity) ? $quantity : null,
+                'estimated_value' => filled($estimatedValue) ? $estimatedValue : null,
+                'description' => filled($description) ? $description : null,
+            ], fn ($value) => $value !== null && $value !== '');
+        }
+
+        return $assets;
     }
 
     public function authorize(): bool

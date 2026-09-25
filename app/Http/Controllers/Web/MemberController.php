@@ -184,6 +184,12 @@ class MemberController extends Controller
 
     public function update(Request $request, Member $member, GroupMembershipService $memberships)
     {
+        if ($request->has('asset_matrix') && ! $request->has('assets')) {
+            $request->merge([
+                'assets' => StoreMemberRequest::normalizeAssetMatrix((array) $request->input('asset_matrix', [])),
+            ]);
+        }
+
         if ($request->has('nominees')) {
             $request->merge([
                 'nominees' => array_values(array_filter(
