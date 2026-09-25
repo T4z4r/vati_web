@@ -141,7 +141,25 @@ class WebPortalTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $this->post('/admin/members')->assertRedirect();
+        $this->post('/admin/members', [
+            'branch_id' => '',
+            'group_id' => '',
+            'first_name' => '',
+            'last_name' => '',
+            'phone' => '',
+            'nationality' => '',
+            'has_vati_family_member' => '',
+            'family_member_is_group_member' => '',
+            'nominees' => null,
+            'family_members' => null,
+            'assets' => null,
+            'kyc' => [
+                'business_name' => '',
+                'household_monthly_income' => '',
+                'household_monthly_expenses' => '',
+                'number_of_dependants' => '',
+            ],
+        ])->assertRedirect();
 
         $member = Member::firstOrFail();
         $this->assertDatabaseHas('members', [
@@ -151,9 +169,15 @@ class WebPortalTest extends TestCase
             'first_name' => null,
             'last_name' => null,
             'phone' => null,
+            'status' => 'active',
+            'nationality' => 'Tanzanian',
         ]);
         $this->assertDatabaseCount('group_memberships', 0);
+        $this->assertDatabaseCount('member_kycs', 0);
         $this->get(route('admin.members.show', $member))
+            ->assertOk()
+            ->assertSee($member->membership_number);
+        $this->get(route('admin.members.index'))
             ->assertOk()
             ->assertSee($member->membership_number);
 
@@ -182,7 +206,6 @@ class WebPortalTest extends TestCase
 
         $this->put(route('admin.members.update', $member), [
             'middle_name' => 'Preserved',
-            'status' => 'active',
         ])->assertRedirect(route('admin.members.show', $member));
         $this->assertDatabaseHas('members', [
             'id' => $member->id,

@@ -73,10 +73,14 @@ class MemberController extends Controller
                     $photoPath = $photo->store('members/photos', 'public');
                     $data['photo_path'] = $photoPath;
                 }
-                $kyc = Arr::pull($data, 'kyc');
-                $nominees = Arr::pull($data, 'nominees', []);
-                $familyMembers = Arr::pull($data, 'family_members', []);
-                $assets = Arr::pull($data, 'assets', []);
+                $kyc = array_filter((array) Arr::pull($data, 'kyc', []), fn ($value) => $value !== null && $value !== '');
+                $nominees = (array) Arr::pull($data, 'nominees', []);
+                $familyMembers = (array) Arr::pull($data, 'family_members', []);
+                $assets = (array) Arr::pull($data, 'assets', []);
+                $data['status'] = $data['status'] ?? 'active';
+                $data['nationality'] = $data['nationality'] ?? 'Tanzanian';
+                $data['has_vati_family_member'] ??= false;
+                $data['family_member_is_group_member'] ??= false;
                 $group = filled($data['group_id'] ?? null) ? MemberGroup::findOrFail($data['group_id']) : null;
                 $data['group_id'] = $group?->id;
                 $data['branch_id'] = $group?->branch_id ?? ($data['branch_id'] ?? null);
@@ -198,10 +202,10 @@ class MemberController extends Controller
         if ($request->has('nominees')) {
             $request->merge([
                 'nominees' => array_values(array_filter(
-                    $request->input('nominees', []),
-                    fn ($row) => filled($row['name'] ?? null)
+                    (array) $request->input('nominees', []),
+                    fn ($row) => is_array($row) && (filled($row['name'] ?? null)
                         || filled($row['relationship'] ?? null)
-                        || (float) ($row['percentage'] ?? 0) > 0
+                        || (float) ($row['percentage'] ?? 0) > 0)
                 )),
             ]);
         }
@@ -210,7 +214,7 @@ class MemberController extends Controller
             if ($request->has($collection)) {
                 $request->merge([
                     $collection => array_values(array_filter(
-                        $request->input($collection, []),
+                        (array) $request->input($collection, []),
                         fn ($row) => collect($row)->contains(fn ($value) => filled($value))
                     )),
                 ]);
@@ -254,7 +258,7 @@ class MemberController extends Controller
             'group_family_member_name' => ['nullable', 'string', 'max:150'],
             'admission_date' => ['nullable', 'date'],
             'passbook_issue_date' => ['nullable', 'date', 'after_or_equal:admission_date'],
-            'status' => ['required', Rule::in(['active', 'inactive', 'suspended', 'closed'])],
+            'status' => ['sometimes', 'nullable', Rule::in(['active', 'inactive', 'suspended', 'closed'])],
             'kyc' => ['nullable', 'array'],
             'kyc.household_monthly_income' => ['nullable', 'numeric', 'min:0'],
             'kyc.household_monthly_expenses' => ['nullable', 'numeric', 'min:0'],
@@ -300,6 +304,8 @@ class MemberController extends Controller
             return back()->withInput()->withErrors(['nominees' => 'Nominee allocations must total exactly 100%.']);
         }
 
+        $data['status'] = $data['status'] ?? $member->status ?? 'active';
+
         $groupProvided = array_key_exists('group_id', $data);
         $branchProvided = array_key_exists('branch_id', $data);
         $groupId = $groupProvided ? $data['group_id'] : $member->group_id;
@@ -320,10 +326,13 @@ class MemberController extends Controller
 
         try {
             DB::transaction(function () use ($member, $data, $memberships, $group) {
-                $kyc = Arr::pull($data, 'kyc');
+                $kyc = array_filter((array) Arr::pull($data, 'kyc', []), fn ($value) => $value !== null && $value !== '');
                 $nominees = Arr::pull($data, 'nominees');
                 $familyMembers = Arr::pull($data, 'family_members');
                 $assets = Arr::pull($data, 'assets');
+                $data['nationality'] = $data['nationality'] ?? 'Tanzanian';
+                $data['has_vati_family_member'] = $data['has_vati_family_member'] ?? false;
+                $data['family_member_is_group_member'] = $data['family_member_is_group_member'] ?? false;
                 $groupChanged = (int) $member->group_id !== (int) ($data['group_id'] ?? 0);
                 $member->update($data);
 

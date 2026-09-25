@@ -10,13 +10,23 @@ class StoreMemberRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        $normalizeEmptyStrings = function ($value) use (&$normalizeEmptyStrings) {
+            if (! is_array($value)) {
+                return $value === '' ? null : $value;
+            }
+
+            return array_map($normalizeEmptyStrings, $value);
+        };
+
+        $this->merge($normalizeEmptyStrings($this->input()));
+
         if ($this->has('nominees')) {
             $this->merge([
                 'nominees' => array_values(array_filter(
-                    $this->input('nominees', []),
-                    fn ($row) => filled($row['name'] ?? null)
+                    (array) $this->input('nominees', []),
+                    fn ($row) => is_array($row) && (filled($row['name'] ?? null)
                         || filled($row['relationship'] ?? null)
-                        || (float) ($row['percentage'] ?? 0) > 0
+                        || (float) ($row['percentage'] ?? 0) > 0)
                 )),
             ]);
         }
@@ -31,7 +41,7 @@ class StoreMemberRequest extends FormRequest
             if ($this->has($collection)) {
                 $this->merge([
                     $collection => array_values(array_filter(
-                        $this->input($collection, []),
+                        (array) $this->input($collection, []),
                         fn ($row) => collect($row)->contains(fn ($value) => filled($value))
                     )),
                 ]);
@@ -150,7 +160,7 @@ class StoreMemberRequest extends FormRequest
             'group_family_member_name' => ['nullable', 'string', 'max:150'],
             'admission_date' => ['nullable', 'date'],
             'passbook_issue_date' => ['nullable', 'date', 'after_or_equal:admission_date'],
-            'status' => [$member ? 'sometimes' : 'nullable', Rule::in(['active', 'inactive', 'suspended', 'closed'])],
+            'status' => [$member ? 'sometimes' : 'nullable', 'nullable', Rule::in(['active', 'inactive', 'suspended', 'closed'])],
             'kyc' => ['nullable', 'array'],
             'kyc.household_monthly_income' => ['nullable', 'numeric', 'min:0'],
             'kyc.household_monthly_expenses' => ['nullable', 'numeric', 'min:0'],

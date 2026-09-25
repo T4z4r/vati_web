@@ -1,7 +1,9 @@
 @php
     $photoSize = (int) ($size ?? 72);
     $photoName = trim(collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' '));
+    $photoName = $photoName !== '' ? $photoName : $member->membership_number;
     $photoInitials = strtoupper(substr((string) $member->first_name, 0, 1).substr((string) $member->last_name, 0, 1));
+    $photoInitials = $photoInitials !== '' ? $photoInitials : strtoupper(substr((string) $member->membership_number, 0, 2));
 @endphp
 
 @if($member->photo_path)

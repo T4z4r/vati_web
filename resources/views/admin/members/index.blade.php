@@ -43,14 +43,17 @@
                 </thead>
                 <tbody>
                     @forelse($members as $member)
+                        @php
+                            $memberName = collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' ');
+                            $displayName = $memberName !== '' ? $memberName : $member->membership_number;
+                        @endphp
                         <tr>
                             <td><a class="table-link"
-                                    href="{{ route('admin.members.show', $member) }}">{{ $member->first_name }}
-                                    {{ $member->middle_name }} {{ $member->last_name }}</a><br><small
+                                    href="{{ route('admin.members.show', $member) }}">{{ $displayName }}</a><br><small
                                     class="muted">{{ $member->membership_number }}</small></td>
-                            <td>{{ $member->phone }}</td>
-                            <td>{{ $member->group->group_name }}</td>
-                            <td>{{ $member->branch->branch_name }}</td>
+                            <td>{{ $member->phone ?: '—' }}</td>
+                            <td>{{ $member->group?->group_name ?: 'Unassigned' }}</td>
+                            <td>{{ $member->branch?->branch_name ?: 'Unassigned' }}</td>
                             <td>{{ $member->admission_date?->format('d M Y') ?? $member->created_at->format('d M Y') }}
                             </td>
                             <td><span class="badge {{ $member->status }}">{{ $member->status }}</span></td>

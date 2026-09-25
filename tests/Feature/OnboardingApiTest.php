@@ -64,11 +64,32 @@ class OnboardingApiTest extends TestCase
         $admin->assignRole('super_admin');
         Sanctum::actingAs($admin);
 
-        $memberId = $this->postJson('/api/v1/onboarding/members')
+        $memberId = $this->postJson('/api/v1/onboarding/members', [
+            'branch_id' => '',
+            'group_id' => '',
+            'first_name' => '',
+            'last_name' => '',
+            'phone' => '',
+            'nationality' => '',
+            'status' => null,
+            'has_vati_family_member' => null,
+            'family_member_is_group_member' => null,
+            'nominees' => null,
+            'family_members' => null,
+            'assets' => null,
+            'kyc' => [
+                'business_name' => '',
+                'household_monthly_income' => '',
+                'household_monthly_expenses' => '',
+                'number_of_dependants' => '',
+            ],
+        ])
             ->assertCreated()
             ->assertJsonPath('data.first_name', null)
             ->assertJsonPath('data.last_name', null)
             ->assertJsonPath('data.phone', null)
+            ->assertJsonPath('data.status', 'active')
+            ->assertJsonPath('data.nationality', 'Tanzanian')
             ->assertJsonPath('data.branch', null)
             ->assertJsonPath('data.group', null)
             ->json('data.id');
@@ -82,6 +103,7 @@ class OnboardingApiTest extends TestCase
             'phone' => null,
         ]);
         $this->assertDatabaseCount('group_memberships', 0);
+        $this->assertDatabaseCount('member_kycs', 0);
 
         $groupId = $this->postJson('/api/v1/onboarding/groups', [
             'branch_id' => $branch->id,
@@ -118,6 +140,7 @@ class OnboardingApiTest extends TestCase
 
         $this->patchJson('/api/v1/members/'.$memberId, [
             'middle_name' => 'Preserved',
+            'status' => null,
         ])->assertOk()
             ->assertJsonPath('data.middle_name', 'Preserved')
             ->assertJsonPath('data.branch.id', $branch->id)

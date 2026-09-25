@@ -41,10 +41,14 @@ class OnboardingService
 
         try {
             return DB::transaction(function () use ($data, $user) {
-                $kyc = Arr::pull($data, 'kyc');
-                $nominees = Arr::pull($data, 'nominees', []);
-                $familyMembers = Arr::pull($data, 'family_members', []);
-                $assets = Arr::pull($data, 'assets', []);
+                $kyc = array_filter((array) Arr::pull($data, 'kyc', []), fn ($value) => $value !== null && $value !== '');
+                $nominees = (array) Arr::pull($data, 'nominees', []);
+                $familyMembers = (array) Arr::pull($data, 'family_members', []);
+                $assets = (array) Arr::pull($data, 'assets', []);
+                $data['status'] = $data['status'] ?? 'active';
+                $data['nationality'] = $data['nationality'] ?? 'Tanzanian';
+                $data['has_vati_family_member'] ??= false;
+                $data['family_member_is_group_member'] ??= false;
                 $groupId = $data['group_id'] ?? null;
                 $branchId = $data['branch_id'] ?? null;
                 $group = filled($groupId)
@@ -92,10 +96,21 @@ class OnboardingService
         $replaceFamily = array_key_exists('family_members', $data);
         $replaceAssets = array_key_exists('assets', $data);
         $kycProvided = array_key_exists('kyc', $data);
-        $kyc = Arr::pull($data, 'kyc');
-        $nominees = Arr::pull($data, 'nominees', []);
-        $familyMembers = Arr::pull($data, 'family_members', []);
-        $assets = Arr::pull($data, 'assets', []);
+        $kyc = array_filter((array) Arr::pull($data, 'kyc', []), fn ($value) => $value !== null && $value !== '');
+        $nominees = (array) Arr::pull($data, 'nominees', []);
+        $familyMembers = (array) Arr::pull($data, 'family_members', []);
+        $assets = (array) Arr::pull($data, 'assets', []);
+        if (array_key_exists('status', $data) && $data['status'] === null) {
+            unset($data['status']);
+        }
+        if (array_key_exists('nationality', $data) && $data['nationality'] === null) {
+            $data['nationality'] = 'Tanzanian';
+        }
+        foreach (['has_vati_family_member', 'family_member_is_group_member'] as $field) {
+            if (array_key_exists($field, $data) && $data[$field] === null) {
+                $data[$field] = false;
+            }
+        }
         $photo = Arr::pull($data, 'photo');
         $newPhotoPath = $photo?->store('members/photos', 'public');
         $oldPhotoPath = $member->photo_path;

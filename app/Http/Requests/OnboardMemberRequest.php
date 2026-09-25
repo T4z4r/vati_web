@@ -9,6 +9,27 @@ class OnboardMemberRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        $normalizeEmptyStrings = function ($value) use (&$normalizeEmptyStrings) {
+            if (! is_array($value)) {
+                return $value === '' ? null : $value;
+            }
+
+            return array_map($normalizeEmptyStrings, $value);
+        };
+
+        $this->merge($normalizeEmptyStrings($this->input()));
+
+        if ($this->has('nominees')) {
+            $this->merge([
+                'nominees' => array_values(array_filter(
+                    (array) $this->input('nominees', []),
+                    fn ($row) => is_array($row) && (filled($row['name'] ?? null)
+                        || filled($row['relationship'] ?? null)
+                        || (float) ($row['percentage'] ?? 0) > 0)
+                )),
+            ]);
+        }
+
         if ($this->has('asset_matrix') && ! $this->has('assets')) {
             $this->merge([
                 'assets' => StoreMemberRequest::normalizeAssetMatrix((array) $this->input('asset_matrix', [])),
@@ -19,7 +40,7 @@ class OnboardMemberRequest extends FormRequest
             if ($this->has($collection)) {
                 $this->merge([
                     $collection => array_values(array_filter(
-                        $this->input($collection, []),
+                        (array) $this->input($collection, []),
                         fn ($row) => collect($row)->contains(fn ($value) => filled($value))
                     )),
                 ]);
@@ -94,7 +115,7 @@ class OnboardMemberRequest extends FormRequest
             'kyc.house_ownership_status' => ['nullable', 'string', 'max:100'],
             'kyc.house_roof_type' => ['nullable', 'string', 'max:100'],
             'kyc.house_fence_type' => ['nullable', 'string', 'max:100'],
-            'nominees' => ['nullable', 'array', 'min:1'],
+            'nominees' => ['nullable', 'array'],
             'nominees.*.name' => ['required', 'string', 'max:150'],
             'nominees.*.relationship' => ['required', 'string', 'max:100'],
             'nominees.*.percentage' => ['required', 'numeric', 'gt:0', 'max:100'],
@@ -127,7 +148,8 @@ class OnboardMemberRequest extends FormRequest
             if ($group && filled($branchId) && (int) $group->branch_id !== (int) $branchId) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
             }
-            if ($this->has('nominees') && abs((float) collect($this->input('nominees'))->sum('percentage') - 100) > 0.009) {
+            $nominees = $this->input('nominees', []);
+            if (is_array($nominees) && count($nominees) > 0 && abs((float) collect($nominees)->sum('percentage') - 100) > 0.009) {
                 $validator->errors()->add('nominees', 'Nominee allocations must total exactly 100%.');
             }
         });
