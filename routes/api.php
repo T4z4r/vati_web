@@ -47,6 +47,7 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
     Route::get('app/latest', [AppDownloadController::class, 'latest'])->name('app.latest');
+    Route::get('app/update-check', [AppDownloadController::class, 'updateCheck'])->name('api.app.update-check');
     Route::get('app/{appVersion}/download', [AppDownloadController::class, 'download'])->name('api.app.download');
 
     Route::middleware(['auth:sanctum'])->group(function () {

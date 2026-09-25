@@ -2715,6 +2715,16 @@
                     "response": []
                 },
                 {
+                    "name": "Update Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/app/update-check?version_code=1",
+                        "description": "Returns whether the installed app should update from the latest uploaded APK. Send the installed Android version_code as `version_code`. No authentication required."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Download APK",
                     "request": {
                         "method": "GET",
