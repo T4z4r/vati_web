@@ -35,13 +35,13 @@ class OnboardMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => ['required', 'exists:branches,id'],
-            'group_id' => ['required', 'exists:member_groups,id'],
-            'first_name' => ['required', 'string', 'max:100'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
+            'group_id' => ['nullable', 'exists:member_groups,id'],
+            'first_name' => ['nullable', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'guardian_name' => ['nullable', 'string', 'max:150'],
-            'phone' => ['required', 'string', 'max:20', 'unique:members,phone'],
+            'phone' => ['nullable', 'string', 'max:20', 'unique:members,phone'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
             'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],
@@ -119,11 +119,12 @@ class OnboardMemberRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $group = MemberGroup::find($this->input('group_id'));
+            $group = filled($this->input('group_id')) ? MemberGroup::find($this->input('group_id')) : null;
+            $branchId = $this->input('branch_id');
             if ($group && ! $group->status) {
                 $validator->errors()->add('group_id', 'The selected group is inactive.');
             }
-            if ($group && (int) $group->branch_id !== (int) $this->input('branch_id')) {
+            if ($group && filled($branchId) && (int) $group->branch_id !== (int) $branchId) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
             }
             if ($this->has('nominees') && abs((float) collect($this->input('nominees'))->sum('percentage') - 100) > 0.009) {

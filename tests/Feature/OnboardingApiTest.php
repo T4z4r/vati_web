@@ -54,6 +54,94 @@ class OnboardingApiTest extends TestCase
         $this->assertDatabaseHas('member_assets', ['member_id' => $memberId, 'quantity' => 2, 'estimated_value' => 700000]);
     }
 
+    public function test_member_can_be_registered_without_details_and_completed_later(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $region = Region::create(['name' => 'Dar es Salaam', 'code' => 'DSM-OPTIONAL']);
+        $area = Area::create(['region_id' => $region->id, 'name' => 'Kigamboni', 'code' => 'KGM-OPTIONAL']);
+        $branch = Branch::create(['area_id' => $area->id, 'branch_code' => 'KGM-OPTIONAL', 'branch_name' => 'Kigamboni']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('super_admin');
+        Sanctum::actingAs($admin);
+
+        $memberId = $this->postJson('/api/v1/onboarding/members')
+            ->assertCreated()
+            ->assertJsonPath('data.first_name', null)
+            ->assertJsonPath('data.last_name', null)
+            ->assertJsonPath('data.phone', null)
+            ->assertJsonPath('data.branch', null)
+            ->assertJsonPath('data.group', null)
+            ->json('data.id');
+
+        $this->assertDatabaseHas('members', [
+            'id' => $memberId,
+            'branch_id' => null,
+            'group_id' => null,
+            'first_name' => null,
+            'last_name' => null,
+            'phone' => null,
+        ]);
+        $this->assertDatabaseCount('group_memberships', 0);
+
+        $groupId = $this->postJson('/api/v1/onboarding/groups', [
+            'branch_id' => $branch->id,
+            'group_code' => 'KGM-OPTIONAL-G',
+            'group_name' => 'Optional Details Group',
+            'meeting_day' => 'Monday',
+            'location' => 'Kigamboni',
+        ])->assertCreated()->json('data.id');
+
+        $this->patchJson('/api/v1/members/'.$memberId, [
+            'branch_id' => $branch->id,
+            'group_id' => $groupId,
+            'first_name' => 'Completed',
+            'last_name' => 'Member',
+            'phone' => '255712000098',
+        ])->assertOk()
+            ->assertJsonPath('data.branch.id', $branch->id)
+            ->assertJsonPath('data.group.id', $groupId)
+            ->assertJsonPath('data.first_name', 'Completed');
+
+        $this->assertDatabaseHas('members', [
+            'id' => $memberId,
+            'branch_id' => $branch->id,
+            'group_id' => $groupId,
+            'first_name' => 'Completed',
+            'last_name' => 'Member',
+            'phone' => '255712000098',
+        ]);
+        $this->assertDatabaseHas('group_memberships', [
+            'member_id' => $memberId,
+            'group_id' => $groupId,
+            'status' => 'active',
+        ]);
+
+        $this->patchJson('/api/v1/members/'.$memberId, [
+            'middle_name' => 'Preserved',
+        ])->assertOk()
+            ->assertJsonPath('data.middle_name', 'Preserved')
+            ->assertJsonPath('data.branch.id', $branch->id)
+            ->assertJsonPath('data.group.id', $groupId);
+
+        $this->patchJson('/api/v1/members/'.$memberId, [
+            'branch_id' => null,
+            'group_id' => null,
+        ])->assertOk()
+            ->assertJsonPath('data.branch', null)
+            ->assertJsonPath('data.group', null);
+
+        $this->assertDatabaseHas('members', [
+            'id' => $memberId,
+            'branch_id' => null,
+            'group_id' => null,
+        ]);
+        $this->assertDatabaseHas('group_memberships', [
+            'member_id' => $memberId,
+            'group_id' => $groupId,
+            'status' => 'inactive',
+        ]);
+    }
+
     public function test_group_and_member_can_be_onboarded_with_kyc_membership_and_nominees(): void
     {
         $this->seed(RolePermissionSeeder::class);

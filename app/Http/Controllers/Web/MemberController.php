@@ -37,7 +37,7 @@ class MemberController extends Controller
     {
         $rows = $this->filteredQuery($request)->latest()->get()->map(fn (Member $member) => [
             'membership_number' => $member->membership_number,
-            'name' => trim("{$member->first_name} {$member->middle_name} {$member->last_name}"),
+            'name' => collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' '),
             'phone' => $member->phone,
             'group' => $member->group?->group_name,
             'branch' => $member->branch?->branch_name,
@@ -77,11 +77,16 @@ class MemberController extends Controller
                 $nominees = Arr::pull($data, 'nominees', []);
                 $familyMembers = Arr::pull($data, 'family_members', []);
                 $assets = Arr::pull($data, 'assets', []);
+                $group = filled($data['group_id'] ?? null) ? MemberGroup::findOrFail($data['group_id']) : null;
+                $data['group_id'] = $group?->id;
+                $data['branch_id'] = $group?->branch_id ?? ($data['branch_id'] ?? null);
                 $member = Member::create([...$data, 'membership_number' => $numbers->member(), 'created_by' => $request->user()->id]);
                 if ($kyc) {
                     $member->kyc()->create($kyc);
                 }
-                $memberships->assign($member, MemberGroup::findOrFail($member->group_id), $member->admission_date ?? today());
+                if ($group) {
+                    $memberships->assign($member, $group, $member->admission_date ?? today());
+                }
                 foreach ($nominees as $nominee) {
                     $member->nominees()->create([...$nominee, 'attested_at' => now()]);
                 }
@@ -213,14 +218,14 @@ class MemberController extends Controller
         }
 
         $data = $request->validate([
-            'branch_id' => ['required', 'exists:branches,id'],
-            'group_id' => ['required', 'exists:member_groups,id'],
-            'first_name' => ['required', 'string', 'max:100'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
+            'group_id' => ['nullable', 'exists:member_groups,id'],
+            'first_name' => ['nullable', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
             'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
@@ -295,10 +300,16 @@ class MemberController extends Controller
             return back()->withInput()->withErrors(['nominees' => 'Nominee allocations must total exactly 100%.']);
         }
 
-        $group = MemberGroup::findOrFail($data['group_id']);
-        if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
+        $groupProvided = array_key_exists('group_id', $data);
+        $branchProvided = array_key_exists('branch_id', $data);
+        $groupId = $groupProvided ? $data['group_id'] : $member->group_id;
+        $branchId = $branchProvided ? $data['branch_id'] : $member->branch_id;
+        $group = filled($groupId) ? MemberGroup::findOrFail($groupId) : null;
+        if ($group && (! $group->status || (filled($branchId) && (int) $group->branch_id !== (int) $branchId))) {
             return back()->withInput()->with('error', 'The selected group must be active and belong to the selected branch.');
         }
+        $data['group_id'] = $group?->id ?? ($groupProvided ? null : $member->group_id);
+        $data['branch_id'] = $group?->branch_id ?? ($branchProvided ? $branchId : $member->branch_id);
 
         $photo = Arr::pull($data, 'photo');
         $oldPhotoPath = $member->photo_path;
@@ -313,7 +324,7 @@ class MemberController extends Controller
                 $nominees = Arr::pull($data, 'nominees');
                 $familyMembers = Arr::pull($data, 'family_members');
                 $assets = Arr::pull($data, 'assets');
-                $groupChanged = (int) $member->group_id !== (int) $data['group_id'];
+                $groupChanged = (int) $member->group_id !== (int) ($data['group_id'] ?? 0);
                 $member->update($data);
 
                 if ($kyc) {
@@ -321,7 +332,11 @@ class MemberController extends Controller
                 }
 
                 if ($groupChanged) {
-                    $memberships->assign($member, $group, $member->admission_date ?? today());
+                    if ($group) {
+                        $memberships->assign($member, $group, $member->admission_date ?? today());
+                    } else {
+                        $memberships->deactivate($member);
+                    }
                 }
 
                 if ($nominees !== null) {

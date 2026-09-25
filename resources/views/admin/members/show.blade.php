@@ -4,6 +4,8 @@
 @section('content')
 @php
     $fullName = trim(collect([$member->first_name, $member->middle_name, $member->last_name])->filter()->implode(' '));
+    $displayName = $fullName !== '' ? $fullName : $member->membership_number;
+    $initials = strtoupper(substr((string) $member->first_name, 0, 1).substr((string) $member->last_name, 0, 1)) ?: strtoupper(substr($member->membership_number, 0, 2));
     $display = fn ($value, $fallback = '—') => filled($value) ? $value : $fallback;
     $money = fn ($value) => 'TZS '.number_format((float) ($value ?? 0), 2);
 @endphp
@@ -11,7 +13,7 @@
 <div class="page-head">
     <div>
         <p class="eyebrow">{{ $member->membership_number }}</p>
-        <h1>{{ $fullName }}</h1>
+        <h1>{{ $displayName }}</h1>
         <p>Kitabu cha Marejesho ya Mwanachama</p>
     </div>
     <div class="head-actions">
@@ -36,11 +38,11 @@
 <div class="card" style="background:linear-gradient(135deg,#16452a,#267044);color:#fff;margin-bottom:20px">
     <div class="card-body" style="display:flex;align-items:center;gap:22px">
         @if($member->photo_path)
-            <img src="{{ asset('storage/'.$member->photo_path) }}" alt="{{ $fullName }} photograph"
+            <img src="{{ asset('storage/'.$member->photo_path) }}" alt="{{ $displayName }} photograph"
                 style="width:132px;height:132px;border-radius:16px;object-fit:cover;border:3px solid rgba(255,255,255,.75);flex:0 0 auto">
         @else
             <div style="width:132px;height:132px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;flex:0 0 auto">
-                {{ strtoupper(substr($member->first_name, 0, 1).substr($member->last_name, 0, 1)) }}
+                {{ $initials }}
             </div>
         @endif
         <div class="detail-grid" style="flex:1">

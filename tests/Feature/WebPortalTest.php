@@ -137,6 +137,77 @@ class WebPortalTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_member_can_be_registered_without_details_and_completed_later(): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->post('/admin/members')->assertRedirect();
+
+        $member = Member::firstOrFail();
+        $this->assertDatabaseHas('members', [
+            'id' => $member->id,
+            'branch_id' => null,
+            'group_id' => null,
+            'first_name' => null,
+            'last_name' => null,
+            'phone' => null,
+        ]);
+        $this->assertDatabaseCount('group_memberships', 0);
+        $this->get(route('admin.members.show', $member))
+            ->assertOk()
+            ->assertSee($member->membership_number);
+
+        $this->put(route('admin.members.update', $member), [
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Completed',
+            'last_name' => 'Member',
+            'phone' => '255712000097',
+            'status' => 'active',
+        ])->assertRedirect(route('admin.members.show', $member));
+
+        $this->assertDatabaseHas('members', [
+            'id' => $member->id,
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'first_name' => 'Completed',
+            'last_name' => 'Member',
+            'phone' => '255712000097',
+        ]);
+        $this->assertDatabaseHas('group_memberships', [
+            'member_id' => $member->id,
+            'group_id' => $this->group->id,
+            'status' => 'active',
+        ]);
+
+        $this->put(route('admin.members.update', $member), [
+            'middle_name' => 'Preserved',
+            'status' => 'active',
+        ])->assertRedirect(route('admin.members.show', $member));
+        $this->assertDatabaseHas('members', [
+            'id' => $member->id,
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'middle_name' => 'Preserved',
+        ]);
+
+        $this->put(route('admin.members.update', $member), [
+            'branch_id' => null,
+            'group_id' => null,
+            'status' => 'active',
+        ])->assertRedirect(route('admin.members.show', $member));
+        $this->assertDatabaseHas('members', [
+            'id' => $member->id,
+            'branch_id' => null,
+            'group_id' => null,
+        ]);
+        $this->assertDatabaseHas('group_memberships', [
+            'member_id' => $member->id,
+            'group_id' => $this->group->id,
+            'status' => 'inactive',
+        ]);
+    }
+
     public function test_web_member_and_application_creation_workflow(): void
     {
         Storage::fake('public');

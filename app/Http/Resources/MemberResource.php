@@ -12,7 +12,7 @@ class MemberResource extends JsonResource
         return [
             'id' => $this->id,
             'membership_number' => $this->membership_number,
-            'full_name' => trim("{$this->first_name} {$this->middle_name} {$this->last_name}"),
+            'full_name' => collect([$this->first_name, $this->middle_name, $this->last_name])->filter()->implode(' '),
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
@@ -50,7 +50,7 @@ class MemberResource extends JsonResource
             'passbook_issue_date' => $this->passbook_issue_date?->toDateString(),
             'photo_url' => $this->photo_path ? asset('storage/'.$this->photo_path) : null,
             'status' => $this->status,
-            'branch' => $this->whenLoaded('branch', fn () => [
+            'branch' => $this->whenLoaded('branch', fn () => $this->branch ? [
                 'id' => $this->branch->id,
                 'branch_code' => $this->branch->branch_code,
                 'branch_name' => $this->branch->branch_name,
@@ -60,8 +60,8 @@ class MemberResource extends JsonResource
                 'manager' => $this->branch->relationLoaded('manager') && $this->branch->manager
                     ? ['id' => $this->branch->manager->id, 'name' => $this->branch->manager->name]
                     : null,
-            ]),
-            'group' => $this->whenLoaded('group', fn () => [
+            ] : null),
+            'group' => $this->whenLoaded('group', fn () => $this->group ? [
                 'id' => $this->group->id,
                 'group_code' => $this->group->group_code,
                 'group_name' => $this->group->group_name,
@@ -74,7 +74,7 @@ class MemberResource extends JsonResource
                 'loan_officer' => $this->group->relationLoaded('loanOfficer') && $this->group->loanOfficer
                     ? ['id' => $this->group->loanOfficer->id, 'name' => $this->group->loanOfficer->name]
                     : null,
-            ]),
+            ] : null),
             'issued_by' => $this->whenLoaded('createdBy', fn () => $this->createdBy
                 ? ['id' => $this->createdBy->id, 'name' => $this->createdBy->name]
                 : null),

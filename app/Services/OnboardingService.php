@@ -45,19 +45,35 @@ class OnboardingService
                 $nominees = Arr::pull($data, 'nominees', []);
                 $familyMembers = Arr::pull($data, 'family_members', []);
                 $assets = Arr::pull($data, 'assets', []);
-                $group = MemberGroup::query()->lockForUpdate()->findOrFail($data['group_id']);
-                $this->assertMemberBranchAccess($user, (int) $data['branch_id']);
-                if (! $group->status || (int) $group->branch_id !== (int) $data['branch_id']) {
-                    throw new DomainException('Member onboarding requires an active group in the selected branch.');
+                $groupId = $data['group_id'] ?? null;
+                $branchId = $data['branch_id'] ?? null;
+                $group = filled($groupId)
+                    ? MemberGroup::query()->lockForUpdate()->findOrFail($groupId)
+                    : null;
+
+                if ($group) {
+                    if (! $group->status || (filled($data['branch_id'] ?? null) && (int) $group->branch_id !== (int) $data['branch_id'])) {
+                        throw new DomainException('Member onboarding requires an active group in the selected branch.');
+                    }
+                    $branchId = $group->branch_id;
                 }
+
+                if (filled($branchId)) {
+                    $this->assertMemberBranchAccess($user, (int) $branchId);
+                }
+
+                $data['branch_id'] = $group?->branch_id ?? (filled($branchId) ? (int) $branchId : null);
+                $data['group_id'] = $group?->id;
 
                 $member = Member::create([...$data, 'membership_number' => $this->numbers->member(), 'created_by' => $user->id]);
                 if ($kyc) {
                     $member->kyc()->create($kyc);
                 }
-                $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                if ($group) {
+                    $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                }
                 $this->replaceMemberCollections($member, $nominees, $familyMembers, $assets);
-                activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group->id])->log('Member onboarded');
+                activity()->causedBy($user)->performedOn($member)->withProperties(['group_id' => $group?->id])->log('Member onboarded');
 
                 return $this->loadMember($member);
             });
@@ -90,21 +106,36 @@ class OnboardingService
         try {
             $member = DB::transaction(function () use ($member, $data, $user, $kycProvided, $kyc, $replaceNominees, $nominees, $replaceFamily, $familyMembers, $replaceAssets, $assets) {
                 $member = Member::query()->lockForUpdate()->findOrFail($member->id);
-                $branchId = (int) ($data['branch_id'] ?? $member->branch_id);
-                $groupId = (int) ($data['group_id'] ?? $member->group_id);
-                $this->assertMemberBranchAccess($user, $branchId);
-                $group = MemberGroup::query()->lockForUpdate()->findOrFail($groupId);
-                if (! $group->status || (int) $group->branch_id !== $branchId) {
-                    throw new DomainException('The selected group must be active and belong to the selected branch.');
+                $branchId = array_key_exists('branch_id', $data) ? $data['branch_id'] : $member->branch_id;
+                $groupId = array_key_exists('group_id', $data) ? $data['group_id'] : $member->group_id;
+                $group = filled($groupId)
+                    ? MemberGroup::query()->lockForUpdate()->findOrFail($groupId)
+                    : null;
+
+                if ($group) {
+                    if (! $group->status || (filled($data['branch_id'] ?? null) && (int) $group->branch_id !== (int) $data['branch_id'])) {
+                        throw new DomainException('The selected group must be active and belong to the selected branch.');
+                    }
+                    $branchId = $group->branch_id;
                 }
 
-                $groupChanged = (int) $member->group_id !== $groupId;
-                $member->update([...$data, 'branch_id' => $branchId, 'group_id' => $groupId]);
+                if (filled($branchId)) {
+                    $this->assertMemberBranchAccess($user, (int) $branchId);
+                }
+
+                $groupChanged = (int) $member->group_id !== (int) ($group?->id ?? 0);
+                $data['branch_id'] = $group?->branch_id ?? (filled($branchId) ? (int) $branchId : null);
+                $data['group_id'] = $group?->id;
+                $member->update($data);
                 if ($kycProvided) {
                     $member->kyc()->updateOrCreate(['member_id' => $member->id], $kyc ?? []);
                 }
                 if ($groupChanged) {
-                    $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                    if ($group) {
+                        $this->memberships->assign($member, $group, $member->admission_date ?? today());
+                    } else {
+                        $this->memberships->deactivate($member);
+                    }
                 }
                 if ($replaceNominees) {
                     $member->nominees()->delete();

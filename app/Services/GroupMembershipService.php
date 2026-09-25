@@ -50,4 +50,20 @@ class GroupMembershipService
             return $membership;
         });
     }
+
+    public function deactivate(Member $member): void
+    {
+        DB::transaction(function () use ($member) {
+            $active = GroupMembership::query()
+                ->where('member_id', $member->id)
+                ->where('status', 'active')
+                ->whereNull('left_at')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($active as $membership) {
+                $membership->update(['status' => 'inactive', 'left_at' => today()]);
+            }
+        });
+    }
 }

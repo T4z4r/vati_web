@@ -111,17 +111,17 @@ class StoreMemberRequest extends FormRequest
     public function rules(): array
     {
         $member = $this->route('member');
-        $required = $member ? 'sometimes' : 'required';
+        $optional = $member ? ['sometimes', 'nullable'] : ['nullable'];
 
         return [
-            'branch_id' => [$required, 'exists:branches,id'],
-            'group_id' => [$required, 'exists:member_groups,id'],
-            'first_name' => [$required, 'string', 'max:100'],
+            'branch_id' => [...$optional, 'exists:branches,id'],
+            'group_id' => [...$optional, 'exists:member_groups,id'],
+            'first_name' => [...$optional, 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => [$required, 'string', 'max:100'],
+            'last_name' => [...$optional, 'string', 'max:100'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
-            'phone' => [$required, 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
+            'phone' => [...$optional, 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
             'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
@@ -206,11 +206,12 @@ class StoreMemberRequest extends FormRequest
         $validator->after(function ($validator) {
             $member = $this->route('member');
             $branchId = $this->input('branch_id', $member?->branch_id);
-            $group = MemberGroup::find($this->input('group_id', $member?->group_id));
+            $groupId = $this->input('group_id', $member?->group_id);
+            $group = filled($groupId) ? MemberGroup::find($groupId) : null;
             if ($group && ! $group->status) {
                 $validator->errors()->add('group_id', 'The selected group is inactive.');
             }
-            if ($group && (int) $group->branch_id !== (int) $branchId) {
+            if ($group && filled($branchId) && (int) $group->branch_id !== (int) $branchId) {
                 $validator->errors()->add('group_id', 'The selected group does not belong to the selected branch.');
             }
             $nominees = collect($this->input('nominees', []));

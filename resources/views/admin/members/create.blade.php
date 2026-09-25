@@ -102,7 +102,7 @@
         <div>
             <p class="eyebrow">{{ $editing ? $member->membership_number : 'NEW MEMBER' }}</p>
             <h1>{{ $editing ? 'Edit member profile' : 'Register a VATI member' }}</h1>
-            <p>Kitabu cha Marejesho ya Mteja (Member's Passbook) - All information as per official passbook</p>
+            <p>Kitabu cha Marejesho ya Mteja (Member's Passbook) - All information as per official passbook. Registration details are optional and can be completed later.</p>
         </div>
         <a class="btn btn-secondary"
             href="{{ $editing ? route('admin.members.show', $member) : route('admin.members.index') }}">Back</a>
@@ -118,7 +118,7 @@
             <!-- GROUP & BRANCH ASSIGNMENT -->
             <h3 class="section-title">📋 Branch & Group Assignment (Tawi na Kikundi)</h3>
             <div class="form-grid">
-                <label>Jina la Tawi (Branch Name)<select id="branch" name="branch_id" required>
+                <label>Jina la Tawi (Branch Name)<select id="branch" name="branch_id">
                         <option value="">Select branch</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}" @selected((string) old('branch_id', $member->branch_id) === (string) $branch->id)>{{ $branch->branch_name }}
@@ -126,7 +126,7 @@
                         @endforeach
                     </select>
                 </label>
-                <label>Jina la Kikundi (Group Name)<select id="group" name="group_id" required>
+                <label>Jina la Kikundi (Group Name)<select id="group" name="group_id">
                         <option value="">Select group</option>
                         @foreach ($groups as $group)
                             <option value="{{ $group->id }}" data-branch="{{ $group->branch_id }}"
@@ -142,11 +142,10 @@
                 <label>Jina la Mwanachama (Member Name)
                     <div class="name-fields">
                         <input name="first_name" placeholder="First name"
-                            value="{{ old('first_name', $member->first_name) }}" required>
+                            value="{{ old('first_name', $member->first_name) }}">
                         <input name="middle_name" placeholder="Middle name"
                             value="{{ old('middle_name', $member->middle_name) }}">
-                        <input name="last_name" placeholder="Last name" value="{{ old('last_name', $member->last_name) }}"
-                            required>
+                        <input name="last_name" placeholder="Last name" value="{{ old('last_name', $member->last_name) }}">
                     </div>
                 </label>
                 <label>Member photograph
@@ -168,7 +167,7 @@
                         value="{{ old('guardian_name', $member->guardian_name) }}"
                         placeholder="Parent/Father/Husband name"></label>
                 <label>Namba ya simu ya Mwanachama (Member Contact Number)<input name="phone"
-                        value="{{ old('phone', $member->phone) }}" placeholder="2557..." required></label>
+                        value="{{ old('phone', $member->phone) }}" placeholder="2557..."></label>
                 <label>Namba ya simu mbadala (Alternate Phone)<input name="alternate_phone"
                         value="{{ old('alternate_phone', $member->alternate_phone) }}"></label>
             </div>
