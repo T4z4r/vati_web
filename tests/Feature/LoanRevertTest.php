@@ -15,6 +15,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LoanRevertTest extends TestCase
@@ -156,6 +157,64 @@ class LoanRevertTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('loans', ['loan_number' => 'RV-L-1']);
+        $this->assertSame('approved', $application->refresh()->status->value);
+    }
+
+    public function test_force_revert_deletes_associated_loan_data(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $application = $this->application($fixtures);
+        $loan = $this->loan($application, $fixtures);
+        $application->update(['status' => 'disbursed']);
+        $loan->update(['status' => 'active']);
+
+        $installment = $loan->installments()->create([
+            'installment_number' => 1,
+            'due_date' => now()->addWeek()->toDateString(),
+            'total_due' => 44500,
+        ]);
+        $payment = Payment::create([
+            'payment_number' => 'RV-PAY-1',
+            'member_id' => $fixtures['member']->id,
+            'loan_id' => $loan->id,
+            'branch_id' => $fixtures['branch']->id,
+            'amount' => 100000,
+            'payment_method' => 'cash',
+            'paid_at' => now(),
+        ]);
+        DB::table('payment_allocations')->insert([
+            'payment_id' => $payment->id,
+            'loan_installment_id' => $installment->id,
+            'principal_amount' => 100000,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('loan_disbursements')->insert(['loan_id' => $loan->id, 'amount' => 873200, 'method' => 'cash', 'status' => 'completed', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('loan_default_notices')->insert(['loan_id' => $loan->id, 'delivery_method' => 'hand', 'notice_text' => 'Default notice', 'issued_at' => now(), 'expires_at' => now()->addDays(14), 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('loan_security_transactions')->insert(['loan_id' => $loan->id, 'transaction_date' => today(), 'security_amount' => 100000, 'balance' => 100000, 'created_at' => now(), 'updated_at' => now()]);
+
+        $accountId = DB::table('member_security_accounts')->insertGetId(['member_id' => $fixtures['member']->id, 'balance' => 125000, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('security_transactions')->insert([
+            ['transaction_number' => 'RV-SEC-1', 'member_security_account_id' => $accountId, 'loan_id' => null, 'transaction_type' => 'deposit', 'amount' => 25000, 'balance_before' => 0, 'balance_after' => 25000, 'transaction_date' => now()->subDay(), 'created_at' => now(), 'updated_at' => now()],
+            ['transaction_number' => 'RV-SEC-2', 'member_security_account_id' => $accountId, 'loan_id' => $loan->id, 'transaction_type' => 'deposit', 'amount' => 100000, 'balance_before' => 25000, 'balance_after' => 125000, 'transaction_date' => now(), 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $admin = $this->superAdmin($fixtures['branch']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.loans.revert', $loan), ['_force' => 1])
+            ->assertRedirect(route('admin.loan-applications.show', $application))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('loans', ['loan_number' => 'RV-L-1']);
+        $this->assertDatabaseMissing('payments', ['loan_id' => $loan->id]);
+        $this->assertDatabaseMissing('payment_allocations', ['payment_id' => $payment->id]);
+        $this->assertDatabaseMissing('loan_disbursements', ['loan_id' => $loan->id]);
+        $this->assertDatabaseMissing('loan_default_notices', ['loan_id' => $loan->id]);
+        $this->assertDatabaseMissing('loan_security_transactions', ['loan_id' => $loan->id]);
+        $this->assertDatabaseMissing('security_transactions', ['loan_id' => $loan->id]);
+        $this->assertDatabaseHas('member_security_accounts', ['id' => $accountId, 'balance' => 25000]);
         $this->assertSame('approved', $application->refresh()->status->value);
     }
 

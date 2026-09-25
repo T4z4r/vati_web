@@ -248,7 +248,9 @@
                             class="muted">
                             {{ __('Delete this loan and return its application to approved. Only possible when the loan has no payments or security activity.') }}</p>
                         <div class="form-actions"><button class="btn btn-danger"
-                                data-confirm="{{ __('Delete this loan and revert its application to approved? This cannot be undone.') }}">{{ __('Revert loan') }}</button>
+                                data-confirm="{{ __('Delete this loan and revert its application to approved? Choose force revert to also delete payments, security activity, and other associated loan data. This cannot be undone.') }}"
+                                data-force-text="{{ __('Force revert and delete associated data') }}"
+                                data-trash-text="{{ __('Revert loan only') }}">{{ __('Revert loan') }}</button>
                         </div>
                     </form>
                 </div>

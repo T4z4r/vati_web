@@ -102,7 +102,7 @@ class LoanController extends Controller
     public function revert(Request $request, Loan $loan, LoanRevertService $service)
     {
         try {
-            $result = $service->revert($loan, $request->user());
+            $result = $service->revert($loan, $request->user(), $request->boolean('_force'));
         } catch (DomainException $e) {
             return back()->with('error', $e->getMessage());
         }
