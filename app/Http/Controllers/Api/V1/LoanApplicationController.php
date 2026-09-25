@@ -45,7 +45,7 @@ class LoanApplicationController extends ApiController
     public function destroy(Request $request, LoanApplication $loanApplication)
     {
         abort_unless(in_array($loanApplication->status?->value ?? 'draft', [
-            'draft', 'submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'rejected', 'returned', 'cancelled',
+            'draft', 'submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'rejected', 'returned', 'reverted', 'cancelled',
         ], true), 409, 'Only applications that are not recommended can be deleted.');
         $force = $request->boolean('force');
         $force ? $loanApplication->forceDelete() : $loanApplication->delete();

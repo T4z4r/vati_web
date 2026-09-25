@@ -293,7 +293,7 @@
                 <td>{{ $display($application->loan_purpose) }}</td>
                 <td>
                     @forelse($application->guarantors as $guarantor)<div>{{ $guarantor->name }} <small>({{ $display($guarantor->relationship, 'relationship not recorded') }})</small></div>@empty<span class="muted">None</span>@endforelse
-                    @if($application->status->value === 'draft')
+                    @if(in_array($application->status->value, ['draft', 'reverted'], true))
                         @can('create-loan-applications')
                             <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#guarantors">Manage</a>
                         @endcan
@@ -301,7 +301,7 @@
                 </td>
                 <td>
                     @forelse($application->groupWitnesses as $witness)<div>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</div>@empty<span class="muted">None</span>@endforelse
-                    @if($application->status->value === 'draft')
+                    @if(in_array($application->status->value, ['draft', 'reverted'], true))
                         @can('create-loan-applications')
                             <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#group-witnesses">Manage</a>
                         @endcan

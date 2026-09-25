@@ -9,7 +9,7 @@
         $label = fn ($value) => str($value)->replace('_', ' ')->title();
         $requestedTotal = $applications->sum('requested_amount');
         $approvedCount = $applications->filter(fn ($application) => ($application->status->value ?? $application->status) === 'approved')->count();
-        $openCount = $applications->filter(fn ($application) => in_array($application->status->value ?? $application->status, ['draft', 'submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended'], true))->count();
+        $openCount = $applications->filter(fn ($application) => in_array($application->status->value ?? $application->status, ['draft', 'submitted', 'reverted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended'], true))->count();
     @endphp
 
     <div class="page-head">

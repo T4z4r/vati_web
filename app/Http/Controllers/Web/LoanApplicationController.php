@@ -99,7 +99,7 @@ class LoanApplicationController extends Controller
 
     public function edit(Request $request, LoanApplication $loanApplication)
     {
-        abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED], true), 409, 'Only draft or submitted applications can be edited.');
+        abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED, ApplicationStatus::REVERTED], true), 409, 'Only draft, submitted, or reverted applications can be edited.');
         $loanApplication->load('assessment', 'utilizations', 'guarantors', 'groupWitnesses');
 
         return view('admin.loan-applications.form', $this->formData($request, $loanApplication, $loanApplication->member_id));
@@ -149,8 +149,8 @@ class LoanApplicationController extends Controller
 
     public function submit(LoanApplication $loanApplication, ApplicationComplianceService $compliance)
     {
-        if ($loanApplication->status !== ApplicationStatus::DRAFT) {
-            return back()->with('error', 'Only draft applications can be submitted.');
+        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::REVERTED], true)) {
+            return back()->with('error', 'Only draft or reverted applications can be submitted.');
         }
         try {
             $compliance->assertReadyForSubmission($loanApplication);
@@ -213,8 +213,8 @@ class LoanApplicationController extends Controller
             return back()->with('error', 'This application already has a loan account and cannot be deleted.');
         }
 
-        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED, ApplicationStatus::REJECTED, ApplicationStatus::CANCELLED], true)) {
-            return back()->with('error', 'Only draft, submitted, rejected, or cancelled applications can be deleted.');
+        if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED, ApplicationStatus::REVERTED, ApplicationStatus::REJECTED, ApplicationStatus::CANCELLED], true)) {
+            return back()->with('error', 'Only draft, submitted, reverted, rejected, or cancelled applications can be deleted.');
         }
 
         $force = $request->boolean('_force');

@@ -14,6 +14,7 @@ enum ApplicationStatus: string
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
     case RETURNED = 'returned';
+    case REVERTED = 'reverted';
     case CANCELLED = 'cancelled';
     case DISBURSEMENT_PENDING = 'disbursement_pending';
     case DISBURSED = 'disbursed';

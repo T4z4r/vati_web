@@ -27,7 +27,7 @@
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Application or member name') }}"><select name="status">
             <option value="">{{ __('All statuses') }}</option>
-            @foreach (['draft', 'submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'approved', 'rejected', 'cancelled', 'disbursed'] as $s)
+            @foreach (['draft', 'submitted', 'reverted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'approved', 'rejected', 'cancelled', 'disbursed'] as $s)
                 <option value="{{ $s }}" @selected(request('status') === $s)>{{ str_replace('_', ' ', ucfirst($s)) }}
                 </option>
             @endforeach
@@ -75,11 +75,11 @@
                                     <a class="btn btn-sm btn-secondary"
                                         href="{{ route('admin.loan-applications.show', $application) }}">{{ __('View') }}</a>
                                     @can('create-loan-applications')
-                                        @if (in_array($status, ['draft', 'submitted'], true))
+                                        @if (in_array($status, ['draft', 'submitted', 'reverted'], true))
                                             <a class="btn btn-sm btn-primary"
                                                 href="{{ route('admin.loan-applications.edit', $application) }}">{{ __('Edit') }}</a>
                                         @endif
-                                        @if (in_array($status, ['draft', 'submitted', 'rejected', 'cancelled'], true) && !$application->loan)
+                                        @if (in_array($status, ['draft', 'submitted', 'reverted', 'rejected', 'cancelled'], true) && !$application->loan)
                                             <form method="POST"
                                                 action="{{ route('admin.loan-applications.destroy', $application) }}">
                                                 @csrf @method('DELETE')

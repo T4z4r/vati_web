@@ -24,10 +24,10 @@
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
         <a class="btn btn-secondary" href="{{ route('admin.loan-applications.export', $application) }}">Pakua PDF ya ombi</a>
-        @if(in_array($status, ['draft', 'submitted'], true))
+        @if(in_array($status, ['draft', 'submitted', 'reverted'], true))
             <a class="btn btn-secondary" href="{{ route('admin.loan-applications.edit', $application) }}">Hariri rasimu</a>
         @endif
-        @if($status === 'draft')
+        @if(in_array($status, ['draft', 'reverted'], true))
             <form method="POST" action="{{ route('admin.loan-applications.submit', $application) }}">@csrf<button class="btn btn-primary">Wasilisha kwa ukaguzi</button></form>
         @endif
         @if($application->cancellation_deadline && !$application->cancellation && !$application->loan?->disbursement)
@@ -138,7 +138,7 @@
             </tbody></table></div>
         </div>
 
-        @if($status === 'draft')
+        @if(in_array($status, ['draft', 'reverted'], true))
             <br><div class="card">
                 <div class="card-head"><h2>Tamko na ushahidi wa mwombaji</h2></div>
                 <form class="card-body" method="POST" enctype="multipart/form-data" action="{{ route('admin.loan-applications.compliance.applicant', $application) }}">

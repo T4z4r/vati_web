@@ -13,12 +13,12 @@ class LoanApplicationWorkflowController extends ApiController
 {
     public function submit(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $compliance)
     {
-        abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED], true), 409, 'Only draft or returned applications can be submitted.');
+        abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED, ApplicationStatus::REVERTED], true), 409, 'Only draft, returned, or reverted applications can be submitted.');
         $compliance->assertReadyForSubmission($loanApplication);
         $loanApplication->update([
             'status' => ApplicationStatus::SUBMITTED,
             'submitted_at' => now(),
-            'credit_review_attempt' => $loanApplication->status === ApplicationStatus::RETURNED ? $loanApplication->credit_review_attempt + 1 : $loanApplication->credit_review_attempt,
+            'credit_review_attempt' => in_array($loanApplication->status, [ApplicationStatus::RETURNED, ApplicationStatus::REVERTED], true) ? $loanApplication->credit_review_attempt + 1 : $loanApplication->credit_review_attempt,
         ]);
         activity()->causedBy($request->user())->performedOn($loanApplication)->log('Loan application submitted');
 

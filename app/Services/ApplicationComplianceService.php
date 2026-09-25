@@ -124,8 +124,8 @@ class ApplicationComplianceService
 
     private function ensureDraft(LoanApplication $application): void
     {
-        if (! in_array($application->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED], true)) {
-            throw new DomainException('Compliance evidence can only be changed while the application is a draft or returned for correction.');
+        if (! in_array($application->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED, ApplicationStatus::REVERTED], true)) {
+            throw new DomainException('Compliance evidence can only be changed while the application is a draft, returned for correction, or reverted.');
         }
     }
 

@@ -386,7 +386,7 @@ class MemberController extends Controller
     {
         $force = $request->boolean('_force');
 
-        if (! $force && ($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'cancelled', 'rejected'])->exists())) {
+        if (! $force && ($member->loans()->exists() || $member->loanApplications()->whereNotIn('status', ['draft', 'reverted', 'cancelled', 'rejected'])->exists())) {
             return back()->with('error', 'This member has loan history and cannot be deleted.');
         }
 

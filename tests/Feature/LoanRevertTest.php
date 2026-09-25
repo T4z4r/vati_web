@@ -87,7 +87,7 @@ class LoanRevertTest extends TestCase
         return $admin;
     }
 
-    public function test_super_admin_can_revert_pending_loan_to_approved_application(): void
+    public function test_super_admin_can_revert_pending_loan_to_editable_application(): void
     {
         $this->seed(RolePermissionSeeder::class);
         $fixtures = $this->fixtures();
@@ -102,8 +102,8 @@ class LoanRevertTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertDatabaseMissing('loans', ['loan_number' => 'RV-L-1']);
-        $this->assertSame('approved', $application->refresh()->status->value);
-        $this->assertDatabaseHas('activity_log', ['description' => 'Loan reverted to approved loan application']);
+        $this->assertSame('reverted', $application->refresh()->status->value);
+        $this->assertDatabaseHas('activity_log', ['description' => 'Loan reverted to editable loan application']);
     }
 
     public function test_revert_deletes_loan_children_for_clean_disbursed_loan(): void
@@ -131,7 +131,7 @@ class LoanRevertTest extends TestCase
         $this->assertDatabaseMissing('loans', ['loan_number' => 'RV-L-1']);
         $this->assertDatabaseMissing('loan_disbursements', ['loan_id' => $loan->id]);
         $this->assertDatabaseMissing('loan_installments', ['loan_id' => $loan->id]);
-        $this->assertSame('approved', $application->refresh()->status->value);
+        $this->assertSame('reverted', $application->refresh()->status->value);
     }
 
     public function test_revert_is_denied_when_loan_has_payments(): void
@@ -215,7 +215,45 @@ class LoanRevertTest extends TestCase
         $this->assertDatabaseMissing('loan_security_transactions', ['loan_id' => $loan->id]);
         $this->assertDatabaseMissing('security_transactions', ['loan_id' => $loan->id]);
         $this->assertDatabaseHas('member_security_accounts', ['id' => $accountId, 'balance' => 25000]);
-        $this->assertSame('approved', $application->refresh()->status->value);
+        $this->assertSame('reverted', $application->refresh()->status->value);
+    }
+
+    public function test_reverted_application_can_be_edited_submitted_or_deleted(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $fixtures = $this->fixtures();
+        $admin = $this->superAdmin($fixtures['branch']);
+        DB::table('member_nominees')->insert([
+            'member_id' => $fixtures['member']->id,
+            'name' => 'Nominee',
+            'relationship' => 'Child',
+            'percentage' => 100,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $editableApplication = $this->application($fixtures, 'RV-A-EDIT');
+        $editableLoan = $this->loan($editableApplication, $fixtures, 'RV-L-EDIT');
+        app(\App\Services\LoanRevertService::class)->revert($editableLoan, $admin);
+        $this->actingAs($admin)
+            ->get(route('admin.loan-applications.edit', $editableApplication))
+            ->assertOk();
+
+        $submittableApplication = $this->application($fixtures, 'RV-A-SUBMIT');
+        $submittableLoan = $this->loan($submittableApplication, $fixtures, 'RV-L-SUBMIT');
+        app(\App\Services\LoanRevertService::class)->revert($submittableLoan, $admin);
+        $this->actingAs($admin)
+            ->post(route('admin.loan-applications.submit', $submittableApplication))
+            ->assertRedirect();
+        $this->assertSame('submitted', $submittableApplication->refresh()->status->value);
+
+        $deletableApplication = $this->application($fixtures, 'RV-A-DELETE');
+        $deletableLoan = $this->loan($deletableApplication, $fixtures, 'RV-L-DELETE');
+        app(\App\Services\LoanRevertService::class)->revert($deletableLoan, $admin);
+        $this->actingAs($admin)
+            ->delete(route('admin.loan-applications.destroy', $deletableApplication))
+            ->assertRedirect(route('admin.loan-applications.index'));
+        $this->assertSoftDeleted('loan_applications', ['id' => $deletableApplication->id]);
     }
 
     public function test_revert_is_restricted_to_super_admin(): void

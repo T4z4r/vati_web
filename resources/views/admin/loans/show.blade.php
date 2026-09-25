@@ -246,9 +246,9 @@
                     </div>
                     <form class="card-body" method="POST" action="{{ route('admin.loans.revert', $loan) }}">@csrf<p
                             class="muted">
-                            {{ __('Delete this loan and return its application to approved. Only possible when the loan has no payments or security activity.') }}</p>
+                            {{ __('Delete this loan and return its application to an editable reverted status. Only possible when the loan has no payments or security activity unless force revert is used.') }}</p>
                         <div class="form-actions"><button class="btn btn-danger"
-                                data-confirm="{{ __('Delete this loan and revert its application to approved? Choose force revert to also delete payments, security activity, and other associated loan data. This cannot be undone.') }}"
+                                data-confirm="{{ __('Delete this loan and mark its application as reverted? Choose force revert to also delete payments, security activity, and other associated loan data. This cannot be undone.') }}"
                                 data-force-text="{{ __('Force revert and delete associated data') }}"
                                 data-trash-text="{{ __('Revert loan only') }}">{{ __('Revert loan') }}</button>
                         </div>

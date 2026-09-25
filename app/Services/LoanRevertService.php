@@ -28,19 +28,19 @@ class LoanRevertService
             $loanNumber = $loan->loan_number;
             $loan->delete();
 
-            $application->update(['status' => ApplicationStatus::APPROVED]);
+            $application->update(['status' => ApplicationStatus::REVERTED]);
 
             activity()
                 ->causedBy($user)
                 ->performedOn($application)
                 ->withProperties(['reverted_loan_number' => $loanNumber, 'forced' => $force, 'deleted' => $deleted])
-                ->log($force ? 'Loan force reverted to approved loan application' : 'Loan reverted to approved loan application');
+                ->log($force ? 'Loan force reverted to editable loan application' : 'Loan reverted to editable loan application');
 
             return [
                 'loan_number' => $loanNumber,
                 'application_id' => $application->id,
                 'application_number' => $application->application_number,
-                'message' => "Loan {$loanNumber} deleted and application {$application->application_number} reverted to approved.",
+                'message' => "Loan {$loanNumber} deleted and application {$application->application_number} reverted to editable status.",
                 'forced' => $force,
                 'deleted' => $deleted,
             ];
