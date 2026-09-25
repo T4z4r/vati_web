@@ -59,7 +59,7 @@ class LoanController extends Controller
 
     public function disburse(Request $request, Loan $loan, DisbursementService $service)
     {
-        $data = $request->validate(['method' => ['required', 'in:cash,mpesa,airtel_money,mixx,halopesa,bank_transfer'], 'recipient_number' => ['nullable', 'max:30'], 'reference_number' => ['nullable', 'max:100'], 'disbursed_at' => ['nullable', 'date'], 'first_payment_date' => ['nullable', 'date']]);
+        $data = $request->validate(['method' => ['required', 'in:cash,mpesa,airtel_money,mixx,halopesa,bank_transfer'], 'recipient_number' => ['nullable', 'max:30'], 'reference_number' => ['nullable', 'max:100'], 'issued_date' => ['nullable', 'date']]);
         try {
             $service->disburse($loan, $request->user(), $data);
         } catch (DomainException $e) {

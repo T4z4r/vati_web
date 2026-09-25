@@ -31,7 +31,7 @@ class DisbursementService
                 throw new DomainException('A cancelled application cannot be disbursed.');
             }
 
-            $date = Carbon::parse($data['disbursed_at'] ?? now());
+            $date = Carbon::parse($data['issued_date'] ?? $data['disbursed_at'] ?? now());
             $amount = $loan->calc_amount_receivable;
             if ($amount === null || (float) $amount <= 0 || (float) $amount > (float) $loan->principal_amount || $amount !== $loan->amount_receivable) {
                 throw new WorkflowConflictException('The saved amount receivable is invalid or outdated. Review the loan before disbursement.');
@@ -46,7 +46,7 @@ class DisbursementService
                     throw new WorkflowConflictException('The submitted amount does not match the saved amount receivable. Refresh the loan and try again.');
                 }
             }
-            $firstPayment = Carbon::parse($data['first_payment_date'] ?? ($loan->product->repayment_frequency === 'weekly' ? $date->copy()->addWeek() : $date->copy()->addMonth()));
+            $firstPayment = $date->copy()->addWeek();
             $disbursement = $loan->disbursement()->create([
                 'amount' => $amount,
                 'method' => $data['method'],

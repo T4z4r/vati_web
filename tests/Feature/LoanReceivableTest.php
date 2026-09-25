@@ -78,9 +78,12 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         }
         // Preserve the member's existing savings when adding the loan security.
         app(\App\Services\SecurityAccountService::class)->transact($member, $user, 'deposit', 25000);
-        $this->postJson($url, ['method' => 'cash', 'amount' => '873200.00'])
+        $this->postJson($url, ['method' => 'cash', 'amount' => '873200.00', 'issued_date' => today()->subDays(3)->toDateString()])
             ->assertCreated()->assertJsonPath('data.id', $loan->id)->assertJsonPath('data.status', 'active')
-            ->assertJsonPath('data.issued_amount', '873200.00')->assertJsonPath('data.disbursement.amount', '873200.00');
+            ->assertJsonPath('data.issued_amount', '873200.00')->assertJsonPath('data.issued_date', today()->subDays(3)->toDateString())
+            ->assertJsonPath('data.first_payment_date', today()->addDays(4)->toDateString())
+            ->assertJsonPath('data.disbursement.amount', '873200.00')
+            ->assertJsonPath('data.disbursement.issued_date', today()->subDays(3)->toDateString());
         $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict();
         $this->assertDatabaseCount('loan_disbursements', 1);
         $this->assertDatabaseHas('member_security_accounts', ['member_id' => $member->id, 'balance' => 125000]);
@@ -91,6 +94,9 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame(1, \App\Models\SecurityTransaction::where('loan_id', $loan->id)->count());
         $this->getJson('/api/v1/members/'.$member->id.'/security')->assertOk()->assertJsonPath('data.balance', 125000);
         $this->assertDatabaseHas('loan_disbursements', ['loan_id' => $loan->id, 'amount' => 873200]);
+        $this->assertSame(today()->subDays(3)->toDateString(), $loan->fresh()->disbursement_date->toDateString());
+        $this->assertSame(today()->addDays(4)->toDateString(), $loan->fresh()->first_payment_date->toDateString());
+        $this->assertSame(today()->addDays(4)->toDateString(), $loan->installments()->orderBy('installment_number')->first()->due_date->toDateString());
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('873200.00', $loan->fresh()->calc_amount_receivable);
         $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', $loan->fresh()->total_repayment);

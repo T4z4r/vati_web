@@ -2116,14 +2116,14 @@
                         "url": "{{base_url}}/api/v1/loans/{{loan_id}}/disburse",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"amount\": \"{{loan_amount_receivable}}\",\n  \"method\": \"mpesa\",\n  \"recipient_number\": \"+255710000001\",\n  \"reference_number\": \"POSTMAN-DISB-{{$timestamp}}\",\n  \"disbursed_at\": \"{{$isoTimestamp}}\"\n}",
+                            "raw": "{\n  \"amount\": \"{{loan_amount_receivable}}\",\n  \"method\": \"mpesa\",\n  \"recipient_number\": \"+255710000001\",\n  \"reference_number\": \"POSTMAN-DISB-{{$timestamp}}\",\n  \"issued_date\": \"{{$isoTimestamp}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
                                 }
                             }
                         },
-                        "description": "Run Get Loan first to capture amount_receivable. Amount is required and must match the saved receivable. Invalid/nonpositive amounts return 422; stale amounts and repeat attempts return 409. Success returns updated loan data with issued_amount and disbursement.amount."
+                    "description": "Run Get Loan first to capture amount_receivable. Amount is required and must match the saved receivable. issued_date defaults to today, may be today or a past date, and the repayment schedule starts one week after it. Invalid/nonpositive amounts return 422; stale amounts and repeat attempts return 409. Success returns updated loan data with issued_amount, issued_date, first_payment_date, and disbursement.amount."
                     },
                     "response": []
                 },

@@ -63,6 +63,7 @@ class LoanResource extends JsonResource
             'calculator_breakdown' => $breakdown,
             'repayment_progress' => round($repaymentProgress, 2),
             'paid_installments' => $paidInstallments,
+            'issued_date' => $this->disbursement_date?->toDateString(),
             'disbursement_date' => $this->disbursement_date?->toDateString(),
             'first_payment_date' => $this->first_payment_date?->toDateString(),
             'maturity_date' => $this->maturity_date?->toDateString(),
@@ -164,6 +165,7 @@ class LoanResource extends JsonResource
                 'method' => $this->disbursement->method,
                 'recipient_number' => $this->disbursement->recipient_number,
                 'reference_number' => $this->disbursement->reference_number,
+                'issued_date' => $this->disbursement->disbursed_at?->toDateString(),
                 'disbursed_at' => $this->disbursement->disbursed_at?->toIso8601String(),
             ]),
             'settlement' => $this->whenLoaded('settlement', fn () => [

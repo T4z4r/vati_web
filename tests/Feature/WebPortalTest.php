@@ -426,7 +426,7 @@ class WebPortalTest extends TestCase
             ->assertSee(__('View details'))
             ->assertSee(number_format((float) $loan->total_balance, 2));
         $this->get(route('admin.loans.show', $loan))->assertOk()->assertSee($loan->loan_number)->assertSee('borrower.jpg', false)->assertSee('data-member-photo', false);
-        $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'disbursed_at' => today()->format('Y-m-d'), 'first_payment_date' => today()->addWeek()->format('Y-m-d')])->assertRedirect();
+        $this->post(route('admin.loans.disburse', $loan), ['method' => 'cash', 'issued_date' => today()->format('Y-m-d')])->assertRedirect();
         $this->assertGreaterThan(0, $loan->refresh()->installments()->count());
         $firstInstallment = $loan->installments()->orderBy('installment_number')->firstOrFail();
         $partialAmount = round((float) $firstInstallment->total_due / 2, 2);

@@ -53,11 +53,10 @@
                             <option value="bank_transfer">{{ __('Bank transfer') }}</option>
                         </select></label><label>{{ __('Recipient number') }}<input
                             name="recipient_number"></label><label>{{ __('Reference') }}<input
-                            name="reference_number"></label><label>{{ __('Disbursement date') }}<input type="date"
-                            name="disbursed_at"
-                            value="{{ today()->format('Y-m-d') }}"></label><label>{{ __('First payment date') }}<input
-                            type="date" name="first_payment_date"
-                            value="{{ today()->addWeek()->format('Y-m-d') }}"></label></div>
+                            name="reference_number"></label><label>{{ __('Issued date') }}<input type="date"
+                            name="issued_date"
+                            max="{{ today()->format('Y-m-d') }}"
+                            value="{{ old('issued_date', today()->format('Y-m-d')) }}"></label></div>
                 <div class="form-actions"><button class="btn btn-primary"
                         data-confirm="{{ __('Disburse this loan and generate its repayment schedule?') }}">{{ __('Confirm disbursement') }}</button>
                 </div>
