@@ -29,15 +29,15 @@
                 href="{{ route('admin.account.show') }}"><span class="ph ph-user-circle nav-icon"
                     aria-hidden="true"></span> {{ __('My Account') }}</a>
             <p class="nav-label">{{ __('Operations') }}</p>
-            @can('view-members')
-                <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
-                    href="{{ route('admin.members.index') }}"><span class="ph ph-users nav-icon"
-                        aria-hidden="true"></span> {{ __('Members') }}</a>
-            @endcan
             @can('view-groups')
                 <a class="{{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
                     href="{{ route('admin.groups.index') }}"><span class="ph ph-users-four nav-icon"
                         aria-hidden="true"></span> {{ __('Groups') }}</a>
+            @endcan
+            @can('view-members')
+                <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}"
+                    href="{{ route('admin.members.index') }}"><span class="ph ph-users nav-icon"
+                        aria-hidden="true"></span> {{ __('Members') }}</a>
             @endcan
             @can('view-group-visits')
                 <a class="{{ request()->routeIs('admin.group-visits.*') ? 'active' : '' }}"
