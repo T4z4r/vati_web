@@ -149,6 +149,34 @@
             @yield('content')
         </main>
     </div>
+    <nav class="mobile-bottom-nav" aria-label="{{ __('Mobile navigation') }}">
+        <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+            <span class="ph ph-squares-four" aria-hidden="true"></span>
+            <small>{{ __('Home') }}</small>
+        </a>
+        @can('view-members')
+            <a class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}" href="{{ route('admin.members.index') }}">
+                <span class="ph ph-users" aria-hidden="true"></span>
+                <small>{{ __('Members') }}</small>
+            </a>
+        @endcan
+        @can('view-loan-applications')
+            <a class="{{ request()->routeIs('admin.loan-applications.*') ? 'active' : '' }}" href="{{ route('admin.loan-applications.index') }}">
+                <span class="ph ph-file-text" aria-hidden="true"></span>
+                <small>{{ __('Apply') }}</small>
+            </a>
+        @endcan
+        @can('view-loans')
+            <a class="{{ request()->routeIs('admin.loans.*') ? 'active' : '' }}" href="{{ route('admin.loans.index') }}">
+                <span class="ph ph-currency-circle-dollar" aria-hidden="true"></span>
+                <small>{{ __('Loans') }}</small>
+            </a>
+        @endcan
+        <button type="button" id="bottomNavMenu" aria-label="{{ __('Open menu') }}">
+            <span class="ph ph-list" aria-hidden="true"></span>
+            <small>{{ __('Menu') }}</small>
+        </button>
+    </nav>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -235,6 +263,7 @@
             };
 
             toggle.addEventListener('click', toggleSidebar);
+            document.getElementById('bottomNavMenu')?.addEventListener('click', toggleSidebar);
             overlay.addEventListener('click', () => {
                 if (window.innerWidth <= 760) {
                     sidebar.classList.remove('open');

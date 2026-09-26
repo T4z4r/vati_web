@@ -388,6 +388,9 @@ body.sidebar-collapsed .main-area {
     align-items: center;
     gap: 10px;
 }
+.mobile-bottom-nav {
+    display: none;
+}
 .lang-switch {
     display: flex;
     align-items: center;
@@ -2151,6 +2154,65 @@ body.auth-page .auth-form {
         margin-left: 0;
         width: 100%;
     }
+    .content {
+        padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    }
+    .mobile-bottom-nav {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        z-index: 35;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        align-items: center;
+        min-height: 64px;
+        padding: 7px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(0, 92, 45, 0.14);
+        border-radius: 18px;
+        box-shadow: 0 16px 34px rgba(19, 53, 31, 0.2);
+        backdrop-filter: blur(12px);
+    }
+    .mobile-bottom-nav a,
+    .mobile-bottom-nav button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        min-width: 0;
+        min-height: 50px;
+        padding: 6px 4px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        gap: 2px;
+        font-weight: 700;
+        text-align: center;
+    }
+    .mobile-bottom-nav .ph {
+        font-size: 22px;
+    }
+    .mobile-bottom-nav small {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 9px;
+        line-height: 1.1;
+    }
+    .mobile-bottom-nav a.active {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+    .mobile-bottom-nav a.active .ph {
+        color: var(--green);
+    }
+    .mobile-bottom-nav button {
+        cursor: pointer;
+    }
     .menu-btn {
         display: block;
         margin-right: 12px;
@@ -2323,7 +2385,7 @@ body.auth-page .auth-form {
         font-size: 18px;
     }
     .content {
-        padding: 16px 12px 40px;
+        padding: 16px 12px calc(88px + env(safe-area-inset-bottom));
     }
     .stat {
         padding: 12px;
@@ -2377,7 +2439,7 @@ body.auth-page .auth-form {
         padding: 8px 10px;
     }
     .content {
-        padding: 12px 10px 36px;
+        padding: 12px 10px calc(84px + env(safe-area-inset-bottom));
     }
     .stat strong {
         font-size: 16px;
