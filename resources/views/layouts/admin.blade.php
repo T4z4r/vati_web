@@ -331,6 +331,35 @@
                 wrap.appendChild(btn);
                 input.dataset.pwdEnhanced = '1';
             });
+
+            document.querySelectorAll('[data-document-preview][data-bs-target]').forEach(button => {
+                const modalSelector = button.dataset.bsTarget;
+                const modal = modalSelector ? document.querySelector(modalSelector) : null;
+                if (!modal || modal.dataset.documentPreviewBound) return;
+
+                modal.dataset.documentPreviewBound = '1';
+
+                const frame = modal.querySelector('.document-preview-frame');
+                const title = modal.querySelector('.modal-title');
+                const download = modal.querySelector('.document-preview-download');
+
+                modal.addEventListener('show.bs.modal', event => {
+                    const trigger = event.relatedTarget;
+                    if (!trigger?.matches('[data-document-preview]')) return;
+
+                    const url = trigger.dataset.documentUrl;
+                    const name = trigger.dataset.documentName || @json(__('Uploaded document'));
+                    const downloadUrl = trigger.dataset.documentDownloadUrl || url;
+
+                    if (title) title.textContent = name;
+                    if (download) download.href = downloadUrl;
+                    if (frame) frame.src = url;
+                });
+
+                modal.addEventListener('hidden.bs.modal', () => {
+                    if (frame) frame.removeAttribute('src');
+                });
+            });
         });
     </script>
 </body>

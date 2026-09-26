@@ -197,7 +197,7 @@
                         <strong>{{ $document->verification_status }}</strong>
                         <span class="muted">{{ $document->original_name ?: basename($document->file_path) }}</span>
                         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
-                            <a class="btn btn-sm btn-secondary" href="{{ route('admin.loan-applications.documents.view', [$application, $document]) }}" target="_blank" rel="noopener noreferrer"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</a>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#loanDocumentPreviewModal" data-document-preview data-document-url="{{ route('admin.loan-applications.documents.view', [$application, $document]) }}" data-document-download-url="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}" data-document-name="{{ $document->original_name ?: basename($document->file_path) }}"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</button>
                             <a class="btn btn-sm btn-secondary" href="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}"><span class="ph ph-download-simple" aria-hidden="true"></span> {{ __('Download') }}</a>
                         </div>
                     </div>
@@ -221,6 +221,7 @@
                 </form>
             </div>
         </div>
+        @include('admin.partials.document-preview-modal', ['id' => 'loanDocumentPreviewModal'])
 
         <br><div class="card">
             <div class="card-head"><h2>Mashahidi wa kikundi</h2><span>{{ $application->groupWitnesses->count() }} wamethibitishwa</span></div>

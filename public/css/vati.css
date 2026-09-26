@@ -641,6 +641,19 @@ body.sidebar-collapsed .main-area {
 .modal-body p {
     margin: 0;
 }
+.document-preview-modal .modal-dialog {
+    max-width: min(1120px, calc(100vw - 24px));
+}
+.document-preview-frame {
+    width: 100%;
+    min-height: 72vh;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8faf8;
+}
+.document-preview-help {
+    font-size: 12px;
+}
 .approval-checklist {
     display: grid;
     gap: 8px;

@@ -119,7 +119,7 @@
                             <td>{{ $document->file_name }}</td>
                             <td>{{ $document->created_at?->format('d M Y') }}</td>
                             <td>
-                                <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.view', [$member, $document]) }}" target="_blank" rel="noopener noreferrer"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</a>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#memberDocumentPreviewModal" data-document-preview data-document-url="{{ route('admin.members.documents.view', [$member, $document]) }}" data-document-download-url="{{ route('admin.members.documents.download', [$member, $document]) }}" data-document-name="{{ $document->file_name }}"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</button>
                                 <a class="btn btn-sm btn-secondary" href="{{ route('admin.members.documents.download', [$member, $document]) }}">Pakua</a>
                                 @can('delete-members')
                                     <form method="POST" action="{{ route('admin.members.documents.destroy', [$member, $document]) }}" style="display:inline">
@@ -146,6 +146,7 @@
                 </form>
             @endcan
         </div>
+        @include('admin.partials.document-preview-modal', ['id' => 'memberDocumentPreviewModal'])
     </div>
 
     <div>
