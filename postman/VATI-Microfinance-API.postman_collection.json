@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "e76df713-1cda-4a85-a77d-f0c4a9a49f54",
         "name": "VATI Microfinance API",
-        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nLatest notes: dashboard `total_issued_amount` and management `total_disbursements` include disbursed principal plus interest (`total_repayment`) for completed disbursements. Member asset input uses `asset_matrix` (fixed/custom asset name, category, quantity, estimated value, and description) and is normalized to the canonical `assets` response; the legacy `assets` array remains supported. Validation errors use HTTP 422; unauthenticated requests use HTTP 401.",
+        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nLatest notes: dashboard `total_issued_amount` and management `total_disbursements` include disbursed principal plus interest (`total_repayment`) for completed disbursements. Member asset input uses `asset_matrix` (fixed/custom asset name, category, quantity, estimated value, and description) and is normalized to the canonical `assets` response; the legacy `assets` array remains supported. Validation errors use HTTP 422; unauthenticated requests use HTTP 401. Group deletion uses `DELETE /api/v1/groups/{group}`: 403 without the `delete-groups` permission or for a loan officer outside their assigned groups, 409/422 with a `message` when members, loans, applications, meetings, collections, visits, or witnesses still reference the group, and 204 on success. Member security pay-off uses `POST /api/v1/members/{member}/security-payoff`: the balance settles the member's eligible active or overdue loans oldest first (interest before principal) and the remainder is refunded, which requires a `payout_method`; it returns 403 without `manage-security` and 422 with a `message` when there is nothing to pay off.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -2412,6 +2412,30 @@
                         }
                     },
                     "response": []
+                },
+                {
+                    "name": "Pay Off Member Security",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/security-payoff",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 50000,\n  \"payout_method\": \"mpesa\",\n  \"payout_reference\": \"MPESA-REF-001\",\n  \"payoff_date\": \"{{$isoTimestamp}}\",\n  \"remarks\": \"Security paid off after full repayment\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
                 }
             ]
         },
@@ -2451,7 +2475,7 @@
                     "request": {
                         "method": "POST",
                         "header": [],
-                        "url": "{{base_url}}/api/v1/groups/{{group_id}}/delete"
+                        "url": "{{base_url}}/api/v1/groups/{{group_id}}"
                     },
                     "response": []
                 },

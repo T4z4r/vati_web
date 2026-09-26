@@ -94,6 +94,7 @@ Route::prefix('v1')->group(function () {
         Route::post('groups', [GroupController::class, 'store']);
         Route::get('groups/{group}', [GroupController::class, 'show']);
         Route::match(['POST', 'PUT'], 'groups/{group}', [GroupController::class, 'update']);
+        Route::delete('groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
         Route::post('groups/{group}/delete', [GroupController::class, 'destroy']);
         Route::get('groups/{group}/members', [GroupController::class, 'members']);
         Route::get('groups/{group}/dashboard', [GroupPortfolioController::class, 'dashboard']);

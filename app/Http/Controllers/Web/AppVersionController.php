@@ -18,7 +18,7 @@ class AppVersionController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'apk' => ['required', 'file', 'mimes:apk', 'max:102400'],
+            'apk' => ['required', 'file', 'max:102400'],
             'version_code' => ['required', 'string', 'max:20'],
             'version_name' => ['required', 'string', 'max:50'],
             'release_notes' => ['nullable', 'string', 'max:2000'],

@@ -31,7 +31,7 @@ class MemberSecurityPayoffService
      * @return array{message: string, amount: float, offset_total: float, refunded: float, balance_after: float, loans_settled: array<int, array<string, mixed>>, refund: array<string, mixed>|null}
      *
      * @throws DomainException when there is nothing to pay off, the amount is not
-     *                       valid, or a refund remains without a payout method.
+     *                         valid, or a refund remains without a payout method.
      */
     public function payOff(Member $member, User $user, array $data): array
     {

@@ -14,6 +14,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -72,7 +73,7 @@ class MemberSecurityPayoffTest extends TestCase
         return $account;
     }
 
-    private function payOff(array $payload = []): \Illuminate\Testing\TestResponse
+    private function payOff(array $payload = []): TestResponse
     {
         return $this->postJson("/api/v1/members/{$this->member->id}/security-payoff", $payload);
     }
