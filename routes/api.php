@@ -118,6 +118,7 @@ Route::prefix('v1')->group(function () {
         Route::get('members/{member}/export', [MemberExportController::class, 'download']);
         Route::get('members/{member}/documents', [MemberDocumentController::class, 'index']);
         Route::post('members/{member}/documents', [MemberDocumentController::class, 'store']);
+        Route::get('members/{member}/documents/{memberDocument}/view', [MemberDocumentController::class, 'view'])->name('api.members.documents.view');
         Route::get('members/{member}/documents/{memberDocument}/download', [MemberDocumentController::class, 'download'])->name('api.members.documents.download');
         Route::post('members/{member}/documents/{memberDocument}', [MemberDocumentController::class, 'show']);
         Route::delete('members/{member}/documents/{memberDocument}', [MemberDocumentController::class, 'destroy'])->name('api.members.documents.destroy');
@@ -151,6 +152,7 @@ Route::prefix('v1')->group(function () {
         Route::post('loan-applications/{loanApplication}/documents', [ApplicationDocumentController::class, 'store']);
         Route::post('loan-applications/{loanApplication}/documents/{loanDocument}/verify', [ApplicationDocumentController::class, 'verify']);
         Route::post('loan-applications/{loanApplication}/documents/{loanDocument}/delete', [ApplicationDocumentController::class, 'destroy'])->name('api.loan-applications.documents.delete');
+        Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/view', [ApplicationDocumentController::class, 'view'])->name('api.loan-applications.documents.view');
         Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ApplicationDocumentController::class, 'download'])->name('api.loan-applications.documents.download');
         Route::get('loan-applications/{loanApplication}/export', [ApplicationExportController::class, 'download']);
         Route::post('loan-applications/{loanApplication}/cancel', [ApplicationComplianceController::class, 'cancel']);

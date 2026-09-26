@@ -98,6 +98,7 @@ class MemberResource extends JsonResource
                 'mime_type' => $document->mime_type,
                 'file_size' => $document->file_size,
                 'description' => $document->description,
+                'view_url' => route('api.members.documents.view', [$this->resource, $document]),
                 'file_url' => $document->disk === 'public' ? asset('storage/'.$document->file_path) : route('api.members.documents.download', [$this->resource, $document]),
                 'delete_url' => route('api.members.documents.destroy', [$this->resource, $document]),
                 'size_bytes' => $document->file_size,

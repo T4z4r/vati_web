@@ -394,6 +394,16 @@
                     "response": []
                 },
                 {
+                    "name": "View Application Document",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/loan-applications/{{loan_application_id}}/documents/{{loan_document_id}}/view",
+                        "description": "Opens a PDF/JPG/PNG application document inline when supported by the client; other file types are downloaded. Requires authentication."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Download Application Document",
                     "request": {
                         "method": "GET",
@@ -1514,6 +1524,16 @@
                     ]
                 },
                 {
+                    "name": "View Member Document",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{base_url}}/api/v1/members/{{member_id}}/documents/{{member_document_id}}/view",
+                        "description": "Opens a PDF/JPG/PNG member document inline when supported by the client; other file types are downloaded. Requires authentication."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Upload Member Signature",
                     "request": {
                         "method": "POST",
@@ -2123,7 +2143,7 @@
                                 }
                             }
                         },
-                    "description": "Run Get Loan first to capture amount_receivable. Amount is required and must match the saved receivable. issued_date defaults to today, may be today or a past date, and the repayment schedule starts one week after it. Invalid/nonpositive amounts return 422; stale amounts and repeat attempts return 409. Success returns updated loan data with issued_amount, issued_date, first_payment_date, and disbursement.amount."
+                        "description": "Run Get Loan first to capture amount_receivable. Amount is required and must match the saved receivable. issued_date defaults to today, may be today or a past date, and the repayment schedule starts one week after it. Invalid/nonpositive amounts return 422; stale amounts and repeat attempts return 409. Success returns updated loan data with issued_amount, issued_date, first_payment_date, and disbursement.amount."
                     },
                     "response": []
                 },

@@ -48,9 +48,34 @@ class ApplicationDocumentController extends ApiController
     public function download(LoanApplication $loanApplication, LoanDocument $loanDocument)
     {
         $this->belongsTo($loanApplication, $loanDocument);
-        abort_unless(Storage::disk('local')->exists($loanDocument->file_path), 404, 'Document file not found.');
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($loanDocument->file_path), 404, 'Document file not found.');
 
-        return Storage::disk('local')->download($loanDocument->file_path, $loanDocument->original_name ?: basename($loanDocument->file_path));
+        return $disk->download($loanDocument->file_path, $loanDocument->original_name ?: basename($loanDocument->file_path), [
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    public function view(LoanApplication $loanApplication, LoanDocument $loanDocument)
+    {
+        $this->belongsTo($loanApplication, $loanDocument);
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($loanDocument->file_path), 404, 'Document file not found.');
+
+        $fileName = $loanDocument->original_name ?: basename($loanDocument->file_path);
+        $mime = $disk->mimeType($loanDocument->file_path) ?: $loanDocument->mime_type ?: 'application/octet-stream';
+
+        if (! in_array($mime, ['application/pdf', 'image/jpeg', 'image/png'], true)) {
+            return $disk->download($loanDocument->file_path, $fileName, [
+                'Cache-Control' => 'private, no-store',
+            ]);
+        }
+
+        return $disk->response($loanDocument->file_path, $fileName, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ], 'inline');
     }
 
     public function destroy(Request $request, LoanApplication $loanApplication, LoanDocument $loanDocument)
@@ -83,6 +108,7 @@ class ApplicationDocumentController extends ApiController
             'verification_status' => $document->verification_status,
             'remarks' => $document->remarks,
             'verification_remarks' => $document->verification_remarks,
+            'view_url' => route('api.loan-applications.documents.view', [$application, $document]),
             'download_url' => route('api.loan-applications.documents.download', [$application, $document]),
             'uploaded_by' => $document->uploader ? ['id' => $document->uploader->id, 'name' => $document->uploader->name] : null,
             'uploaded_at' => $document->created_at?->toIso8601String(),

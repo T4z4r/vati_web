@@ -59,11 +59,35 @@ class MemberDocumentController extends ApiController
     {
         $this->belongsTo($member, $memberDocument);
 
-        abort_unless(Storage::disk($memberDocument->disk)->exists($memberDocument->file_path), 404, 'Document file not found.');
-        return Storage::disk($memberDocument->disk)->download($memberDocument->file_path, $memberDocument->file_name, [
+        $disk = Storage::disk($memberDocument->disk);
+        abort_unless($disk->exists($memberDocument->file_path), 404, 'Document file not found.');
+
+        return $disk->download($memberDocument->file_path, $memberDocument->file_name, [
             'Content-Type' => $memberDocument->mime_type ?? 'application/octet-stream',
             'Cache-Control' => 'private, no-store',
         ]);
+    }
+
+    public function view(Member $member, MemberDocument $memberDocument)
+    {
+        $this->belongsTo($member, $memberDocument);
+
+        $disk = Storage::disk($memberDocument->disk);
+        abort_unless($disk->exists($memberDocument->file_path), 404, 'Document file not found.');
+
+        $mime = $disk->mimeType($memberDocument->file_path) ?: $memberDocument->mime_type ?: 'application/octet-stream';
+
+        if (! in_array($mime, ['application/pdf', 'image/jpeg', 'image/png'], true)) {
+            return $disk->download($memberDocument->file_path, $memberDocument->file_name, [
+                'Cache-Control' => 'private, no-store',
+            ]);
+        }
+
+        return $disk->response($memberDocument->file_path, $memberDocument->file_name, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ], 'inline');
     }
 
     public function destroy(Request $request, Member $member, MemberDocument $memberDocument)
@@ -100,6 +124,7 @@ class MemberDocumentController extends ApiController
             'status' => $document->status ?? 'uploaded',
             'created_at' => $document->created_at?->toIso8601String(),
             'description' => $document->description,
+            'view_url' => route('api.members.documents.view', [$member, $document]),
             'download_url' => route('api.members.documents.download', [$member, $document]),
             'delete_url' => route('api.members.documents.destroy', [$member, $document]),
             'uploaded_by' => $document->uploadedBy ? ['id' => $document->uploadedBy->id, 'name' => $document->uploadedBy->name] : null,

@@ -90,6 +90,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::put('loan-applications/{loanApplication}/compliance/nominees', [ComplianceController::class, 'nominees'])->name('loan-applications.compliance.nominees')->middleware('permission:manage-loan-compliance');
     Route::post('loan-applications/{loanApplication}/compliance/documents', [ComplianceController::class, 'document'])->name('loan-applications.compliance.documents')->middleware('permission:manage-loan-compliance');
     Route::post('loan-applications/{loanApplication}/compliance/documents/{loanDocument}/verify', [ComplianceController::class, 'verifyDocument'])->name('loan-applications.compliance.documents.verify')->middleware('permission:verify-loan-documents');
+    Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/view', [ComplianceController::class, 'viewDocument'])->name('loan-applications.documents.view')->middleware('permission:view-loan-applications');
+    Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ComplianceController::class, 'downloadDocument'])->name('loan-applications.documents.download')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/cancel', [ComplianceController::class, 'cancel'])->name('loan-applications.cancel')->middleware('permission:create-loan-applications');
 
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');

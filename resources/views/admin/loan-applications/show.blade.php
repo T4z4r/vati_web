@@ -192,7 +192,15 @@
             <div class="card-head"><h2>Viambatisho vya hiari</h2><span>{{ $application->documents->count() }} zimepakiwa</span></div>
             <div class="card-body">
                 @forelse($application->documents as $document)
-                    <div class="detail" style="margin-bottom:10px"><small>{{ $document->getDocumentTypeLabel() }}</small><strong>{{ $document->verification_status }}</strong></div>
+                    <div class="detail" style="margin-bottom:10px">
+                        <small>{{ $document->getDocumentTypeLabel() }}</small>
+                        <strong>{{ $document->verification_status }}</strong>
+                        <span class="muted">{{ $document->original_name ?: basename($document->file_path) }}</span>
+                        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+                            <a class="btn btn-sm btn-secondary" href="{{ route('admin.loan-applications.documents.view', [$application, $document]) }}" target="_blank" rel="noopener noreferrer"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</a>
+                            <a class="btn btn-sm btn-secondary" href="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}"><span class="ph ph-download-simple" aria-hidden="true"></span> {{ __('Download') }}</a>
+                        </div>
+                    </div>
                     @can('verify-loan-documents')
                         @if($document->verification_status === 'pending')
                             <form method="POST" action="{{ route('admin.loan-applications.compliance.documents.verify', [$application, $document]) }}">@csrf<input type="hidden" name="decision" value="verified"><button class="btn btn-sm btn-primary">Thibitisha</button></form>

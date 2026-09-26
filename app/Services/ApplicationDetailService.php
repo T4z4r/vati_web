@@ -274,6 +274,7 @@ class ApplicationDetailService
             'file_name' => $document->original_name ?: basename($document->file_path),
             'mime_type' => $document->mime_type, 'size_bytes' => $document->size_bytes,
             'status' => $document->verification_status, 'remarks' => $document->remarks,
+            'view_url' => route('api.loan-applications.documents.view', [$application, $document]),
             'download_url' => route('api.loan-applications.documents.download', [$application, $document]),
             'uploaded_by' => $document->uploader ? ['id' => $document->uploader->id, 'name' => $document->uploader->name] : null,
             'uploaded_at' => $document->created_at?->toIso8601String(),
