@@ -59,11 +59,13 @@ class MemberSecurityPayoffTest extends TestCase
         ]);
     }
 
+    private static int $securitySequence = 0;
+
     private function securityBalance(float $balance): MemberSecurityAccount
     {
-        $account = MemberSecurityAccount::create(['member_id' => $this->member->id, 'balance' => $balance]);
+        $account = MemberSecurityAccount::updateOrCreate(['member_id' => $this->member->id], ['balance' => $balance]);
         $account->transactions()->create([
-            'transaction_number' => 'VATI-SEC-'.$this->member->id, 'transaction_type' => 'deposit', 'amount' => $balance,
+            'transaction_number' => 'VATI-SEC-'.$this->member->id.'-'.(++self::$securitySequence), 'transaction_type' => 'deposit', 'amount' => $balance,
             'balance_before' => 0, 'balance_after' => $balance, 'created_by' => $this->admin->id, 'transaction_date' => now(),
         ]);
 
@@ -122,19 +124,20 @@ class MemberSecurityPayoffTest extends TestCase
 
     public function test_payoff_consumes_security_across_several_loans_oldest_first(): void
     {
-        $this->securityBalance(400000);
+        $this->securityBalance(280000);
         $newer = $this->loan('2', 100000, 20000, 'active', '2026-06-30');
         $older = $this->loan('1', 150000, 10000, 'active', '2026-03-31');
 
         $this->payOff()
             ->assertOk()
+            ->assertJsonPath('data.offset_total', 280000)
             ->assertJsonPath('data.refunded', 0)
             ->assertJsonPath('data.refund', null)
             ->assertJsonPath('data.loans_settled.0.loan_id', $older->id)
             ->assertJsonPath('data.loans_settled.0.offset', 160000)
             ->assertJsonPath('data.loans_settled.1.loan_id', $newer->id)
             ->assertJsonPath('data.loans_settled.1.offset', 120000)
-            ->assertJsonPath('data.balance_after', 120000);
+            ->assertJsonPath('data.balance_after', 0);
 
         $this->assertSame('settled', $older->fresh()->status->value);
         $this->assertSame('settled', $newer->fresh()->status->value);
