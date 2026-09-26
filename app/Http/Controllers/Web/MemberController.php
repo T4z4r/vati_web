@@ -8,8 +8,9 @@ use App\Models\AssetType;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MemberGroup;
-use App\Services\GroupMembershipService;
 use App\Services\ExportService;
+use App\Services\GroupMembershipService;
+use App\Services\MemberDeletionService;
 use App\Services\NumberGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -398,7 +399,7 @@ class MemberController extends Controller
         }
 
         if ($force) {
-            app(\App\Services\MemberDeletionService::class)->forceDelete($member);
+            app(MemberDeletionService::class)->forceDelete($member);
         } else {
             $member->delete();
         }

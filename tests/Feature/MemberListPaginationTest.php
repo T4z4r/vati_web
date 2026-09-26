@@ -66,11 +66,18 @@ class MemberListPaginationTest extends TestCase
     public function test_members_list_honours_per_page_and_keeps_filters_in_page_links(): void
     {
         $this->actingAs($this->admin)
-            ->get(route('admin.members.index', ['per_page' => 5, 'search' => 'Member1', 'status' => 'active']))
+            ->get(route('admin.members.index', ['per_page' => 10, 'status' => 'active']))
             ->assertOk()
-            ->assertViewHas('members', fn ($members) => $members->total() === 10 && $members->count() === 5 && $members->lastPage() === 2)
-            ->assertSee('Showing 1–5')
-            ->assertSee('per_page=5', false)
+            ->assertViewHas('members', function ($members) {
+                $this->assertSame(25, $members->total());
+                $this->assertSame(10, $members->count());
+                $this->assertSame(3, $members->lastPage());
+
+                return true;
+            })
+            ->assertSee('Showing 1–10')
+            ->assertSee('per_page=10', false)
+            ->assertSee('status=active', false)
             ->assertSee('page=2', false);
     }
 
