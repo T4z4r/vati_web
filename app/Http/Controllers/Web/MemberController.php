@@ -23,9 +23,16 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        $members = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
+        $members = $this->filteredQuery($request)->latest()->paginate($this->perPage($request))->withQueryString();
 
         return view('admin.members.index', ['members' => $members, 'groups' => MemberGroup::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get()]);
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', 20);
+
+        return in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 20;
     }
 
     private function filteredQuery(Request $request)

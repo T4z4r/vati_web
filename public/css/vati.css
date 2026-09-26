@@ -1279,6 +1279,28 @@ textarea {
     color: var(--muted);
     font-size: 11px;
 }
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.pagination-pages .btn {
+    min-width: 28px;
+    text-align: center;
+}
+.pagination-pages .btn.active,
+.pagination .btn.disabled {
+    pointer-events: none;
+    opacity: 0.55;
+}
+.pagination-gap {
+    padding: 0 2px;
+}
 .progress {
     height: 7px;
     background: #e7ece8;

@@ -25,6 +25,11 @@
             @foreach (['active', 'inactive', 'suspended', 'closed'] as $s)
                 <option @selected(request('status') == $s)>{{ $s }}</option>
             @endforeach
+        </select>
+        <select name="per_page">
+            @foreach ([10, 20, 25, 50, 100] as $size)
+                <option value="{{ $size }}" @selected((int) request('per_page', 20) === $size)>{{ $size }} / {{ __('page') }}</option>
+            @endforeach
         </select><button class="btn btn-secondary">{{ __('Filter') }}</button>
     </form>
     <div class="card">
