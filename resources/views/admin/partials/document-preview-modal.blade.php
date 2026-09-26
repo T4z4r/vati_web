@@ -4,11 +4,12 @@
             <div class="modal-header">
                 <div>
                     <p class="muted" style="margin:0">{{ __('Document preview') }}</p>
-                    <h2 class="modal-title" id="{{ ($id ?? 'documentPreviewModal') }}Title">{{ __('Uploaded document') }}</h2>
+                    <h2 class="modal-title document-preview-title" id="{{ ($id ?? 'documentPreviewModal') }}Title">{{ __('Uploaded document') }}</h2>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
             </div>
             <div class="modal-body">
+                <img class="document-preview-image" alt="{{ __('Document preview') }}">
                 <iframe class="document-preview-frame" title="{{ __('Document preview') }}"></iframe>
             </div>
             <div class="modal-footer">

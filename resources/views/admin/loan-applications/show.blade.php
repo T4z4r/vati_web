@@ -197,7 +197,7 @@
                         <strong>{{ $document->verification_status }}</strong>
                         <span class="muted">{{ $document->original_name ?: basename($document->file_path) }}</span>
                         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
-                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#loanDocumentPreviewModal" data-document-preview data-document-url="{{ route('admin.loan-applications.documents.view', [$application, $document]) }}" data-document-download-url="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}" data-document-name="{{ $document->original_name ?: basename($document->file_path) }}"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#loanDocumentPreviewModal" data-document-preview data-document-url="{{ route('admin.loan-applications.documents.view', [$application, $document]) }}" data-document-download-url="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}" data-document-name="{{ $document->original_name ?: basename($document->file_path) }}" data-document-mime="{{ $document->mime_type }}"><span class="ph ph-eye" aria-hidden="true"></span> {{ __('View') }}</button>
                             <a class="btn btn-sm btn-secondary" href="{{ route('admin.loan-applications.documents.download', [$application, $document]) }}"><span class="ph ph-download-simple" aria-hidden="true"></span> {{ __('Download') }}</a>
                         </div>
                     </div>

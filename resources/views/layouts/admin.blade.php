@@ -340,6 +340,7 @@
                 modal.dataset.documentPreviewBound = '1';
 
                 const frame = modal.querySelector('.document-preview-frame');
+                const image = modal.querySelector('.document-preview-image');
                 const title = modal.querySelector('.modal-title');
                 const download = modal.querySelector('.document-preview-download');
 
@@ -350,14 +351,25 @@
                     const url = trigger.dataset.documentUrl;
                     const name = trigger.dataset.documentName || @json(__('Uploaded document'));
                     const downloadUrl = trigger.dataset.documentDownloadUrl || url;
+                    const mime = trigger.dataset.documentMime || '';
+                    const isImage = mime.startsWith('image/');
 
                     if (title) title.textContent = name;
                     if (download) download.href = downloadUrl;
-                    if (frame) frame.src = url;
+                    if (image) {
+                        image.hidden = !isImage;
+                        image.src = isImage ? url : '';
+                        image.alt = name;
+                    }
+                    if (frame) {
+                        frame.hidden = isImage;
+                        frame.src = isImage ? '' : url;
+                    }
                 });
 
                 modal.addEventListener('hidden.bs.modal', () => {
                     if (frame) frame.removeAttribute('src');
+                    if (image) image.removeAttribute('src');
                 });
             });
         });
