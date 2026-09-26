@@ -35,6 +35,14 @@ class AppVersion extends Model
         return $query->where('is_active', true);
     }
 
+    public function downloadFileName(): string
+    {
+        $version = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $this->version_name) ?: 'app';
+        $version = trim((string) preg_replace('/\.(zip|apk|aab|xapk)$/i', '', $version), '-.');
+
+        return 'VATI-'.($version !== '' ? $version : 'app').'.apk';
+    }
+
     public function formattedFileSize(): string
     {
         $bytes = $this->file_size;
@@ -44,6 +52,7 @@ class AppVersion extends Model
             $bytes /= 1024;
             $i++;
         }
-        return round($bytes, 1) . ' ' . $units[$i];
+
+        return round($bytes, 1).' '.$units[$i];
     }
 }

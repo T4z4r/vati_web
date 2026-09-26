@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\AppVersion;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -54,5 +56,52 @@ class AppUpdateEndpointTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.update_available', false)
             ->assertJsonPath('data.latest_version', null);
+    }
+
+    public function test_download_is_served_as_an_android_package_and_never_as_a_zip(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('apk/vati-1.3.0.apk', 'fake-apk');
+
+        $version = AppVersion::create([
+            'version_code' => '13',
+            'version_name' => '1.3.0.zip',
+            'file_path' => 'apk/vati-1.3.0.apk',
+            'file_name' => 'vati-1.3.0.apk',
+            'file_size' => 8,
+            'is_latest' => true,
+            'is_active' => true,
+            'uploaded_by' => User::factory()->create()->id,
+        ]);
+
+        $this->assertSame('VATI-1.3.0.apk', $version->downloadFileName());
+
+        $response = $this->get('/api/v1/app/'.$version->id.'/download')->assertOk();
+
+        $this->assertStringContainsString('VATI-1.3.0.apk', (string) $response->headers->get('content-disposition'));
+        $this->assertStringNotContainsString('.zip', (string) $response->headers->get('content-disposition'));
+        $this->assertSame('application/vnd.android.package-archive', $response->headers->get('content-type'));
+        $this->assertSame('nosniff', $response->headers->get('x-content-type-options'));
+    }
+
+    public function test_admin_upload_rejects_a_zip_archive(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+
+        $this->seed(RolePermissionSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post('/admin/system/app-versions', [
+                'apk' => UploadedFile::fake()->create('vati-1.4.0.zip', 12, 'application/zip'),
+                'version_code' => '14',
+                'version_name' => '1.4.0',
+            ])
+            ->assertSessionHasErrors('apk');
+
+        $this->assertDatabaseCount('app_versions', 0);
     }
 }

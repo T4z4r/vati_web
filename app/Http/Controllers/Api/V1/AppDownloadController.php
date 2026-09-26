@@ -62,7 +62,10 @@ class AppDownloadController extends ApiController
 
         abort_unless(Storage::disk('public')->exists($appVersion->file_path), 404);
 
-        return Storage::disk('public')->download($appVersion->file_path, 'VATI-' . $appVersion->version_name . '.apk');
+        return Storage::disk('public')->download($appVersion->file_path, $appVersion->downloadFileName(), [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     private function latestVersion(): ?AppVersion
