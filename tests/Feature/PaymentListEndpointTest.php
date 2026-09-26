@@ -175,6 +175,30 @@ class PaymentListEndpointTest extends TestCase
             ->assertJsonPath('summary.interest', '9500.00');
     }
 
+    public function test_summary_covers_every_filtered_repayment_not_just_the_current_page(): void
+    {
+        $first = $this->repayment('PL-P1', $this->fixtures['member'], $this->fixtures['loan'], $this->fixtures['branch'], ['amount' => 40000, 'paid_at' => now()->subDays(3)]);
+        PaymentAllocation::create(['payment_id' => $first->id, 'loan_installment_id' => $this->fixtures['installment']->id, 'principal_amount' => 30000, 'interest_amount' => 10000, 'penalty_amount' => 0]);
+        $second = $this->repayment('PL-P2', $this->fixtures['member'], $this->fixtures['loan'], $this->fixtures['branch'], ['amount' => 60000, 'paid_at' => now()->subDay()]);
+        PaymentAllocation::create(['payment_id' => $second->id, 'loan_installment_id' => null, 'principal_amount' => 55000, 'interest_amount' => 5000, 'penalty_amount' => 0]);
+
+        $auditor = User::factory()->create(['branch_id' => $this->fixtures['branch']->id]);
+        $auditor->assignRole('auditor');
+        Sanctum::actingAs($auditor);
+
+        $this->getJson(route('payments.index', ['per_page' => 1]))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $second->id)
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('meta.last_page', 2)
+            ->assertJsonPath('summary.count', 2)
+            ->assertJsonPath('summary.total_amount', '100000.00')
+            ->assertJsonPath('summary.principal', '85000.00')
+            ->assertJsonPath('summary.interest', '15000.00')
+            ->assertJsonPath('summary.penalty', '0.00');
+    }
+
     public function test_it_filters_repayments(): void
     {
         $cash = $this->repayment('PL-P1', $this->fixtures['member'], $this->fixtures['loan'], $this->fixtures['branch'], ['amount' => 50000, 'paid_at' => now()->subDays(10), 'payment_method' => 'cash', 'reference_number' => 'CASH-1', 'external_reference' => 'EXT-1']);

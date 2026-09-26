@@ -37,8 +37,19 @@ class PaymentController extends ApiController
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
+        $summary = $this->summary($this->filteredQuery($data, $request));
+        $paginator = $this->filteredQuery($data, $request)
+            ->with('member', 'loan', 'branch', 'collectedBy', 'allocations.installment')
+            ->orderBy($data['sort'] ?? 'paid_at', $data['direction'] ?? 'desc')
+            ->paginate($this->perPage($request));
+
+        return PaymentResource::collection($paginator)->additional(['summary' => $summary]);
+    }
+
+    private function filteredQuery(array $data, Request $request)
+    {
         $user = $request->user();
-        $query = Payment::with('member', 'loan', 'branch', 'collectedBy', 'allocations.installment')
+        $query = Payment::query()
             ->when($data['search'] ?? null, fn ($q, $search) => $q->where(fn ($q) => $q
                 ->where('payment_number', 'like', "%{$search}%")
                 ->orWhere('reference_number', 'like', "%{$search}%")
@@ -68,18 +79,13 @@ class PaymentController extends ApiController
             $query->whereHas('member.group', fn ($group) => $group->where('loan_officer_id', $user->id));
         }
 
-        return PaymentResource::collection($this->paginate($query, $request))->additional(['summary' => $this->summary(clone $query)]);
-    }
-
-    private function paginate($query, Request $request)
-    {
-        return $query->orderBy($request->input('sort', 'paid_at'), $request->input('direction', 'desc'))
-            ->paginate($this->perPage($request));
+        return $query;
     }
 
     private function summary($query): array
     {
-        $allocations = PaymentAllocation::whereIn('payment_id', $query->select('payments.id'))
+        $paymentIds = (clone $query)->select('payments.id');
+        $allocations = PaymentAllocation::whereIn('payment_id', $paymentIds)
             ->selectRaw('COALESCE(SUM(principal_amount), 0) AS principal, COALESCE(SUM(interest_amount), 0) AS interest, COALESCE(SUM(penalty_amount), 0) AS penalty')
             ->first();
 
