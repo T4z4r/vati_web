@@ -26,6 +26,16 @@ class Payment extends Model
         return $this->belongsTo(Member::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function collectedBy()
+    {
+        return $this->belongsTo(User::class, 'collected_by');
+    }
+
     public function allocations()
     {
         return $this->hasMany(PaymentAllocation::class);

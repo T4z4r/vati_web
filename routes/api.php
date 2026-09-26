@@ -166,6 +166,7 @@ Route::prefix('v1')->group(function () {
         Route::get('loans/{loan}/schedule', [LoanController::class, 'schedule']);
         Route::get('loans/{loan}/export', [LoanExportController::class, 'download']);
         Route::post('loans/{loan}/disburse', [LoanDisbursementController::class, 'store']);
+        Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::post('loans/{loan}/payments', [PaymentController::class, 'store']);
         Route::match(['POST', 'PUT', 'PATCH'], 'payments/{payment}', [PaymentController::class, 'update']);
         Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse']);
