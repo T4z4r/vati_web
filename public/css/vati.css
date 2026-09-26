@@ -642,17 +642,23 @@ body.sidebar-collapsed .main-area {
     margin: 0;
 }
 .document-preview-modal .modal-dialog {
-    max-width: min(1120px, calc(100vw - 24px));
+    max-width: min(720px, calc(100vw - 24px));
+}
+.document-preview-modal .modal-content {
+    height: min(88vh, 820px);
+}
+.document-preview-modal .modal-body {
+    display: block;
+    flex: 1 1 auto;
+    padding: 8px;
+    overflow: hidden;
 }
 .document-preview-frame {
     width: 100%;
-    min-height: 72vh;
+    height: 100%;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #f8faf8;
-}
-.document-preview-help {
-    font-size: 12px;
 }
 .approval-checklist {
     display: grid;
