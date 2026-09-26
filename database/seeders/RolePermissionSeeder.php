@@ -15,7 +15,7 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             'view-dashboard', 'view-management-dashboard', 'manage-organization', 'view-users', 'manage-users',
             'view-members', 'create-members', 'edit-members', 'delete-members',
-            'view-groups', 'create-groups', 'edit-groups', 'view-group-portfolio',
+            'view-groups', 'create-groups', 'edit-groups', 'delete-groups', 'view-group-portfolio',
             'view-group-witnesses', 'manage-group-witnesses', 'view-group-visits', 'view-loan-products', 'manage-loan-products',
             'view-loan-applications', 'create-loan-applications', 'review-loan-applications',
             'approve-loan-applications', 'reject-loan-applications', 'view-loans', 'disburse-loans',
@@ -42,7 +42,7 @@ class RolePermissionSeeder extends Seeder
         Role::findByName('assistant_branch_manager')->syncPermissions(Role::findByName('branch_manager')->permissions->whereNotIn('name', ['approve-loan-applications', 'disburse-loans', 'settle-loans', 'authorize-loan-clearances']));
         $fieldPermissions = [
             'view-members', 'create-members', 'edit-members', 'delete-members',
-            'view-groups', 'create-groups', 'edit-groups', 'view-group-portfolio',
+            'view-groups', 'create-groups', 'edit-groups', 'delete-groups', 'view-group-portfolio',
             'view-group-witnesses', 'manage-group-witnesses', 'view-group-visits',
             'view-loan-products', 'manage-loan-products',
             'view-loan-applications', 'create-loan-applications', 'review-loan-applications',

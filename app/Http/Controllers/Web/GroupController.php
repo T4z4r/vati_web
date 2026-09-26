@@ -96,8 +96,10 @@ class GroupController extends Controller
         return redirect()->route('admin.groups.show', $group)->with('success', 'Group updated successfully.');
     }
 
-    public function destroy(MemberGroup $group, GroupDeletionService $service)
+    public function destroy(Request $request, MemberGroup $group, GroupDeletionService $service)
     {
+        abort_unless($group->isOfficerAssigned($request->user()), 404);
+
         try {
             $service->forceDelete($group);
         } catch (DomainException $e) {

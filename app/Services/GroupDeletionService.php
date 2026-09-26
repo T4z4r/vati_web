@@ -2,55 +2,77 @@
 
 namespace App\Services;
 
+use App\Models\GroupCollection;
+use App\Models\GroupMeeting;
+use App\Models\GroupMembership;
+use App\Models\GroupVisit;
+use App\Models\Loan;
+use App\Models\LoanApplication;
+use App\Models\LoanGroupWitness;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use DomainException;
-use Illuminate\Support\Facades\DB;
 
 class GroupDeletionService
 {
-    public function __construct(private readonly MemberDeletionService $memberDeletion)
-    {
-    }
-
     /**
-     * Permanently delete a group that has no live members or recorded visits.
+     * Permanently delete a group, but only while nothing references it.
      *
-     * Soft-deleted members that still point at the group are force-deleted
-     * with their linked records, and residual rows (left-over memberships,
-     * witnesses, meetings, collections, or orphan loans/applications) are
-     * purged in a single transaction so the restrictive foreign keys are
-     * satisfied before the group row is force-deleted. Live members and their
-     * loans are never touched.
+     * Deletion is refused as soon as any record is still linked to the group so
+     * that members, loans, applications, repayments and other financial history
+     * are never cascade-deleted behind the user's back. Callers must surface the
+     * exception message to the user and keep the group in place.
      *
-     * @throws DomainException when the group has members or visits.
+     * @throws DomainException when the group still has linked records.
      */
     public function forceDelete(MemberGroup $group): void
     {
-        if ($group->members()->exists() || $group->visits()->exists()) {
-            throw new DomainException('This group has members or recorded visits and cannot be deleted.');
+        if ($blockers = $this->blockers($group)) {
+            throw new DomainException('This group cannot be deleted because it still has '.implode(', ', $blockers).'. Remove or reassign them first.');
         }
 
-        DB::transaction(function () use ($group) {
-            Member::onlyTrashed()->where('group_id', $group->id)->get()->each(
-                fn (Member $member) => $this->memberDeletion->forceDelete($member)
-            );
+        $group->forceDelete();
+    }
 
-            $loanIds = DB::table('loans')->where('group_id', $group->id)->pluck('id');
-            if ($loanIds->isNotEmpty()) {
-                DB::table('loan_refinancings')->whereIn('old_loan_id', $loanIds)->orWhereIn('new_loan_id', $loanIds)->delete();
-                DB::table('loan_settlements')->whereIn('loan_id', $loanIds)->delete();
-                DB::table('loan_disbursements')->whereIn('loan_id', $loanIds)->delete();
-                DB::table('payments')->whereIn('loan_id', $loanIds)->delete();
-                DB::table('security_transactions')->whereIn('loan_id', $loanIds)->delete();
-                DB::table('loans')->whereIn('id', $loanIds)->delete();
-            }
-            DB::table('loan_applications')->where('group_id', $group->id)->delete();
-            DB::table('loan_group_witnesses')->where('group_id', $group->id)->delete();
-            DB::table('group_memberships')->where('group_id', $group->id)->delete();
-            DB::table('group_collections')->where('group_id', $group->id)->delete();
-            DB::table('group_meetings')->where('group_id', $group->id)->delete();
-            $group->forceDelete();
-        });
+    /**
+     * @return array<int, string> Labels of the records that block deletion.
+     */
+    private function blockers(MemberGroup $group): array
+    {
+        $blockers = [];
+
+        if (Member::withTrashed()->where('group_id', $group->id)->exists()) {
+            $blockers[] = 'members';
+        }
+
+        if (Loan::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'loans';
+        }
+
+        if (LoanApplication::withTrashed()->where('group_id', $group->id)->exists()) {
+            $blockers[] = 'loan applications';
+        }
+
+        if (LoanGroupWitness::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'recorded witnesses';
+        }
+
+        if (GroupMembership::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'membership records';
+        }
+
+        if (GroupMeeting::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'meetings';
+        }
+
+        if (GroupCollection::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'collections';
+        }
+
+        if (GroupVisit::where('group_id', $group->id)->exists()) {
+            $blockers[] = 'recorded visits';
+        }
+
+        return $blockers;
     }
 }

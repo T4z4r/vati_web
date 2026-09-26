@@ -59,7 +59,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
 
     Route::resource('groups', GroupController::class)->only(['create', 'store'])->middleware('permission:create-groups');
     Route::resource('groups', GroupController::class)->only(['edit', 'update'])->middleware('permission:edit-groups');
-    Route::resource('groups', GroupController::class)->only(['destroy'])->middleware('permission:edit-groups');
+    Route::resource('groups', GroupController::class)->only(['destroy'])->middleware('permission:delete-groups');
     Route::resource('groups', GroupController::class)->only(['index', 'show'])->middleware('permission:view-groups');
     Route::resource('members', MemberController::class)->only(['create', 'store'])->middleware('permission:create-members');
     Route::resource('members', MemberController::class)->only(['edit', 'update'])->middleware('permission:edit-members');

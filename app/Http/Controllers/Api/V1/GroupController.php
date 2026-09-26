@@ -7,6 +7,7 @@ use App\Models\LoanApplication;
 use App\Models\MemberGroup;
 use App\Services\GroupDeletionService;
 use App\Services\NumberGeneratorService;
+use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -67,7 +68,15 @@ class GroupController extends ApiController
 
     public function destroy(Request $request, MemberGroup $group, GroupDeletionService $service)
     {
-        $service->forceDelete($group);
+        abort_unless($request->user()->can('delete-groups'), 403, 'You are not allowed to delete groups.');
+        abort_unless($group->isOfficerAssigned($request->user()), 403, 'You are not allowed to delete this group.');
+
+        try {
+            $service->forceDelete($group);
+        } catch (DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
         activity()->useLog('groups')->causedBy($request->user())->performedOn($group)->withProperties(['deleted_group' => ['id' => $group->id, 'name' => $group->group_name]])->log('Group deleted');
 
         return response()->noContent();
