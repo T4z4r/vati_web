@@ -990,6 +990,19 @@ tbody tr:hover {
     font-weight: 600;
     color: var(--green);
 }
+.member-list-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 190px;
+}
+.member-list-profile > div:last-child {
+    min-width: 0;
+}
+.member-list-profile .table-link,
+.member-list-profile .muted {
+    overflow-wrap: anywhere;
+}
 .badge {
     display: inline-flex;
     align-items: center;

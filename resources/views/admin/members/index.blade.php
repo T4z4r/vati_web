@@ -48,9 +48,16 @@
                             $displayName = $memberName !== '' ? $memberName : $member->membership_number;
                         @endphp
                         <tr>
-                            <td><a class="table-link"
-                                    href="{{ route('admin.members.show', $member) }}">{{ $displayName }}</a><br><small
-                                    class="muted">{{ $member->membership_number }}</small></td>
+                            <td>
+                                <div class="member-list-profile">
+                                    @include('admin.partials.member-photo', ['member' => $member, 'size' => 44])
+                                    <div>
+                                        <a class="table-link"
+                                            href="{{ route('admin.members.show', $member) }}">{{ $displayName }}</a><br><small
+                                            class="muted">{{ $member->membership_number }}</small>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $member->phone ?: '—' }}</td>
                             <td>{{ $member->group?->group_name ?: 'Unassigned' }}</td>
                             <td>{{ $member->branch?->branch_name ?: 'Unassigned' }}</td>
