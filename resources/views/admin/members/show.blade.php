@@ -263,6 +263,27 @@
                 </div>
                 <div class="form-actions"><button class="btn btn-gold">Post transaction</button></div>
             </form>
+            <form class="card-body" method="POST" action="{{ route('admin.security.payoff', $member) }}">
+                @csrf
+                <h3>Pay off security</h3>
+                <p class="muted">Outstanding loans are settled from the security balance first; whatever remains is refunded to the member.</p>
+                <div class="form-grid">
+                    <label>Amount (blank for full balance)<input type="number" step="0.01" name="amount" min="1"></label>
+                    <label>Payout method<select name="payout_method">
+                        <option value="">Required only if a refund remains</option>
+                        <option value="cash">Cash</option>
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="airtel_money">Airtel Money</option>
+                        <option value="mixx">Mixx by Yas</option>
+                        <option value="halopesa">HaloPesa</option>
+                        <option value="bank_transfer">Bank transfer</option>
+                    </select></label>
+                    <label class="full">Payout reference<input name="payout_reference" maxlength="100"></label>
+                    <label class="full">Remarks<input name="remarks"></label>
+                </div>
+                <div class="form-actions"><button class="btn btn-danger"
+                        data-confirm="Pay off this member's security? Eligible loans will be settled first and any remainder refunded to the member.">Pay off security</button></div>
+            </form>
             @endcan
         </div>
         <br>

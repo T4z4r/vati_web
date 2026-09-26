@@ -37,6 +37,8 @@ class SecurityAccountService
                 'amount' => $amount,
                 'balance_before' => $before,
                 'balance_after' => $after,
+                'payout_method' => $data['payout_method'] ?? null,
+                'payout_reference' => $data['payout_reference'] ?? null,
                 'remarks' => $data['remarks'] ?? null,
                 'created_by' => $user->id,
                 'transaction_date' => $data['transaction_date'] ?? now(),

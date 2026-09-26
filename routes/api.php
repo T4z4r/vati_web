@@ -125,6 +125,7 @@ Route::prefix('v1')->group(function () {
         Route::post('members/{member}/documents/{memberDocument}/delete', [MemberDocumentController::class, 'destroy'])->name('api.members.documents.delete');
         Route::get('members/{member}/security', [SecurityAccountController::class, 'show']);
         Route::post('members/{member}/security-transactions', [SecurityAccountController::class, 'store']);
+        Route::post('members/{member}/security-payoff', [SecurityAccountController::class, 'payOff'])->name('members.security-payoff');
 
         Route::get('loan-products', [LoanProductController::class, 'index'])->name('loan-products.index');
         Route::get('loan-products/{loan_product}', [LoanProductController::class, 'show'])->name('loan-products.show');

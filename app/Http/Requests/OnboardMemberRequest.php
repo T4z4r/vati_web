@@ -62,7 +62,7 @@ class OnboardMemberRequest extends FormRequest
             'middle_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
             'guardian_name' => ['nullable', 'string', 'max:150'],
-            'phone' => ['nullable', 'string', 'max:20', 'unique:members,phone'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],
             'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],

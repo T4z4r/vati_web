@@ -106,6 +106,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::post('loans/{loan}/revert', [LoanController::class, 'revert'])->name('loans.revert')->middleware('role:super_admin|head_office_admin');
     Route::post('payments/{payment}/reverse', [PaymentController::class, 'reverse'])->name('payments.reverse')->middleware('permission:reverse-payments');
     Route::post('members/{member}/security', [SecurityController::class, 'store'])->name('security.store')->middleware('permission:manage-security');
+    Route::post('members/{member}/security-payoff', [SecurityController::class, 'payOff'])->name('security.payoff')->middleware('permission:manage-security');
     Route::post('members/{member}/passbook-replacements', [ComplianceController::class, 'passbook'])->name('members.passbook-replacements.store')->middleware('permission:replace-passbooks');
     Route::post('loans/{loan}/default-notices', [ComplianceController::class, 'defaultNotice'])->name('loans.default-notices.store')->middleware('permission:issue-default-notices');
     Route::post('loans/{loan}/clearance', [ComplianceController::class, 'clearance'])->name('loans.clearance.store')->middleware('permission:authorize-loan-clearances');

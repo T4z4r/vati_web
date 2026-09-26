@@ -131,7 +131,7 @@ class StoreMemberRequest extends FormRequest
             'last_name' => [...$optional, 'string', 'max:100'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=200,min_height=200'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
-            'phone' => [...$optional, 'string', 'max:20', Rule::unique('members', 'phone')->ignore($member)],
+            'phone' => [...$optional, 'string', 'max:20'],
             'national_id' => ['nullable', 'string', 'max:50'],
             'voter_id' => ['nullable', 'string', 'max:50'],
             'alternate_phone' => ['nullable', 'string', 'max:20'],

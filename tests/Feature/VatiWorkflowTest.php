@@ -61,7 +61,7 @@ class VatiWorkflowTest extends TestCase
         $this->term = LoanTerm::create(['version' => 'TEST-1', 'title' => 'Test terms', 'body' => 'Test declaration', 'effective_from' => today(), 'is_active' => true]);
     }
 
-    public function test_member_registration_and_duplicate_phone_validation(): void
+    public function test_member_registration_allows_duplicate_phone_numbers(): void
     {
         Sanctum::actingAs($this->admin);
         $payload = [
@@ -141,7 +141,12 @@ class VatiWorkflowTest extends TestCase
             ->assertJsonPath('data.family_members.0.name', 'Juma Musa Junior')
             ->assertJsonPath('data.assets.0.name', 'Radio')
             ->assertJsonCount(2, 'data.nominees');
-        $this->postJson('/api/v1/members', $payload)->assertUnprocessable()->assertJsonValidationErrors('phone');
+        $payload['national_id'] = '19900101-12345-00001-01';
+        $payload['voter_id'] = 'VOTER-002';
+
+        $this->postJson('/api/v1/members', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.phone', '255712000001');
     }
 
     public function test_loan_calculation_enforces_product_limits(): void
