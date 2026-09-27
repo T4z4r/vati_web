@@ -49,13 +49,14 @@ class MemberController extends Controller
             'phone' => $member->phone,
             'group' => $member->group?->group_name,
             'branch' => $member->branch?->branch_name,
-            'joined' => $member->admission_date?->format('d M Y') ?? $member->created_at->format('d M Y'),
+            'joined' => $member->admission_date?->format('d M Y'),
+            'created_at' => $member->created_at?->format('d M Y H:i'),
             'status' => ucfirst($member->status),
         ])->values()->all();
 
         return $exporter->export(
             'VATI Members List',
-            ['Membership No', 'Name', 'Phone', 'Group', 'Branch', 'Joined', 'Status'],
+            ['Membership No', 'Name', 'Phone', 'Group', 'Branch', 'Joined', 'Created at', 'Status'],
             $rows,
             'VATI-members-'.now()->format('Ymd-His'),
             $format

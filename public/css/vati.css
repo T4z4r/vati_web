@@ -2587,3 +2587,144 @@ body.auth-page .auth-form {
         font-size: 16px;
     }
 }
+
+/* Group visit record */
+.visit-hero-icon {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    flex: 0 0 auto;
+    border-radius: 14px;
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 26px;
+}
+
+.visit-person {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.visit-person .avatar {
+    flex: 0 0 auto;
+}
+
+.visit-note {
+    margin: 0;
+    padding: 16px 18px;
+    border-left: 3px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    background: var(--green-soft);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-line;
+}
+
+.visit-callout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--shadow);
+}
+
+.visit-callout .ph {
+    flex: 0 0 auto;
+    font-size: 22px;
+    color: var(--green);
+}
+
+.visit-callout strong,
+.visit-callout small {
+    display: block;
+    font-size: 11px;
+}
+
+.visit-callout small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.visit-callout .btn {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.visit-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0 0;
+}
+
+.visit-timeline li {
+    position: relative;
+    padding: 0 0 18px 26px;
+    border-left: 2px solid var(--line);
+}
+
+.visit-timeline li:last-child {
+    padding-bottom: 0;
+    border-left-color: transparent;
+}
+
+.visit-timeline li::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--line);
+}
+
+.visit-timeline li.is-current::before {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px var(--green-soft);
+}
+
+.visit-timeline .visit-date {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.visit-timeline .visit-date .badge {
+    margin-left: 6px;
+    vertical-align: 1px;
+}
+
+.visit-timeline .visit-meta {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .visit-hero-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 21px;
+    }
+
+    .visit-callout {
+        flex-wrap: wrap;
+    }
+
+    .visit-callout .btn {
+        margin-left: 0;
+        width: 100%;
+    }
+}

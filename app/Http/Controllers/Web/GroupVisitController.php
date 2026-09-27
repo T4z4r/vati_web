@@ -72,9 +72,29 @@ class GroupVisitController extends Controller
 
     public function show(GroupVisit $groupVisit)
     {
-        $groupVisit->load('group', 'user');
+        $groupVisit->load('user');
 
-        return view('admin.group-visits.show', ['visit' => $groupVisit]);
+        $group = $groupVisit->group;
+        $outstandingStatuses = ['pending_disbursement', 'active', 'overdue'];
+
+        $group->load(['branch', 'loanOfficer'])
+            ->loadCount(['members', 'loans'])
+            ->loadCount(['members as active_members_count' => fn ($query) => $query->where('status', 'active')])
+            ->loadCount(['loans as outstanding_loans_count' => fn ($query) => $query->whereIn('status', $outstandingStatuses)])
+            ->loadSum(['loans as outstanding_balance' => fn ($query) => $query->whereIn('status', $outstandingStatuses)], 'total_balance')
+            ->loadSum(['loans as outstanding_repayment' => fn ($query) => $query->whereIn('status', $outstandingStatuses)], 'total_repayment')
+            ->loadSum('collections as savings_expected', 'expected_amount')
+            ->loadSum('collections as savings_collected', 'collected_amount');
+
+        return view('admin.group-visits.show', [
+            'visit' => $groupVisit,
+            'group' => $group,
+            'history' => $group->visits()->with('user')->whereKeyNot($groupVisit->getKey())->latest('visit_date')->latest('id')->limit(7)->get(),
+            'previousVisit' => $group->visits()->whereDate('visit_date', '<', $groupVisit->visit_date)->latest('visit_date')->first(),
+            'nextVisit' => $group->visits()->whereDate('visit_date', '>', $groupVisit->visit_date)->oldest('visit_date')->first(),
+            'visitNumber' => $group->visits()->whereDate('visit_date', '<=', $groupVisit->visit_date)->count(),
+            'totalVisits' => $group->visits()->count(),
+        ]);
     }
 
     public function destroy(GroupVisit $groupVisit)

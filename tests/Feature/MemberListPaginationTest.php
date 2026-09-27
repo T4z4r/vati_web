@@ -10,6 +10,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class MemberListPaginationTest extends TestCase
@@ -107,5 +108,45 @@ class MemberListPaginationTest extends TestCase
             ->get(route('admin.members.index', ['search' => 'Member01']))
             ->assertOk()
             ->assertDontSee('Showing 1–1 of 1');
+    }
+
+    public function test_members_list_shows_the_joined_and_created_at_columns(): void
+    {
+        Carbon::setTestNow('2026-05-04 09:30:00');
+
+        $member = Member::create([
+            'branch_id' => Member::query()->firstOrFail()->branch_id,
+            'group_id' => Member::query()->firstOrFail()->group_id,
+            'membership_number' => 'MP-M026',
+            'first_name' => 'Created',
+            'last_name' => 'At',
+            'phone' => '255719999999',
+            'admission_date' => '2026-04-01',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.members.index', ['search' => $member->membership_number]))
+            ->assertOk()
+            ->assertSee(__('Joined'))
+            ->assertSee(__('Created at'))
+            ->assertSee('01 Apr 2026')          // admission date
+            ->assertSee('04 May 2026 09:30');   // record creation timestamp
+
+        Carbon::setTestNow();
+    }
+
+    public function test_members_list_shows_a_dash_when_the_admission_date_is_missing(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.members.index', ['search' => 'Member01']))
+            ->assertOk()
+            ->assertSee(__('Created at'))
+            ->assertSee($this->createdAtOf('MP-M001'))
+            ->assertSee('<td>—</td>', false);
+    }
+
+    private function createdAtOf(string $membershipNumber): string
+    {
+        return Member::where('membership_number', $membershipNumber)->firstOrFail()->created_at->format('d M Y H:i');
     }
 }

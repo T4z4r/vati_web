@@ -42,6 +42,7 @@
                         <th>{{ __('Group') }}</th>
                         <th>{{ __('Branch') }}</th>
                         <th>{{ __('Joined') }}</th>
+                        <th>{{ __('Created at') }}</th>
                         <th>{{ __('Status') }}</th>
                         <th class="actions-col">{{ __('Actions') }}</th>
                     </tr>
@@ -66,8 +67,8 @@
                             <td>{{ $member->phone ?: '—' }}</td>
                             <td>{{ $member->group?->group_name ?: 'Unassigned' }}</td>
                             <td>{{ $member->branch?->branch_name ?: 'Unassigned' }}</td>
-                            <td>{{ $member->admission_date?->format('d M Y') ?? $member->created_at->format('d M Y') }}
-                            </td>
+                            <td>{{ $member->admission_date?->format('d M Y') ?? '—' }}</td>
+                            <td>{{ $member->created_at?->format('d M Y H:i') ?? '—' }}</td>
                             <td><span class="badge {{ $member->status }}">{{ $member->status }}</span></td>
                             <td>
                                 <div class="table-actions">
@@ -96,7 +97,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No members match your filters.') }}</td>
+                            <td colspan="8" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No members match your filters.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
