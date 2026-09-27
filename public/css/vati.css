@@ -1095,21 +1095,30 @@ tbody tr:hover {
 .badge.approved,
 .badge.paid,
 .badge.posted,
-.badge.completed {
+.badge.completed,
+.badge.settled,
+.badge.disbursed,
+.badge.recommended {
     background: #e5f5eb;
     color: #21743d;
 }
 .badge.draft,
 .badge.pending,
 .badge.upcoming,
-.badge.submitted {
+.badge.submitted,
+.badge.pending_disbursement,
+.badge.disbursement_pending,
+.badge.returned,
+.badge.reverted {
     background: #fff4d8;
     color: #8b6815;
 }
 .badge.rejected,
 .badge.overdue,
 .badge.reversed,
-.badge.inactive {
+.badge.inactive,
+.badge.written_off,
+.badge.cancelled {
     background: #fde9e9;
     color: #a42626;
 }

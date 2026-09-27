@@ -12,14 +12,20 @@
             <a class="btn btn-secondary" href="{{ route('admin.loans.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
         </div>
     </div>
-    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-            placeholder="{{ __('Loan number or member') }}"><select name="status">
-            <option value="">{{ __('All statuses') }}</option>
-            @foreach (['pending_disbursement', 'active', 'overdue', 'settled', 'refinanced', 'written_off'] as $s)
-                <option value="{{ $s }}" @selected(request('status') === $s)>{{ str_replace('_', ' ', ucfirst($s)) }}
-                </option>
+    <div class="status-tabs">
+        <nav class="tabs-nav">
+            @foreach ($statusTabs as $tab)
+                <a class="tab @if ($activeStatus === $tab['key']) active @endif"
+                    href="{{ route('admin.loans.index', $tab['key'] === '' ? request()->except('status', 'page') : array_merge(request()->except('status', 'page'), ['status' => $tab['key']])) }}"
+                    @if ($activeStatus === $tab['key']) aria-current="page" @endif>
+                    <span>{{ __($tab['label']) }}</span>
+                    <span class="badge @if ($tab['key'] !== '') {{ $tab['key'] }} @endif">{{ $tab['count'] }}</span>
+                </a>
             @endforeach
-        </select><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
+        </nav>
+    </div>
+    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
+            placeholder="{{ __('Loan number or member') }}"><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
     <div class="card">
         <div class="table-wrap">
             <table>

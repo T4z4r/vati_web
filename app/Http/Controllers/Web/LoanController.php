@@ -2,31 +2,71 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\LoanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
 use App\Models\LoanCycle;
 use App\Models\LoanInstallmentRecord;
-use App\Models\LoanSecurityTransaction;
 use App\Services\DisbursementService;
 use App\Services\ExportService;
 use App\Services\LoanRevertService;
 use App\Services\SettlementService;
 use App\Services\VatCorrectionService;
+use Carbon\Carbon;
 use DomainException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LoanController extends Controller
 {
+    private const STATUS_TABS = [
+        'pending_disbursement' => 'Pending Disbursement',
+        'active' => 'Active',
+        'overdue' => 'Overdue',
+        'settled' => 'Settled',
+        'refinanced' => 'Refinanced',
+        'written_off' => 'Written Off',
+        'cancelled' => 'Cancelled',
+    ];
+
     public function index(Request $request)
     {
         $loans = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
-        return view('admin.loans.index', compact('loans'));
+        return view('admin.loans.index', [
+            'loans' => $loans,
+            'statusTabs' => $this->statusTabs($request),
+            'activeStatus' => $this->activeStatus($request) ?? '',
+        ]);
     }
 
-    private function filteredQuery(Request $request)
+    private function filteredQuery(Request $request, bool $applyStatus = true)
     {
-        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    private function activeStatus(Request $request): ?string
+    {
+        $status = (string) $request->query('status', '');
+
+        return LoanStatus::tryFrom($status) ? $status : null;
+    }
+
+    private function statusTabs(Request $request): array
+    {
+        $counts = $this->filteredQuery($request, false)
+            ->toBase()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $tabs = [['key' => '', 'label' => 'All', 'count' => (int) $counts->sum()]];
+
+        foreach (self::STATUS_TABS as $key => $label) {
+            $tabs[] = ['key' => $key, 'label' => $label, 'count' => (int) $counts->get($key, 0)];
+        }
+
+        return $tabs;
     }
 
     public function export(Request $request, ExportService $exporter, string $format)
@@ -252,7 +292,7 @@ class LoanController extends Controller
      */
     private function generateInstallmentRecords(Loan $loan, LoanCycle $cycle)
     {
-        $paymentDate = \Carbon\Carbon::parse($cycle->first_payment_date ?? $cycle->disbursement_date);
+        $paymentDate = Carbon::parse($cycle->first_payment_date ?? $cycle->disbursement_date);
         $totalInstallments = $cycle->total_installments;
         $weeklyAmount = $cycle->weekly_installment;
         $totalPrincipal = $cycle->adjusted_principal_amount ?? $cycle->principal_amount;
