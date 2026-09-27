@@ -31,9 +31,9 @@ class MemberController extends Controller
 
     private function perPage(Request $request): int
     {
-        $perPage = $request->integer('per_page', 20);
+        $perPage = $request->integer('per_page', 10);
 
-        return in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 20;
+        return in_array($perPage, [10, 20, 25, 50, 100], true) ? $perPage : 10;
     }
 
     private function filteredQuery(Request $request)

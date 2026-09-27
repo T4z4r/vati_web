@@ -28,7 +28,7 @@
         </select>
         <select name="per_page">
             @foreach ([10, 20, 25, 50, 100] as $size)
-                <option value="{{ $size }}" @selected((int) request('per_page', 20) === $size)>{{ $size }} / {{ __('page') }}</option>
+                <option value="{{ $size }}" @selected((int) request('per_page', 10) === $size)>{{ $size }} / {{ __('page') }}</option>
             @endforeach
         </select><button class="btn btn-secondary">{{ __('Filter') }}</button>
     </form>
