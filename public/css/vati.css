@@ -497,6 +497,9 @@ body.sidebar-collapsed .main-area {
     color: var(--muted);
     font-size: 12px;
 }
+.page-head.card {
+    padding: 22px 24px;
+}
 .head-actions {
     display: flex;
     gap: 9px;
@@ -2380,6 +2383,9 @@ body.auth-page .auth-form {
     .page-head {
         align-items: flex-start;
         flex-direction: column;
+    }
+    .page-head.card {
+        padding: 16px 18px;
     }
     .page-head h1 {
         font-size: 20px;

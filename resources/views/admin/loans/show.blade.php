@@ -2,7 +2,7 @@
 @section('title', $loan->loan_number)
 @section('content')
     @php($status = $loan->status->value)
-    <div class="page-head">
+    <div class="page-head card">
         <div style="display:flex;align-items:center;gap:16px">@include('admin.partials.member-photo', ['member' => $loan->member, 'size' => 88])<div>
                 <p class="eyebrow">{{ $loan->loan_number }}</p>
                 <h1>{{ $loan->member->first_name }} {{ $loan->member->last_name }}</h1>

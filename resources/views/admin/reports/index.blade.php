@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Reports')
 @section('content')
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">{{ __('MANAGEMENT INFORMATION') }}</p>
             <h1>{{ __('Portfolio reports') }}</h1>

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Organization')
 @section('content')
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">{{ __('ORGANIZATION STRUCTURE') }}</p>
             <h1>{{ __('Regions, areas & branches') }}</h1>

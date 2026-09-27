@@ -2,7 +2,7 @@
 @section('title', $user->exists ? 'Edit Staff User' : 'Add Staff User')
 @section('content')
     @php($editing = $user->exists)
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">{{ __('ACCESS CONTROL') }}</p>
             <h1>{{ $editing ? __('Edit staff account') : __('Create staff account') }}</h1>

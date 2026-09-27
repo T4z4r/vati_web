@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', __('App Versions'))
 @section('content')
-<div class="page-head">
+<div class="page-head card">
     <div>
         <p class="eyebrow">{{ __('SYSTEM') }}</p>
         <h1>{{ __('App Versions') }}</h1>

@@ -22,7 +22,7 @@
         $selectedWitnesses = collect(old('witness_member_ids', $application->groupWitnesses?->pluck('member_id')->all() ?? []))->map(fn ($id) => (int) $id)->all();
     @endphp
 
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">USAJILI WA MKOPO</p>
             <h1>{{ $editing ? 'Hariri rasimu ya ombi' : 'Unda ombi la mkopo' }}</h1>

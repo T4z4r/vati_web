@@ -11,7 +11,7 @@
     $canDecideApplication = in_array($status, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']);
 @endphp
 
-<div class="page-head">
+<div class="page-head card">
     <div style="display:flex;align-items:center;gap:16px">
         @include('admin.partials.member-photo', ['member' => $member, 'size' => 88])
         <div>

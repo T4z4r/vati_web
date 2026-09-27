@@ -2,7 +2,7 @@
 @section('title', $group->exists ? 'Edit Group' : 'Create Group')
 @section('content')
     @php($editing = $group->exists)
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">{{ __('GROUP LENDING') }}</p>
             <h1>{{ $editing ? __('Edit member group') : __('Create a member group') }}</h1>

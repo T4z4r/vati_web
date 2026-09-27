@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', $group->group_name)
 @section('content')
-    <div class="page-head">
+    <div class="page-head card">
         <div>
             <p class="eyebrow">{{ $group->group_code }}</p>
             <h1>{{ $group->group_name }}</h1>
