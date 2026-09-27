@@ -39,6 +39,7 @@ class LoanApplicationController extends Controller
         'rejected' => 'Rejected',
         'cancelled' => 'Cancelled',
     ];
+
     public function index(Request $request)
     {
         $activeStatus = $this->activeStatus($request);
