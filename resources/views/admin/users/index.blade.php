@@ -12,10 +12,10 @@
             <a class="btn btn-primary" href="{{ route('admin.users.create') }}"><span class="ph ph-user-plus" aria-hidden="true"></span> {{ __('Add staff user') }}</a>
         </div>
     </div>
-    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-            placeholder="{{ __('Search name or email') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>
-    </form>
     <div class="card">
+        <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
+                placeholder="{{ __('Search name or email') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>
+        </form>
         <div class="table-wrap">
             <table>
                 <thead>

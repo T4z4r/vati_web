@@ -31,18 +31,18 @@
             <small>{{ __('Groups visited') }}</small><strong>{{ number_format($stats['groups']) }}</strong><em>{{ __('Distinct groups') }}</em>
         </div>
     </div>
-    <form class="filters">
-        <select name="group_id">
-            <option value="">{{ __('All groups') }}</option>
-            @foreach($groups as $group)
-                <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>{{ $group->group_name }}</option>
-            @endforeach
-        </select>
-        <input type="date" name="from" value="{{ request('from') }}">
-        <input type="date" name="to" value="{{ request('to') }}">
-        <button class="btn btn-secondary">{{ __('Filter') }}</button>
-    </form>
     <div class="card">
+        <form class="filters">
+            <select name="group_id">
+                <option value="">{{ __('All groups') }}</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>{{ $group->group_name }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="from" value="{{ request('from') }}">
+            <input type="date" name="to" value="{{ request('to') }}">
+            <button class="btn btn-secondary">{{ __('Filter') }}</button>
+        </form>
         <div class="table-wrap">
             <table>
                 <thead>

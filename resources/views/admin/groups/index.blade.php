@@ -31,10 +31,10 @@
             <small>{{ __('Loans') }}</small><strong>{{ number_format($stats['loans']) }}</strong><em>{{ __('Across these groups') }}</em>
         </div>
     </div>
-    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-            placeholder="{{ __('Search name or group code') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>
-    </form>
     <div class="card">
+        <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
+                placeholder="{{ __('Search name or group code') }}"><button class="btn btn-secondary">{{ __('Search') }}</button>
+        </form>
         <div class="table-wrap">
             <table>
                 <thead>

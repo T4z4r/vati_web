@@ -31,26 +31,26 @@
             <small>{{ __('Groups covered') }}</small><strong>{{ number_format($stats['groups']) }}</strong><em>{{ __('Groups with members') }}</em>
         </div>
     </div>
-    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-            placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">
-            <option value="">{{ __('All groups') }}</option>
-            @foreach ($groups as $group)
-                <option value="{{ $group->id }}" @selected(request('group_id') == $group->id)>{{ $group->group_name }}</option>
-            @endforeach
-        </select>
-        <select name="status">
-            <option value="">{{ __('All statuses') }}</option>
-            @foreach (['active', 'inactive', 'suspended', 'closed'] as $s)
-                <option @selected(request('status') == $s)>{{ $s }}</option>
-            @endforeach
-        </select>
-        <select name="per_page">
-            @foreach ([10, 20, 25, 50, 100] as $size)
-                <option value="{{ $size }}" @selected((int) request('per_page', 10) === $size)>{{ $size }} / {{ __('page') }}</option>
-            @endforeach
-        </select><button class="btn btn-secondary">{{ __('Filter') }}</button>
-    </form>
     <div class="card">
+        <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
+                placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">
+                <option value="">{{ __('All groups') }}</option>
+                @foreach ($groups as $group)
+                    <option value="{{ $group->id }}" @selected(request('group_id') == $group->id)>{{ $group->group_name }}</option>
+                @endforeach
+            </select>
+            <select name="status">
+                <option value="">{{ __('All statuses') }}</option>
+                @foreach (['active', 'inactive', 'suspended', 'closed'] as $s)
+                    <option @selected(request('status') == $s)>{{ $s }}</option>
+                @endforeach
+            </select>
+            <select name="per_page">
+                @foreach ([10, 20, 25, 50, 100] as $size)
+                    <option value="{{ $size }}" @selected((int) request('per_page', 10) === $size)>{{ $size }} / {{ __('page') }}</option>
+                @endforeach
+            </select><button class="btn btn-secondary">{{ __('Filter') }}</button>
+        </form>
         <div class="table-wrap">
             <table>
                 <thead>

@@ -1165,6 +1165,11 @@ tbody tr:hover {
 .filters .search {
     min-width: 260px;
 }
+.card > .filters {
+    margin-bottom: 0;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+}
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

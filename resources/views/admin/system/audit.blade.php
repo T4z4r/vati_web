@@ -18,35 +18,34 @@ $subjectRoutes = [
     </div>
 </div>
 
-<form class="filters" method="GET">
-    <input class="search" name="search" placeholder="{{ __('Search actions or users...') }}" value="{{ request('search') }}">
-    <select name="log_name" title="{{ __('Filter by log type') }}">
-        <option value="">{{ __('All log types') }}</option>
-        @foreach($logNames as $logName)
-        <option value="{{ $logName }}" @selected(request('log_name') === $logName)>{{ $logName }}</option>
-        @endforeach
-    </select>
-    <select name="subject_type" title="{{ __('Filter by entity type') }}">
-        <option value="">{{ __('All entity types') }}</option>
-        @foreach($subjectTypes as $label => $type)
-        <option value="{{ $type }}" @selected(request('subject_type') === $type)>{{ $label }}</option>
-        @endforeach
-    </select>
-    <input type="date" name="from" value="{{ request('from') }}" title="{{ __('From date') }}">
-    <input type="date" name="to" value="{{ request('to') }}" title="{{ __('To date') }}">
-    <select name="user_id" title="{{ __('Filter by user') }}">
-        <option value="">{{ __('All users') }}</option>
-        @foreach($users as $user)
-        <option value="{{ $user->id }}" @selected(request('user_id') == $user->id)>{{ $user->name }}</option>
-        @endforeach
-    </select>
-    <button class="btn btn-secondary">{{ __('Filter') }}</button>
-    @if(request()->hasAny(['search', 'from', 'to', 'user_id', 'log_name', 'subject_type']))
-    <a class="btn btn-secondary" href="{{ route('admin.system.audit') }}">{{ __('Clear') }}</a>
-    @endif
-</form>
-
 <div class="card">
+    <form class="filters" method="GET">
+        <input class="search" name="search" placeholder="{{ __('Search actions or users...') }}" value="{{ request('search') }}">
+        <select name="log_name" title="{{ __('Filter by log type') }}">
+            <option value="">{{ __('All log types') }}</option>
+            @foreach($logNames as $logName)
+            <option value="{{ $logName }}" @selected(request('log_name') === $logName)>{{ $logName }}</option>
+            @endforeach
+        </select>
+        <select name="subject_type" title="{{ __('Filter by entity type') }}">
+            <option value="">{{ __('All entity types') }}</option>
+            @foreach($subjectTypes as $label => $type)
+            <option value="{{ $type }}" @selected(request('subject_type') === $type)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <input type="date" name="from" value="{{ request('from') }}" title="{{ __('From date') }}">
+        <input type="date" name="to" value="{{ request('to') }}" title="{{ __('To date') }}">
+        <select name="user_id" title="{{ __('Filter by user') }}">
+            <option value="">{{ __('All users') }}</option>
+            @foreach($users as $user)
+            <option value="{{ $user->id }}" @selected(request('user_id') == $user->id)>{{ $user->name }}</option>
+            @endforeach
+        </select>
+        <button class="btn btn-secondary">{{ __('Filter') }}</button>
+        @if(request()->hasAny(['search', 'from', 'to', 'user_id', 'log_name', 'subject_type']))
+        <a class="btn btn-secondary" href="{{ route('admin.system.audit') }}">{{ __('Clear') }}</a>
+        @endif
+    </form>
     <div class="table-wrap">
         <table>
             <thead>

@@ -54,9 +54,9 @@
             @endforeach
         </nav>
     </div>
-    <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-            placeholder="{{ __('Application or member name') }}"><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
     <div class="card">
+        <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
+                placeholder="{{ __('Application or member name') }}"><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
         <div class="table-wrap">
             <table>
                 <thead>
