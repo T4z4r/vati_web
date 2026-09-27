@@ -30,19 +30,19 @@
             <small>{{ __('Repaid to date') }}</small><strong>{{ number_format($stats['repaidShare'], 1) }}%</strong><em>{{ __('Of principal recovered') }}</em>
         </div>
     </div>
-    <div class="status-tabs">
-        <nav class="tabs-nav">
-            @foreach ($statusTabs as $tab)
-                <a class="tab @if ($activeStatus === $tab['key']) active @endif"
-                    href="{{ route('admin.loans.index', $tab['key'] === '' ? request()->except('status', 'page') : array_merge(request()->except('status', 'page'), ['status' => $tab['key']])) }}"
-                    @if ($activeStatus === $tab['key']) aria-current="page" @endif>
-                    <span>{{ __($tab['label']) }}</span>
-                    <span class="badge @if ($tab['key'] !== '') {{ $tab['key'] }} @endif">{{ $tab['count'] }}</span>
-                </a>
-            @endforeach
-        </nav>
-    </div>
     <div class="card">
+        <div class="status-tabs">
+            <nav class="tabs-nav">
+                @foreach ($statusTabs as $tab)
+                    <a class="tab @if ($activeStatus === $tab['key']) active @endif"
+                        href="{{ route('admin.loans.index', $tab['key'] === '' ? request()->except('status', 'page') : array_merge(request()->except('status', 'page'), ['status' => $tab['key']])) }}"
+                        @if ($activeStatus === $tab['key']) aria-current="page" @endif>
+                        <span>{{ __($tab['label']) }}</span>
+                        <span class="badge @if ($tab['key'] !== '') {{ $tab['key'] }} @endif">{{ $tab['count'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+        </div>
         <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
                 placeholder="{{ __('Loan number or member') }}"><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
         <div class="table-wrap">
