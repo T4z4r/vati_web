@@ -23,16 +23,61 @@ use Illuminate\Support\Facades\DB;
 
 class LoanApplicationController extends Controller
 {
+    private const STATUS_TABS = [
+        'draft' => 'Draft',
+        'submitted' => 'Submitted',
+        'lo_review' => 'Lo Review',
+        'abm_review' => 'Abm Review',
+        'bm_review' => 'Bm Review',
+        'credit_review' => 'Credit Review',
+        'recommended' => 'Recommended',
+        'approved' => 'Approved',
+        'disbursement_pending' => 'Disbursement Pending',
+        'disbursed' => 'Disbursed',
+        'returned' => 'Returned',
+        'reverted' => 'Reverted',
+        'rejected' => 'Rejected',
+        'cancelled' => 'Cancelled',
+    ];
     public function index(Request $request)
     {
+        $activeStatus = $this->activeStatus($request);
         $applications = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
-        return view('admin.loan-applications.index', compact('applications'));
+        return view('admin.loan-applications.index', [
+            'applications' => $applications,
+            'statusTabs' => $this->statusTabs($request),
+            'activeStatus' => $activeStatus,
+        ]);
     }
 
-    private function filteredQuery(Request $request)
+    private function filteredQuery(Request $request, bool $applyStatus = true)
     {
-        return LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+        return LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    private function activeStatus(Request $request): ?string
+    {
+        $status = (string) $request->query('status', '');
+
+        return ApplicationStatus::tryFrom($status) ? $status : null;
+    }
+
+    private function statusTabs(Request $request): array
+    {
+        $counts = $this->filteredQuery($request, false)
+            ->toBase()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $tabs = [['key' => '', 'label' => 'All', 'count' => (int) $counts->sum()]];
+
+        foreach (self::STATUS_TABS as $key => $label) {
+            $tabs[] = ['key' => $key, 'label' => $label, 'count' => (int) $counts->get($key, 0)];
+        }
+
+        return $tabs;
     }
 
     public function exportList(Request $request, ExportService $exporter, string $format)

@@ -616,6 +616,44 @@ body.sidebar-collapsed .main-area {
     display: block;
     animation: fadeIn 0.15s ease;
 }
+
+/* Status tabs (server rendered links) */
+.status-tabs {
+    overflow-x: auto;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+}
+.status-tabs .tabs-nav {
+    border-bottom: 0;
+    background: transparent;
+    width: max-content;
+    min-width: 100%;
+}
+.status-tabs .tabs-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 3px solid transparent;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+}
+.status-tabs .tabs-nav a:hover {
+    color: var(--text);
+}
+.status-tabs .tabs-nav a.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+}
+.status-tabs .tabs-nav a .badge {
+    margin-left: 0;
+    padding: 2px 7px;
+    font-size: 10px;
+}
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
