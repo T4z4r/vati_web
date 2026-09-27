@@ -43,16 +43,22 @@
                             <td>
                                 <div class="table-actions">
                                     <a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.loan-products.show', $product) }}">{{ __('View') }}</a>
+                                        href="{{ route('admin.loan-products.show', $product) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a>
                                     @can('manage-loan-products')
                                         <a class="btn btn-sm btn-primary"
-                                            href="{{ route('admin.loan-products.edit', $product) }}">{{ __('Edit') }}</a>
+                                            href="{{ route('admin.loan-products.edit', $product) }}" title="{{ __('Edit') }}"
+                                            aria-label="{{ __('Edit') }}"><span class="ph ph-pencil-simple"
+                                                aria-hidden="true"></span></a>
                                     @endcan
                                     @can('manage-loan-products')
                                         <form method="POST" action="{{ route('admin.loan-products.destroy', $product) }}">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-danger"
-                                                data-confirm="{{ __('Delete this product? Products with lending history cannot be deleted.') }}">{{ __('Delete') }}</button>
+                                            <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"
+                                                aria-label="{{ __('Delete') }}"
+                                                data-confirm="{{ __('Delete this product? Products with lending history cannot be deleted.') }}"><span
+                                                    class="ph ph-trash" aria-hidden="true"></span></button>
                                         </form>
                                     @endcan
                                 </div>

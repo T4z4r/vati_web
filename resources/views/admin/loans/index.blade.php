@@ -66,7 +66,9 @@
                             </td>
                             <td>
                                 <div class="table-actions"><a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.loans.show', $loan) }}">{{ __('View') }}</a></div>
+                                        href="{{ route('admin.loans.show', $loan) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a></div>
                             </td>
                         </tr>
                     @empty

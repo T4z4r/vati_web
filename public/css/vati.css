@@ -1339,6 +1339,9 @@ textarea {
     display: inline-flex;
 }
 .table-actions .btn {
+    min-width: 30px;
+    padding: 7px 9px;
+    font-size: 14px;
     white-space: nowrap;
 }
 .pagination {

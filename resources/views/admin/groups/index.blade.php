@@ -49,16 +49,22 @@
                             <td>
                                 <div class="table-actions">
                                     <a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.groups.show', $group) }}">{{ __('View') }}</a>
+                                        href="{{ route('admin.groups.show', $group) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a>
                                     @can('edit-groups')
                                         <a class="btn btn-sm btn-primary"
-                                            href="{{ route('admin.groups.edit', $group) }}">{{ __('Edit') }}</a>
+                                            href="{{ route('admin.groups.edit', $group) }}" title="{{ __('Edit') }}"
+                                            aria-label="{{ __('Edit') }}"><span class="ph ph-pencil-simple"
+                                                aria-hidden="true"></span></a>
                                     @endcan
                                     @can('delete-groups')
                                         <form method="POST" action="{{ route('admin.groups.destroy', $group) }}">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-danger"
-                                                data-confirm="{{ __('Delete this group? Groups with members or lending history cannot be deleted.') }}">{{ __('Delete') }}</button>
+                                            <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"
+                                                aria-label="{{ __('Delete') }}"
+                                                data-confirm="{{ __('Delete this group? Groups with members or lending history cannot be deleted.') }}"><span
+                                                    class="ph ph-trash" aria-hidden="true"></span></button>
                                         </form>
                                     @endcan
                                 </div>

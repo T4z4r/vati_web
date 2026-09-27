@@ -147,6 +147,228 @@
             @endcan
         </div>
         @include('admin.partials.document-preview-modal', ['id' => 'memberDocumentPreviewModal'])
+        <br>
+        <div class="card">
+            <div class="card-head"><h2>Loan applications</h2><span>{{ $applications->count() }} applications</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Guarantors</th><th>Group witnesses</th><th>Status</th><th>Decision</th></tr></thead><tbody>
+                @forelse($applications as $application)
+                    <tr>
+                        <td>@can('view-loan-applications')<a class="table-link" href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a>@else{{ $application->application_number }}@endcan</td>
+                        <td>{{ ucfirst($application->application_type) }}</td>
+                        <td>{{ $display($application->product?->name) }}</td>
+                        <td class="money">{{ $money($application->requested_amount) }}</td>
+                        <td>{{ $application->duration_months }} months</td>
+                        <td>{{ $display($application->loan_purpose) }}</td>
+                        <td>
+                            @forelse($application->guarantors as $guarantor)<div>{{ $guarantor->name }} <small>({{ $display($guarantor->relationship, 'relationship not recorded') }})</small></div>@empty<span class="muted">None</span>@endforelse
+                            @if(in_array($application->status->value, ['draft', 'reverted'], true))
+                                @can('create-loan-applications')
+                                    <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#guarantors">Manage</a>
+                                @endcan
+                            @endif
+                        </td>
+                        <td>
+                            @forelse($application->groupWitnesses as $witness)<div>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</div>@empty<span class="muted">None</span>@endforelse
+                            @if(in_array($application->status->value, ['draft', 'reverted'], true))
+                                @can('create-loan-applications')
+                                    <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#group-witnesses">Manage</a>
+                                @endcan
+                            @endif
+                        </td>
+                        <td><span class="badge {{ $application->status->value }}">{{ str_replace('_', ' ', $application->status->value) }}</span></td>
+                        <td>
+                            @if(in_array($application->status->value, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
+                                <div style="display:flex;align-items:start;gap:8px;flex-wrap:wrap;min-width:260px">
+                                    @can('approve-loan-applications')
+                                        <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">
+                                            @csrf
+                                            <input type="hidden" name="remarks" value="Approved from member profile">
+                                            <button class="btn btn-sm btn-primary" data-confirm="Approve this loan application? Compliance and witness requirements will be checked.">Approve</button>
+                                        </form>
+                                    @endcan
+                                    @can('reject-loan-applications')
+                                        <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}" style="display:flex;gap:6px;align-items:end">
+                                            @csrf
+                                            <label style="margin:0;min-width:165px"><small>Rejection reason</small><input name="remarks" minlength="5" required placeholder="Enter reason"></label>
+                                            <button class="btn btn-sm btn-danger" data-confirm="Reject this loan application?">Reject</button>
+                                        </form>
+                                    @endcan
+                                </div>
+                            @else
+                                <span class="muted">Decision unavailable</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="10" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan applications yet.</td></tr>
+                @endforelse
+            </tbody></table></div>
+        </div>
+
+        <br>
+        <div class="card">
+            <div class="card-head"><h2>Complete loan history / Historia ya Mikopo</h2><span>{{ $loans->count() }} loans</span></div>
+        </div>
+
+        @forelse($loans as $loan)
+            @php
+                $loanStatus = $loan->status->value;
+                $paidAmount = max(0, (float) $loan->total_repayment - (float) $loan->total_balance);
+                $progress = (float) $loan->total_repayment > 0 ? min(100, max(0, $paidAmount / (float) $loan->total_repayment * 100)) : 0;
+            @endphp
+            <div class="card" style="margin-top:20px;border-top:4px solid var(--green)">
+                <div class="card-head">
+                    <div><h2>@can('view-loans')<a class="table-link" href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a>@else{{ $loan->loan_number }}@endcan</h2><small>{{ $display($loan->product?->name) }} · {{ ucfirst($loan->loan_cycle ?? $loan->application?->application_type ?? 'main') }} loan cycle</small></div>
+                    <span class="badge {{ $loanStatus }}">{{ str_replace('_', ' ', $loanStatus) }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="stats" style="margin-bottom:20px">
+                        <div class="stat gold"><small>Principal</small><strong>{{ $money($loan->principal_amount) }}</strong></div>
+                        <div class="stat"><small>Total repayment</small><strong>{{ $money($loan->total_repayment) }}</strong></div>
+                        <div class="stat"><small>Amount paid</small><strong>{{ $money($paidAmount) }}</strong></div>
+                        <div class="stat"><small>Outstanding balance</small><strong>{{ $money($loan->total_balance) }}</strong><div class="progress"><span style="width:{{ $progress }}%"></span></div></div>
+                    </div>
+
+                    <h3 class="section-title">Loan information / Taarifa za Mkopo</h3>
+                    <table class="detail-table">
+                        <tbody>
+                            <tr><th>Project / business</th><td>{{ $display($loan->business_name ?? $loan->application?->business_summary) }}</td></tr>
+                            <tr><th>Loan purpose</th><td>{{ $display($loan->application?->loan_purpose) }}</td></tr>
+                            <tr><th>Interest rate</th><td>{{ filled($loan->interest_rate) ? number_format((float) $loan->interest_rate * 100, 2).'%' : '—' }}</td></tr>
+                            <tr><th>Disbursement date</th><td>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</td></tr>
+                            <tr><th>First payment date</th><td>{{ $loan->first_payment_date?->format('d M Y') ?? '—' }}</td></tr>
+                            <tr><th>Maturity date</th><td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td></tr>
+                            <tr><th>Adjusted principal</th><td class="money">{{ $money($loan->adjusted_principal_amount ?? $loan->principal_amount) }}</td></tr>
+                            <tr><th>Main loan with interest</th><td class="money">{{ $money($loan->total_repayment) }}</td></tr>
+                            <tr><th>Admission fee</th><td class="money">{{ $money($loan->admission_fee) }}</td></tr>
+                            <tr><th>Processing fee</th><td class="money">{{ $money($loan->processing_fee) }}</td></tr>
+                            <tr><th>Transaction charges</th><td class="money">{{ $money($loan->transaction_charges) }}</td></tr>
+                            <tr><th>Other charges</th><td class="money">{{ $money($loan->other_charges) }}</td></tr>
+                            <tr><th>Total fees and VAT</th><td class="money">{{ $money($loan->total_fees_and_vat) }}</td></tr>
+                            <tr><th>Increment amount</th><td class="money">{{ $money($loan->increment_amount) }}</td></tr>
+                            <tr><th>Refinancing amount</th><td class="money">{{ $money($loan->refinancing_amount) }}</td></tr>
+                            <tr><th>Weekly installment</th><td class="money">{{ $money($loan->weekly_installment ?: $loan->installment_amount) }}</td></tr>
+                            <tr><th>Total installments</th><td>{{ $loan->number_of_installments }}</td></tr>
+                            <tr><th>Principal balance</th><td class="money">{{ $money($loan->principal_balance) }}</td></tr>
+                            <tr><th>Interest balance</th><td class="money">{{ $money($loan->interest_balance) }}</td></tr>
+                            <tr><th>Applicant signature</th><td>{{ $loan->application?->applicant_signature_path ? 'Captured' : '—' }}</td></tr>
+                            <tr><th>Applicant thumbprint</th><td>{{ $loan->application?->applicant_thumbprint_path ? 'Captured' : '—' }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($loan->cycles->isNotEmpty())
+                <div class="card-head"><h3>Loan cycles / Awamu za Mkopo</h3></div>
+                @foreach($loan->cycles as $cycle)
+                    <div class="card-body" style="border-bottom:1px solid var(--line)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px"><strong>{{ ucfirst($cycle->cycle_type) }} · {{ $display($cycle->business_name, 'Unnamed project') }}</strong><span class="badge {{ $cycle->status }}">{{ $cycle->status }}</span></div>
+                        <table class="detail-table">
+                            <tbody>
+                                <tr><th>Principal</th><td class="money">{{ $money($cycle->principal_amount) }}</td></tr>
+                                <tr><th>Adjusted principal</th><td class="money">{{ $money($cycle->adjusted_principal_amount) }}</td></tr>
+                                <tr><th>Interest rate</th><td>{{ number_format((float) $cycle->interest_rate, 2) }}%</td></tr>
+                                <tr><th>Loan with interest</th><td class="money">{{ $money($cycle->total_with_interest) }}</td></tr>
+                                <tr><th>Disbursement date</th><td>{{ $cycle->disbursement_date?->format('d M Y') ?? '—' }}</td></tr>
+                                <tr><th>First payment date</th><td>{{ $cycle->first_payment_date?->format('d M Y') ?? '—' }}</td></tr>
+                                <tr><th>Admission fee</th><td class="money">{{ $money($cycle->admission_fee) }}</td></tr>
+                                <tr><th>Processing fee</th><td class="money">{{ $money($cycle->processing_fee) }}</td></tr>
+                                <tr><th>Transaction charges</th><td class="money">{{ $money($cycle->transaction_charges) }}</td></tr>
+                                <tr><th>Other charges</th><td class="money">{{ $money($cycle->other_charges) }}</td></tr>
+                                <tr><th>VAT</th><td class="money">{{ $money($cycle->vat_amount) }}</td></tr>
+                                <tr><th>Total fees and VAT</th><td class="money">{{ $money($cycle->total_fees_and_vat) }}</td></tr>
+                                <tr><th>Increment amount</th><td class="money">{{ $money($cycle->increment_amount) }}</td></tr>
+                                <tr><th>Refinancing amount</th><td class="money">{{ $money($cycle->refinancing_amount) }}</td></tr>
+                                <tr><th>Weekly installment</th><td class="money">{{ $money($cycle->weekly_installment) }}</td></tr>
+                                <tr><th>Total installments</th><td>{{ $cycle->total_installments }}</td></tr>
+                                <tr><th>Notes</th><td>{{ $display($cycle->notes) }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
+                @endif
+
+                <div class="card-head"><h3>Loan security / Kiasi cha Dhamana</h3><strong>{{ $money($loan->securityTransactions->sortByDesc('transaction_date')->first()?->balance) }}</strong></div>
+                <div class="table-wrap"><table><thead><tr><th>Date</th><th>Security amount</th><th>Withdrawal</th><th>Balance</th><th>Collector</th><th>Approved by</th></tr></thead><tbody>
+                    @forelse($loan->securityTransactions->sortByDesc('transaction_date') as $transaction)
+                        <tr><td>{{ $transaction->transaction_date?->format('d M Y') }}</td><td class="money">{{ $money($transaction->security_amount) }}</td><td class="money">{{ $money($transaction->withdrawal_amount) }}</td><td class="money">{{ $money($transaction->balance) }}</td><td>{{ $display($transaction->collectedBy?->name) }}</td><td>{{ $display($transaction->approvedBy?->name) }}</td></tr>
+                    @empty
+                        <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan-security transactions recorded.</td></tr>
+                    @endforelse
+                </tbody></table></div>
+
+                <div class="card-head"><h3>Installment collection / Taarifa za Marejesho</h3></div>
+                <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total due</th><th>Paid</th><th>Interest exemption</th><th>Outstanding</th><th>Remarks / Collector</th><th>Status</th><th>Repayment</th></tr></thead><tbody>
+                    @if($loan->installments->isNotEmpty())
+                        @foreach($loan->installments->sortBy('installment_number') as $installment)
+                            @php($installmentBalance = max(0, (float) $installment->total_due - (float) $installment->total_paid - (float) $installment->interest_exemption))
+                            <tr>
+                                <td>{{ $installment->installment_number }}</td><td>{{ $installment->due_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_due) }}</td><td class="money">{{ $money($installment->interest_due) }}</td><td class="money">{{ $money($installment->total_due) }}</td><td class="money">{{ $money($installment->total_paid) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installmentBalance) }}</td><td>—</td><td><span class="badge {{ $installment->status }}">{{ str_replace('_', ' ', $installment->status) }}</span></td>
+                                <td>
+                                    @if(in_array($loan->status->value, ['active', 'overdue']) && $installmentBalance > 0)
+                                        @can('collect-payments')
+                                            <form method="POST" action="{{ route('admin.payments.store', $loan) }}" class="repayment-form">
+                                                @csrf
+                                                <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
+                                                <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
+                                                <label style="margin:0;min-width:100px"><small>Method</small><select name="payment_method" data-select2="false"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank</option></select></label>
+                                                <button class="btn btn-sm btn-primary" data-confirm="Thibitisha malipo ya awamu hii?">Thibitisha marejesho</button>
+                                            </form>
+                                        @else
+                                            <span class="muted">No collection permission</span>
+                                        @endcan
+                                    @else
+                                        <span class="muted">Completed</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @elseif($loan->installmentRecords->isNotEmpty())
+                        @foreach($loan->installmentRecords->sortBy('installment_number') as $installment)
+                            <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->payment_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_amount) }}</td><td class="money">{{ $money($installment->interest_amount) }}</td><td class="money">{{ $money($installment->total_amount) }}</td><td class="money">{{ $installment->is_paid ? $money($installment->total_amount) : $money(0) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>{{ $display($installment->remarks ?? $installment->collector?->name) }}</td><td><span class="badge {{ $installment->status_badge }}">{{ $installment->status_badge }}</span></td><td><a class="btn btn-sm btn-secondary" href="{{ route('admin.loans.show', $loan) }}">Open loan</a></td></tr>
+                        @endforeach
+                    @else
+                        <tr><td colspan="11" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>Repayment schedule has not been generated.</td></tr>
+                    @endif
+                </tbody></table></div>
+
+                <div class="card-head"><h3>Payments received</h3><span>{{ $loan->payments->count() }}</span></div>
+                <div class="table-wrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Reference</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+                    @forelse($loan->payments->sortByDesc('paid_at') as $payment)
+                        <tr><td>{{ $payment->payment_number }}</td><td>{{ $payment->paid_at?->format('d M Y H:i') }}</td><td>{{ str_replace('_', ' ', $payment->payment_method) }}</td><td>{{ $display($payment->reference_number) }}</td><td class="money">{{ $money($payment->amount) }}</td><td><span class="badge {{ $payment->status }}">{{ $payment->status }}</span></td></tr>
+                    @empty
+                        <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No payments received.</td></tr>
+                    @endforelse
+                </tbody></table></div>
+
+                @if($loan->application?->guarantors?->isNotEmpty())
+                <div class="card-head"><h3>Guarantors / Wadhamini</h3></div>
+                <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Relationship</th><th>Phone</th><th>National ID</th><th>Address</th><th>Signature</th><th>Thumbprint</th><th>Joint photo</th></tr></thead><tbody>
+                    @foreach($loan->application->guarantors as $guarantor)
+                        <tr><td>{{ $guarantor->name }}</td><td>{{ $display($guarantor->guarantor_type) }}</td><td>{{ $display($guarantor->relationship) }}</td><td>{{ $display($guarantor->phone) }}</td><td>{{ $display($guarantor->national_id) }}</td><td>{{ $display(collect([$guarantor->street, $guarantor->ward, $guarantor->district, $guarantor->region])->filter()->implode(', ')) }}</td><td>{{ $guarantor->signature_path ? 'Captured' : '—' }}</td><td>{{ $guarantor->thumbprint_path ? 'Captured' : '—' }}</td><td>{{ $guarantor->joint_photo_path ? 'Captured' : '—' }}</td></tr>
+                    @endforeach
+                </tbody></table></div>
+                @endif
+
+                @if($loan->settlement || $loan->clearance)
+                <div class="card-head"><h3>Adjustment and loan clearance</h3></div>
+                <div class="card-body">
+                    <table class="detail-table">
+                        <tbody>
+                            <tr><th>Loan outstanding at clearance</th><td class="money">{{ $money($loan->clearance?->loan_outstanding_amount) }}</td></tr>
+                            <tr><th>Security deduction</th><td class="money">{{ $money($loan->clearance?->security_offset) }}</td></tr>
+                            <tr><th>Cash collection</th><td class="money">{{ $money($loan->clearance?->cash_collection) }}</td></tr>
+                            <tr><th>Security return</th><td class="money">{{ $money($loan->clearance?->security_refund) }}</td></tr>
+                            <tr><th>Clearance status</th><td>{{ $display($loan->clearance?->status) }}</td></tr>
+                            <tr><th>Authorized date</th><td>{{ $loan->clearance?->authorized_at?->format('d M Y H:i') ?? '—' }}</td></tr>
+                            <tr><th>Comments</th><td>{{ $display($loan->clearance?->comments) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+            </div>
+        @empty
+            <div class="card" style="margin-top:20px"><div class="card-body empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loans found for this member.</div></div>
+        @endforelse
     </div>
 
     <div>
@@ -300,228 +522,5 @@
         @endcan
     </div>
 </div>
-
-<br>
-<div class="card">
-    <div class="card-head"><h2>Loan applications</h2><span>{{ $applications->count() }} applications</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Application</th><th>Type</th><th>Product</th><th>Requested</th><th>Duration</th><th>Purpose</th><th>Guarantors</th><th>Group witnesses</th><th>Status</th><th>Decision</th></tr></thead><tbody>
-        @forelse($applications as $application)
-            <tr>
-                <td>@can('view-loan-applications')<a class="table-link" href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a>@else{{ $application->application_number }}@endcan</td>
-                <td>{{ ucfirst($application->application_type) }}</td>
-                <td>{{ $display($application->product?->name) }}</td>
-                <td class="money">{{ $money($application->requested_amount) }}</td>
-                <td>{{ $application->duration_months }} months</td>
-                <td>{{ $display($application->loan_purpose) }}</td>
-                <td>
-                    @forelse($application->guarantors as $guarantor)<div>{{ $guarantor->name }} <small>({{ $display($guarantor->relationship, 'relationship not recorded') }})</small></div>@empty<span class="muted">None</span>@endforelse
-                    @if(in_array($application->status->value, ['draft', 'reverted'], true))
-                        @can('create-loan-applications')
-                            <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#guarantors">Manage</a>
-                        @endcan
-                    @endif
-                </td>
-                <td>
-                    @forelse($application->groupWitnesses as $witness)<div>{{ $witness->member->first_name }} {{ $witness->member->last_name }}</div>@empty<span class="muted">None</span>@endforelse
-                    @if(in_array($application->status->value, ['draft', 'reverted'], true))
-                        @can('create-loan-applications')
-                            <a class="btn btn-sm btn-secondary" style="margin-top:5px" href="{{ route('admin.loan-applications.edit', $application) }}#group-witnesses">Manage</a>
-                        @endcan
-                    @endif
-                </td>
-                <td><span class="badge {{ $application->status->value }}">{{ str_replace('_', ' ', $application->status->value) }}</span></td>
-                <td>
-                    @if(in_array($application->status->value, ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended']))
-                        <div style="display:flex;align-items:start;gap:8px;flex-wrap:wrap;min-width:260px">
-                            @can('approve-loan-applications')
-                                <form method="POST" action="{{ route('admin.loan-applications.approve', $application) }}">
-                                    @csrf
-                                    <input type="hidden" name="remarks" value="Approved from member profile">
-                                    <button class="btn btn-sm btn-primary" data-confirm="Approve this loan application? Compliance and witness requirements will be checked.">Approve</button>
-                                </form>
-                            @endcan
-                            @can('reject-loan-applications')
-                                <form method="POST" action="{{ route('admin.loan-applications.reject', $application) }}" style="display:flex;gap:6px;align-items:end">
-                                    @csrf
-                                    <label style="margin:0;min-width:165px"><small>Rejection reason</small><input name="remarks" minlength="5" required placeholder="Enter reason"></label>
-                                    <button class="btn btn-sm btn-danger" data-confirm="Reject this loan application?">Reject</button>
-                                </form>
-                            @endcan
-                        </div>
-                    @else
-                        <span class="muted">Decision unavailable</span>
-                    @endif
-                </td>
-            </tr>
-        @empty
-            <tr><td colspan="10" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan applications yet.</td></tr>
-        @endforelse
-    </tbody></table></div>
-</div>
-
-<br>
-<div class="card">
-    <div class="card-head"><h2>Complete loan history / Historia ya Mikopo</h2><span>{{ $loans->count() }} loans</span></div>
-</div>
-
-@forelse($loans as $loan)
-    @php
-        $loanStatus = $loan->status->value;
-        $paidAmount = max(0, (float) $loan->total_repayment - (float) $loan->total_balance);
-        $progress = (float) $loan->total_repayment > 0 ? min(100, max(0, $paidAmount / (float) $loan->total_repayment * 100)) : 0;
-    @endphp
-    <div class="card" style="margin-top:20px;border-top:4px solid var(--green)">
-        <div class="card-head">
-            <div><h2>@can('view-loans')<a class="table-link" href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a>@else{{ $loan->loan_number }}@endcan</h2><small>{{ $display($loan->product?->name) }} · {{ ucfirst($loan->loan_cycle ?? $loan->application?->application_type ?? 'main') }} loan cycle</small></div>
-            <span class="badge {{ $loanStatus }}">{{ str_replace('_', ' ', $loanStatus) }}</span>
-        </div>
-        <div class="card-body">
-            <div class="stats" style="margin-bottom:20px">
-                <div class="stat gold"><small>Principal</small><strong>{{ $money($loan->principal_amount) }}</strong></div>
-                <div class="stat"><small>Total repayment</small><strong>{{ $money($loan->total_repayment) }}</strong></div>
-                <div class="stat"><small>Amount paid</small><strong>{{ $money($paidAmount) }}</strong></div>
-                <div class="stat"><small>Outstanding balance</small><strong>{{ $money($loan->total_balance) }}</strong><div class="progress"><span style="width:{{ $progress }}%"></span></div></div>
-            </div>
-
-            <h3 class="section-title">Loan information / Taarifa za Mkopo</h3>
-            <table class="detail-table">
-                <tbody>
-                    <tr><th>Project / business</th><td>{{ $display($loan->business_name ?? $loan->application?->business_summary) }}</td></tr>
-                    <tr><th>Loan purpose</th><td>{{ $display($loan->application?->loan_purpose) }}</td></tr>
-                    <tr><th>Interest rate</th><td>{{ filled($loan->interest_rate) ? number_format((float) $loan->interest_rate * 100, 2).'%' : '—' }}</td></tr>
-                    <tr><th>Disbursement date</th><td>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</td></tr>
-                    <tr><th>First payment date</th><td>{{ $loan->first_payment_date?->format('d M Y') ?? '—' }}</td></tr>
-                    <tr><th>Maturity date</th><td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td></tr>
-                    <tr><th>Adjusted principal</th><td class="money">{{ $money($loan->adjusted_principal_amount ?? $loan->principal_amount) }}</td></tr>
-                    <tr><th>Main loan with interest</th><td class="money">{{ $money($loan->total_repayment) }}</td></tr>
-                    <tr><th>Admission fee</th><td class="money">{{ $money($loan->admission_fee) }}</td></tr>
-                    <tr><th>Processing fee</th><td class="money">{{ $money($loan->processing_fee) }}</td></tr>
-                    <tr><th>Transaction charges</th><td class="money">{{ $money($loan->transaction_charges) }}</td></tr>
-                    <tr><th>Other charges</th><td class="money">{{ $money($loan->other_charges) }}</td></tr>
-                    <tr><th>Total fees and VAT</th><td class="money">{{ $money($loan->total_fees_and_vat) }}</td></tr>
-                    <tr><th>Increment amount</th><td class="money">{{ $money($loan->increment_amount) }}</td></tr>
-                    <tr><th>Refinancing amount</th><td class="money">{{ $money($loan->refinancing_amount) }}</td></tr>
-                    <tr><th>Weekly installment</th><td class="money">{{ $money($loan->weekly_installment ?: $loan->installment_amount) }}</td></tr>
-                    <tr><th>Total installments</th><td>{{ $loan->number_of_installments }}</td></tr>
-                    <tr><th>Principal balance</th><td class="money">{{ $money($loan->principal_balance) }}</td></tr>
-                    <tr><th>Interest balance</th><td class="money">{{ $money($loan->interest_balance) }}</td></tr>
-                    <tr><th>Applicant signature</th><td>{{ $loan->application?->applicant_signature_path ? 'Captured' : '—' }}</td></tr>
-                    <tr><th>Applicant thumbprint</th><td>{{ $loan->application?->applicant_thumbprint_path ? 'Captured' : '—' }}</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        @if($loan->cycles->isNotEmpty())
-        <div class="card-head"><h3>Loan cycles / Awamu za Mkopo</h3></div>
-        @foreach($loan->cycles as $cycle)
-            <div class="card-body" style="border-bottom:1px solid var(--line)">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px"><strong>{{ ucfirst($cycle->cycle_type) }} · {{ $display($cycle->business_name, 'Unnamed project') }}</strong><span class="badge {{ $cycle->status }}">{{ $cycle->status }}</span></div>
-                <table class="detail-table">
-                    <tbody>
-                        <tr><th>Principal</th><td class="money">{{ $money($cycle->principal_amount) }}</td></tr>
-                        <tr><th>Adjusted principal</th><td class="money">{{ $money($cycle->adjusted_principal_amount) }}</td></tr>
-                        <tr><th>Interest rate</th><td>{{ number_format((float) $cycle->interest_rate, 2) }}%</td></tr>
-                        <tr><th>Loan with interest</th><td class="money">{{ $money($cycle->total_with_interest) }}</td></tr>
-                        <tr><th>Disbursement date</th><td>{{ $cycle->disbursement_date?->format('d M Y') ?? '—' }}</td></tr>
-                        <tr><th>First payment date</th><td>{{ $cycle->first_payment_date?->format('d M Y') ?? '—' }}</td></tr>
-                        <tr><th>Admission fee</th><td class="money">{{ $money($cycle->admission_fee) }}</td></tr>
-                        <tr><th>Processing fee</th><td class="money">{{ $money($cycle->processing_fee) }}</td></tr>
-                        <tr><th>Transaction charges</th><td class="money">{{ $money($cycle->transaction_charges) }}</td></tr>
-                        <tr><th>Other charges</th><td class="money">{{ $money($cycle->other_charges) }}</td></tr>
-                        <tr><th>VAT</th><td class="money">{{ $money($cycle->vat_amount) }}</td></tr>
-                        <tr><th>Total fees and VAT</th><td class="money">{{ $money($cycle->total_fees_and_vat) }}</td></tr>
-                        <tr><th>Increment amount</th><td class="money">{{ $money($cycle->increment_amount) }}</td></tr>
-                        <tr><th>Refinancing amount</th><td class="money">{{ $money($cycle->refinancing_amount) }}</td></tr>
-                        <tr><th>Weekly installment</th><td class="money">{{ $money($cycle->weekly_installment) }}</td></tr>
-                        <tr><th>Total installments</th><td>{{ $cycle->total_installments }}</td></tr>
-                        <tr><th>Notes</th><td>{{ $display($cycle->notes) }}</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        @endforeach
-        @endif
-
-        <div class="card-head"><h3>Loan security / Kiasi cha Dhamana</h3><strong>{{ $money($loan->securityTransactions->sortByDesc('transaction_date')->first()?->balance) }}</strong></div>
-        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Security amount</th><th>Withdrawal</th><th>Balance</th><th>Collector</th><th>Approved by</th></tr></thead><tbody>
-            @forelse($loan->securityTransactions->sortByDesc('transaction_date') as $transaction)
-                <tr><td>{{ $transaction->transaction_date?->format('d M Y') }}</td><td class="money">{{ $money($transaction->security_amount) }}</td><td class="money">{{ $money($transaction->withdrawal_amount) }}</td><td class="money">{{ $money($transaction->balance) }}</td><td>{{ $display($transaction->collectedBy?->name) }}</td><td>{{ $display($transaction->approvedBy?->name) }}</td></tr>
-            @empty
-                <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loan-security transactions recorded.</td></tr>
-            @endforelse
-        </tbody></table></div>
-
-        <div class="card-head"><h3>Installment collection / Taarifa za Marejesho</h3></div>
-        <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total due</th><th>Paid</th><th>Interest exemption</th><th>Outstanding</th><th>Remarks / Collector</th><th>Status</th><th>Repayment</th></tr></thead><tbody>
-            @if($loan->installments->isNotEmpty())
-                @foreach($loan->installments->sortBy('installment_number') as $installment)
-                    @php($installmentBalance = max(0, (float) $installment->total_due - (float) $installment->total_paid - (float) $installment->interest_exemption))
-                    <tr>
-                        <td>{{ $installment->installment_number }}</td><td>{{ $installment->due_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_due) }}</td><td class="money">{{ $money($installment->interest_due) }}</td><td class="money">{{ $money($installment->total_due) }}</td><td class="money">{{ $money($installment->total_paid) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installmentBalance) }}</td><td>—</td><td><span class="badge {{ $installment->status }}">{{ str_replace('_', ' ', $installment->status) }}</span></td>
-                        <td>
-                            @if(in_array($loan->status->value, ['active', 'overdue']) && $installmentBalance > 0)
-                                @can('collect-payments')
-                                    <form method="POST" action="{{ route('admin.payments.store', $loan) }}" class="repayment-form">
-                                        @csrf
-                                        <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
-                                        <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
-                                        <label style="margin:0;min-width:100px"><small>Method</small><select name="payment_method" data-select2="false"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank</option></select></label>
-                                        <button class="btn btn-sm btn-primary" data-confirm="Thibitisha malipo ya awamu hii?">Thibitisha marejesho</button>
-                                    </form>
-                                @else
-                                    <span class="muted">No collection permission</span>
-                                @endcan
-                            @else
-                                <span class="muted">Completed</span>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            @elseif($loan->installmentRecords->isNotEmpty())
-                @foreach($loan->installmentRecords->sortBy('installment_number') as $installment)
-                    <tr><td>{{ $installment->installment_number }}</td><td>{{ $installment->payment_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_amount) }}</td><td class="money">{{ $money($installment->interest_amount) }}</td><td class="money">{{ $money($installment->total_amount) }}</td><td class="money">{{ $installment->is_paid ? $money($installment->total_amount) : $money(0) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installment->outstanding_balance) }}</td><td>{{ $display($installment->remarks ?? $installment->collector?->name) }}</td><td><span class="badge {{ $installment->status_badge }}">{{ $installment->status_badge }}</span></td><td><a class="btn btn-sm btn-secondary" href="{{ route('admin.loans.show', $loan) }}">Open loan</a></td></tr>
-                @endforeach
-            @else
-                <tr><td colspan="11" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>Repayment schedule has not been generated.</td></tr>
-            @endif
-        </tbody></table></div>
-
-        <div class="card-head"><h3>Payments received</h3><span>{{ $loan->payments->count() }}</span></div>
-        <div class="table-wrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Reference</th><th>Amount</th><th>Status</th></tr></thead><tbody>
-            @forelse($loan->payments->sortByDesc('paid_at') as $payment)
-                <tr><td>{{ $payment->payment_number }}</td><td>{{ $payment->paid_at?->format('d M Y H:i') }}</td><td>{{ str_replace('_', ' ', $payment->payment_method) }}</td><td>{{ $display($payment->reference_number) }}</td><td class="money">{{ $money($payment->amount) }}</td><td><span class="badge {{ $payment->status }}">{{ $payment->status }}</span></td></tr>
-            @empty
-                <tr><td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No payments received.</td></tr>
-            @endforelse
-        </tbody></table></div>
-
-        @if($loan->application?->guarantors?->isNotEmpty())
-        <div class="card-head"><h3>Guarantors / Wadhamini</h3></div>
-        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Relationship</th><th>Phone</th><th>National ID</th><th>Address</th><th>Signature</th><th>Thumbprint</th><th>Joint photo</th></tr></thead><tbody>
-            @foreach($loan->application->guarantors as $guarantor)
-                <tr><td>{{ $guarantor->name }}</td><td>{{ $display($guarantor->guarantor_type) }}</td><td>{{ $display($guarantor->relationship) }}</td><td>{{ $display($guarantor->phone) }}</td><td>{{ $display($guarantor->national_id) }}</td><td>{{ $display(collect([$guarantor->street, $guarantor->ward, $guarantor->district, $guarantor->region])->filter()->implode(', ')) }}</td><td>{{ $guarantor->signature_path ? 'Captured' : '—' }}</td><td>{{ $guarantor->thumbprint_path ? 'Captured' : '—' }}</td><td>{{ $guarantor->joint_photo_path ? 'Captured' : '—' }}</td></tr>
-            @endforeach
-        </tbody></table></div>
-        @endif
-
-        @if($loan->settlement || $loan->clearance)
-        <div class="card-head"><h3>Adjustment and loan clearance</h3></div>
-        <div class="card-body">
-            <table class="detail-table">
-                <tbody>
-                    <tr><th>Loan outstanding at clearance</th><td class="money">{{ $money($loan->clearance?->loan_outstanding_amount) }}</td></tr>
-                    <tr><th>Security deduction</th><td class="money">{{ $money($loan->clearance?->security_offset) }}</td></tr>
-                    <tr><th>Cash collection</th><td class="money">{{ $money($loan->clearance?->cash_collection) }}</td></tr>
-                    <tr><th>Security return</th><td class="money">{{ $money($loan->clearance?->security_refund) }}</td></tr>
-                    <tr><th>Clearance status</th><td>{{ $display($loan->clearance?->status) }}</td></tr>
-                    <tr><th>Authorized date</th><td>{{ $loan->clearance?->authorized_at?->format('d M Y H:i') ?? '—' }}</td></tr>
-                    <tr><th>Comments</th><td>{{ $display($loan->clearance?->comments) }}</td></tr>
-                </tbody>
-            </table>
-        </div>
-        @endif
-    </div>
-@empty
-    <div class="card" style="margin-top:20px"><div class="card-body empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>No loans found for this member.</div></div>
-@endforelse
 
 @endsection

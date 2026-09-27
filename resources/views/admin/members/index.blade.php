@@ -72,17 +72,23 @@
                             <td>
                                 <div class="table-actions">
                                     <a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.members.show', $member) }}">{{ __('View') }}</a>
+                                        href="{{ route('admin.members.show', $member) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a>
                                     @can('edit-members')
                                         <a class="btn btn-sm btn-primary"
-                                            href="{{ route('admin.members.edit', $member) }}">{{ __('Edit') }}</a>
+                                            href="{{ route('admin.members.edit', $member) }}" title="{{ __('Edit') }}"
+                                            aria-label="{{ __('Edit') }}"><span class="ph ph-pencil-simple"
+                                                aria-hidden="true"></span></a>
                                     @endcan
                                     @can('delete-members')
                                         <form method="POST" action="{{ route('admin.members.destroy', $member) }}">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-danger"
+                                            <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"
+                                                aria-label="{{ __('Delete') }}"
                                                 data-confirm="{{ __('Delete this member? Members with loan history cannot be deleted. Choosing \'Delete forever\' permanently deletes the member and ALL linked data.') }}"
-                                                data-force-text="{{ __('Delete forever') }}" data-trash-text="{{ __('Move to trash') }}">{{ __('Delete') }}</button>
+                                                data-force-text="{{ __('Delete forever') }}" data-trash-text="{{ __('Move to trash') }}"><span
+                                                    class="ph ph-trash" aria-hidden="true"></span></button>
                                         </form>
                                     @endcan
                                 </div>

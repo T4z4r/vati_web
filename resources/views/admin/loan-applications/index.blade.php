@@ -79,19 +79,25 @@
                             <td>
                                 <div class="table-actions">
                                     <a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.loan-applications.show', $application) }}">{{ __('View') }}</a>
+                                        href="{{ route('admin.loan-applications.show', $application) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a>
                                     @can('create-loan-applications')
                                         @if (in_array($status, ['draft', 'submitted', 'reverted'], true))
                                             <a class="btn btn-sm btn-primary"
-                                                href="{{ route('admin.loan-applications.edit', $application) }}">{{ __('Edit') }}</a>
+                                                href="{{ route('admin.loan-applications.edit', $application) }}" title="{{ __('Edit') }}"
+                                                aria-label="{{ __('Edit') }}"><span class="ph ph-pencil-simple"
+                                                    aria-hidden="true"></span></a>
                                         @endif
                                         @if (in_array($status, ['draft', 'submitted', 'reverted', 'rejected', 'cancelled'], true) && !$application->loan)
                                             <form method="POST"
                                                 action="{{ route('admin.loan-applications.destroy', $application) }}">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-danger"
+                                                <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"
+                                                    aria-label="{{ __('Delete') }}"
                                                     data-confirm="{{ __('Delete this loan application?') }}"
-                                                    data-force-text="{{ __('Delete forever') }}">{{ __('Delete') }}</button>
+                                                    data-force-text="{{ __('Delete forever') }}"><span
+                                                        class="ph ph-trash" aria-hidden="true"></span></button>
                                             </form>
                                         @endif
                                     @endcan

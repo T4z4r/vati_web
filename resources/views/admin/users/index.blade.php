@@ -43,14 +43,20 @@
                             <td>
                                 <div class="table-actions">
                                     <a class="btn btn-sm btn-secondary"
-                                        href="{{ route('admin.users.show', $user) }}">{{ __('View') }}</a>
+                                        href="{{ route('admin.users.show', $user) }}" title="{{ __('View') }}"
+                                        aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                            aria-hidden="true"></span></a>
                                     <a class="btn btn-sm btn-primary"
-                                        href="{{ route('admin.users.edit', $user) }}">{{ __('Edit') }}</a>
+                                        href="{{ route('admin.users.edit', $user) }}" title="{{ __('Edit') }}"
+                                        aria-label="{{ __('Edit') }}"><span class="ph ph-pencil-simple"
+                                            aria-hidden="true"></span></a>
                                     @unless (auth()->id() === $user->id)
                                         <form method="POST" action="{{ route('admin.users.destroy', $user) }}">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-danger"
-                                                data-confirm="{{ __('Delete this staff account?') }}">{{ __('Delete') }}</button>
+                                            <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"
+                                                aria-label="{{ __('Delete') }}"
+                                                data-confirm="{{ __('Delete this staff account?') }}"><span
+                                                    class="ph ph-trash" aria-hidden="true"></span></button>
                                         </form>
                                     @endunless
                                 </div>
