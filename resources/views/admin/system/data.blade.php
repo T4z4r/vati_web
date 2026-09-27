@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', __('Data Management'))
 @section('content')
-<div class="page-head card">
+<div class="page-head">
     <div>
         <p class="eyebrow">{{ __('SYSTEM') }}</p>
         <h1>{{ __('Data Management') }}</h1>

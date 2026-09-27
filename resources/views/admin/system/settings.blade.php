@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', __('System Settings'))
 @section('content')
-<div class="page-head card">
+<div class="page-head">
     <div>
         <p class="eyebrow">{{ __('SYSTEM') }}</p>
         <h1>{{ __('System Settings') }}</h1>

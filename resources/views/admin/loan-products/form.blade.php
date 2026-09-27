@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', $product->exists ? 'Edit Loan Product' : 'New Loan Product')
 @section('content')
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('CREDIT CONFIGURATION') }}</p>
             <h1>{{ $product->exists ? __('Edit') : __('Create') }} {{ __('loan product') }}</h1>

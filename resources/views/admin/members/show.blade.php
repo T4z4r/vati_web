@@ -10,7 +10,7 @@
     $money = fn ($value) => 'TZS '.number_format((float) ($value ?? 0), 2);
 @endphp
 
-<div class="page-head card">
+<div class="page-head">
     <div>
         <p class="eyebrow">{{ $member->membership_number }}</p>
         <h1>{{ $displayName }}</h1>

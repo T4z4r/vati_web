@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Staff Accounts')
 @section('content')
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('ACCESS CONTROL') }}</p>
             <h1>{{ __('Staff accounts') }}</h1>

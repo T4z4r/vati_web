@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Loan Products')
 @section('content')
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('CREDIT CONFIGURATION') }}</p>
             <h1>{{ __('Loan products') }}</h1>

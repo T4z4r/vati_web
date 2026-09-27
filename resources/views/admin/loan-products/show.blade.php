@@ -12,7 +12,7 @@
         $openCount = $applications->filter(fn ($application) => in_array($application->status->value ?? $application->status, ['draft', 'submitted', 'reverted', 'lo_review', 'abm_review', 'bm_review', 'credit_review', 'recommended'], true))->count();
     @endphp
 
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('CREDIT CONFIGURATION') }} / {{ $product->code }}</p>
             <h1>{{ $product->name }}</h1>

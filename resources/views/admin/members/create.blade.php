@@ -98,7 +98,7 @@
             }
         }
     @endphp
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ $editing ? $member->membership_number : 'NEW MEMBER' }}</p>
             <h1>{{ $editing ? 'Edit member profile' : 'Register a VATI member' }}</h1>

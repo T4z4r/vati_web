@@ -497,19 +497,6 @@ body.sidebar-collapsed .main-area {
     color: var(--muted);
     font-size: 12px;
 }
-.page-head.card {
-    padding: 22px 24px;
-    align-items: center;
-    flex-wrap: wrap;
-    row-gap: 14px;
-}
-.page-head.card > *:first-child {
-    flex: 1 1 300px;
-    min-width: 0;
-}
-.page-head.card p {
-    max-width: 80ch;
-}
 .head-actions {
     display: flex;
     gap: 9px;
@@ -519,15 +506,6 @@ body.sidebar-collapsed .main-area {
 .head-actions form,
 .head-actions .btn {
     flex: 0 0 auto;
-}
-.page-head.card .head-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    margin-left: auto;
-}
-.page-head.card > .btn,
-.page-head.card > button {
-    margin-left: auto;
 }
 .btn {
     border: 0;
@@ -2399,16 +2377,9 @@ body.auth-page .auth-form {
     .detail-grid {
         grid-template-columns: 1fr !important;
     }
-    .page-head,
-    .page-head.card {
+    .page-head {
         align-items: flex-start;
         flex-direction: column;
-    }
-    .page-head.card {
-        padding: 16px 18px;
-    }
-    .page-head.card .head-actions {
-        margin-left: 0;
     }
     .page-head h1 {
         font-size: 20px;

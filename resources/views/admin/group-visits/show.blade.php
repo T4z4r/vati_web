@@ -12,7 +12,7 @@
         $visitLocation = $visit->location ?: $group->location;
     @endphp
 
-    <div class="page-head card">
+    <div class="page-head">
         <div style="display:flex;align-items:center;gap:16px">
             <span class="visit-hero-icon ph ph-map-pin" aria-hidden="true"></span>
             <div>

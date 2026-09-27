@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Member Groups')
 @section('content')
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('GROUP LENDING') }}</p>
             <h1>{{ __('Member groups') }}</h1>

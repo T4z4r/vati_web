@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', __('My Account'))
 @section('content')
-    <div class="page-head card">
+    <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('MY ACCOUNT') }}</p>
             <h1>{{ $user->name }}</h1>
