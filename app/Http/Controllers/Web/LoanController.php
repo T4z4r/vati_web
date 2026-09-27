@@ -37,12 +37,32 @@ class LoanController extends Controller
             'loans' => $loans,
             'statusTabs' => $this->statusTabs($request),
             'activeStatus' => $this->activeStatus($request) ?? '',
+            'stats' => $this->listingStats($request),
         ]);
+    }
+
+    private function listingStats(Request $request): array
+    {
+        $query = $this->baseQuery($request);
+        $disbursed = (float) ((clone $query)->toBase()->sum('principal_amount') ?? 0);
+        $balance = (float) ((clone $query)->toBase()->sum('principal_balance') ?? 0);
+
+        return [
+            'total' => (clone $query)->toBase()->count(),
+            'disbursed' => $disbursed,
+            'outstanding' => (float) ((clone $query)->toBase()->sum('total_balance') ?? 0),
+            'repaidShare' => $disbursed > 0 ? round(($disbursed - $balance) / $disbursed * 100, 1) : 0.0,
+        ];
     }
 
     private function filteredQuery(Request $request, bool $applyStatus = true)
     {
-        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+        return $this->baseQuery($request)->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    private function baseQuery(Request $request)
+    {
+        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id));
     }
 
     private function activeStatus(Request $request): ?string

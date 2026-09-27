@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\DB;
 
 class LoanApplicationController extends Controller
 {
+    private const REVIEW_STATUSES = ['submitted', 'lo_review', 'abm_review', 'bm_review', 'credit_review'];
+
     private const STATUS_TABS = [
         'draft' => 'Draft',
         'submitted' => 'Submitted',
@@ -49,12 +51,31 @@ class LoanApplicationController extends Controller
             'applications' => $applications,
             'statusTabs' => $this->statusTabs($request),
             'activeStatus' => $activeStatus ?? '',
+            'stats' => $this->listingStats($request),
         ]);
+    }
+
+    private function listingStats(Request $request): array
+    {
+        $query = $this->baseQuery($request);
+        $total = (clone $query)->toBase()->count();
+
+        return [
+            'total' => $total,
+            'inReview' => (clone $query)->whereIn('status', self::REVIEW_STATUSES)->toBase()->count(),
+            'approved' => (clone $query)->where('status', ApplicationStatus::APPROVED->value)->toBase()->count(),
+            'requested' => (float) ((clone $query)->toBase()->sum('requested_amount') ?? 0),
+        ];
     }
 
     private function filteredQuery(Request $request, bool $applyStatus = true)
     {
-        return LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+        return $this->baseQuery($request)->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('application_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+    }
+
+    private function baseQuery(Request $request)
+    {
+        return LoanApplication::with(['member', 'product', 'group', 'loan'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id));
     }
 
     private function activeStatus(Request $request): ?string

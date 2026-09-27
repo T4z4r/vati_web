@@ -13,6 +13,24 @@
             <a class="btn btn-secondary" href="{{ route('admin.group-visits.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
         </div>
     </div>
+    <div class="stats">
+        <div class="stat">
+            <span class="ph ph-map-pin stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Visits') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ __('Matching the current filters') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-calendar-blank stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Visits this month') }}</small><strong>{{ number_format($stats['thisMonth']) }}</strong><em>{{ __('Since the 1st') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-clock stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Visits today') }}</small><strong>{{ number_format($stats['today']) }}</strong><em>{{ now()->format('d M Y') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-users-four stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Groups visited') }}</small><strong>{{ number_format($stats['groups']) }}</strong><em>{{ __('Distinct groups') }}</em>
+        </div>
+    </div>
     <form class="filters">
         <select name="group_id">
             <option value="">{{ __('All groups') }}</option>

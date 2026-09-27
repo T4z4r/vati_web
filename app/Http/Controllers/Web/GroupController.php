@@ -19,7 +19,23 @@ class GroupController extends Controller
     {
         $groups = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
 
-        return view('admin.groups.index', compact('groups'));
+        return view('admin.groups.index', ['groups' => $groups, 'stats' => $this->listingStats($request)]);
+    }
+
+    private function listingStats(Request $request): array
+    {
+        $query = $this->filteredQuery($request);
+        $groups = (clone $query)->toBase()->get();
+        $total = $groups->count();
+        $active = (clone $query)->toBase()->where('status', true)->count();
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'activeShare' => $total > 0 ? round($active / $total * 100, 1) : 0.0,
+            'members' => (int) $groups->sum('members_count'),
+            'loans' => (int) $groups->sum('loans_count'),
+        ];
     }
 
     private function filteredQuery(Request $request)

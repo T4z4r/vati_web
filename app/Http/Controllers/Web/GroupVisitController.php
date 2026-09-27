@@ -16,7 +16,20 @@ class GroupVisitController extends Controller
 
         $groups = MemberGroup::where('status', true)->orderBy('group_name')->get();
 
-        return view('admin.group-visits.index', compact('visits', 'groups'));
+        return view('admin.group-visits.index', ['visits' => $visits, 'groups' => $groups, 'stats' => $this->listingStats($request)]);
+    }
+
+    private function listingStats(Request $request): array
+    {
+        $query = $this->filteredQuery($request);
+        $total = (clone $query)->toBase()->count();
+
+        return [
+            'total' => $total,
+            'thisMonth' => (clone $query)->where('visit_date', '>=', now()->startOfMonth())->toBase()->count(),
+            'today' => (clone $query)->whereDate('visit_date', now()->toDateString())->toBase()->count(),
+            'groups' => (clone $query)->distinct()->toBase()->count('group_id'),
+        ];
     }
 
     private function filteredQuery(Request $request)

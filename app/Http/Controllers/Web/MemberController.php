@@ -26,7 +26,26 @@ class MemberController extends Controller
     {
         $members = $this->filteredQuery($request)->latest()->paginate($this->perPage($request))->withQueryString();
 
-        return view('admin.members.index', ['members' => $members, 'groups' => MemberGroup::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get()]);
+        return view('admin.members.index', [
+            'members' => $members,
+            'groups' => MemberGroup::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get(),
+            'stats' => $this->listingStats($request),
+        ]);
+    }
+
+    private function listingStats(Request $request): array
+    {
+        $query = $this->baseQuery($request);
+        $total = (clone $query)->toBase()->count();
+        $active = (clone $query)->where('status', 'active')->toBase()->count();
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'activeShare' => $total > 0 ? round($active / $total * 100, 1) : 0.0,
+            'newToday' => (clone $query)->where('created_at', '>=', now()->startOfDay())->toBase()->count(),
+            'groups' => (clone $query)->whereNotNull('group_id')->distinct()->toBase()->count('group_id'),
+        ];
     }
 
     private function perPage(Request $request): int
@@ -38,7 +57,12 @@ class MemberController extends Controller
 
     private function filteredQuery(Request $request)
     {
-        return Member::with(['branch', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->status, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$v}%")->orWhere('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")));
+        return $this->baseQuery($request)->when($request->status, fn ($q, $v) => $q->where('status', $v));
+    }
+
+    private function baseQuery(Request $request)
+    {
+        return Member::with(['branch', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('membership_number', 'like', "%{$v}%")->orWhere('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")));
     }
 
     public function exportList(Request $request, ExportService $exporter, string $format)

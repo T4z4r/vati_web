@@ -13,6 +13,24 @@
             <a class="btn btn-secondary" href="{{ route('admin.members.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
         </div>
     </div>
+    <div class="stats">
+        <div class="stat">
+            <span class="ph ph-users stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Members') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ __('Matching the current filters') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-check-circle stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Active members') }}</small><strong>{{ number_format($stats['active']) }}</strong><em>{{ number_format($stats['activeShare'], 1) }}% {{ __('of the member list') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-user-plus stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Members registered today') }}</small><strong>{{ number_format($stats['newToday']) }}</strong><em>{{ __('Since midnight') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-users-four stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Groups covered') }}</small><strong>{{ number_format($stats['groups']) }}</strong><em>{{ __('Groups with members') }}</em>
+        </div>
+    </div>
     <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
             placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">
             <option value="">{{ __('All groups') }}</option>

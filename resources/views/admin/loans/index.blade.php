@@ -12,6 +12,24 @@
             <a class="btn btn-secondary" href="{{ route('admin.loans.export.list', ['format' => 'xlsx'] + request()->query()) }}" title="{{ __('Export Excel') }}"><span class="ph ph-file-xls" aria-hidden="true"></span> {{ __('Excel') }}</a>
         </div>
     </div>
+    <div class="stats">
+        <div class="stat">
+            <span class="ph ph-stack stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Loans') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ __('All statuses in scope') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-money stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Disbursed') }}</small><strong>TZS {{ number_format($stats['disbursed'], 0) }}</strong><em>{{ __('Principal issued') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-warning stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Outstanding balance') }}</small><strong>TZS {{ number_format($stats['outstanding'], 0) }}</strong><em>{{ __('Principal and interest') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-trend-up stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Repaid to date') }}</small><strong>{{ number_format($stats['repaidShare'], 1) }}%</strong><em>{{ __('Of principal recovered') }}</em>
+        </div>
+    </div>
     <div class="status-tabs">
         <nav class="tabs-nav">
             @foreach ($statusTabs as $tab)

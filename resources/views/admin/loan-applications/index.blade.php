@@ -24,6 +24,24 @@
             @endrole
         </div>
     </div>
+    <div class="stats">
+        <div class="stat">
+            <span class="ph ph-file-text stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Applications') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ __('All statuses in scope') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-hourglass stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Awaiting review') }}</small><strong>{{ number_format($stats['inReview']) }}</strong><em>{{ __('Submitted or in review') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-seal-check stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Approved') }}</small><strong>{{ number_format($stats['approved']) }}</strong><em>{{ __('Awaiting disbursement') }}</em>
+        </div>
+        <div class="stat">
+            <span class="ph ph-money stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Amount requested') }}</small><strong>TZS {{ number_format($stats['requested'], 0) }}</strong><em>{{ __('Requested to date') }}</em>
+        </div>
+    </div>
     <div class="status-tabs">
         <nav class="tabs-nav">
             @foreach ($statusTabs as $tab)
