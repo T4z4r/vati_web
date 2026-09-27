@@ -135,7 +135,7 @@ class LoanApplicationStatusTabsTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.loan-applications.index', ['status' => 'not-a-status']))
             ->assertOk()
-            ->assertViewHas('activeStatus', null)
+            ->assertViewHas('activeStatus', '')
             ->assertViewHas('applications', fn ($paginator) => $paginator->total() === 1);
     }
 
