@@ -78,7 +78,7 @@ class LoanApplicationStatusTabsTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.loan-applications.index'))
             ->assertOk()
-            ->assertViewHas('activeStatus', null)
+            ->assertViewHas('activeStatus', '')
             ->assertViewHas('statusTabs', function (array $tabs) {
                 $this->assertSame('', $tabs[0]['key']);
                 $this->assertSame(3, $tabs[0]['count']);

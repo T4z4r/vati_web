@@ -47,7 +47,7 @@ class LoanApplicationController extends Controller
         return view('admin.loan-applications.index', [
             'applications' => $applications,
             'statusTabs' => $this->statusTabs($request),
-            'activeStatus' => $activeStatus,
+            'activeStatus' => $activeStatus ?? '',
         ]);
     }
 
