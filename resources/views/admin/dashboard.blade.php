@@ -32,6 +32,10 @@
                 <small>{{ __('Active members') }}</small><strong>{{ number_format($activeMembers) }}</strong><em>{{ __('Current member base') }}</em>
             </div>
             <div class="stat">
+                <span class="ph ph-user-plus stat-icon" aria-hidden="true"></span>
+                <small>{{ __('Members registered today') }}</small><strong>{{ number_format($newMembersToday) }}</strong><em>{{ number_format($newMembersShare, 1) }}% {{ __('of the member base') }}</em>
+            </div>
+            <div class="stat">
                 <span class="ph ph-wallet stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Active loans') }}</small><strong>{{ number_format($activeLoanCount) }}</strong><em>{{ __('Performing portfolio') }}</em>
             </div>

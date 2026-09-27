@@ -73,6 +73,8 @@ class DashboardController extends Controller
         $interestReceived = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
             ->selectRaw('COALESCE(SUM(interest_amount), 0) as total')->value('total');
         $isManagement = $request->user()->can('view-management-dashboard');
+        $totalMembers = (clone $members)->count();
+        $newMembersToday = (clone $members)->where('created_at', '>=', now()->startOfDay())->count();
         $managementSummary = $isManagement
             ? $this->managementSummary($postedPayments, $loans, $applications, $activeLoans)
             : null;
@@ -87,7 +89,10 @@ class DashboardController extends Controller
 
         $data = compact('branchId', 'recentPayments', 'managementSummary', 'charts') + [
             'branches' => Branch::where('status', true)->orderBy('branch_name')->get(),
+            'totalMembers' => $totalMembers,
             'activeMembers' => (clone $members)->where('status', 'active')->count(),
+            'newMembersToday' => $newMembersToday,
+            'newMembersShare' => $totalMembers > 0 ? round($newMembersToday / $totalMembers * 100, 1) : 0.0,
             'activeLoanCount' => (clone $activeLoans)->count(),
             'expected' => $expected,
             'collected' => $collected,
