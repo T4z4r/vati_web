@@ -112,6 +112,9 @@
                     aria-hidden="true"></span></button>
             <div class="crumb"><small>{{ __('VATI OPERATIONS') }}</small><strong>@yield('title', __('Dashboard'))</strong></div>
             <div class="top-actions">
+                <a class="icon-btn" href="{{ request()->fullUrl() }}" title="{{ __('Refresh') }}"
+                    aria-label="{{ __('Refresh page') }}"><span class="ph ph-arrow-clockwise"
+                        aria-hidden="true"></span></a>
                 <div class="lang-switch" role="group" aria-label="Language">
                     <a href="{{ route('locale.switch', 'sw') }}"
                         class="{{ app()->getLocale() === 'sw' ? 'active' : '' }}">SW</a>
