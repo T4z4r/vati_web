@@ -501,6 +501,11 @@ body.sidebar-collapsed .main-area {
     display: flex;
     gap: 9px;
     align-items: center;
+    flex-wrap: nowrap;
+}
+.head-actions form,
+.head-actions .btn {
+    flex: 0 0 auto;
 }
 .btn {
     border: 0;
@@ -1037,6 +1042,10 @@ body.sidebar-collapsed .main-area {
 .table-wrap {
     overflow: auto;
 }
+.actions-col {
+    min-width: 150px;
+    white-space: nowrap;
+}
 table {
     width: 100%;
     border-collapse: collapse;
@@ -1318,10 +1327,26 @@ textarea {
     margin: 7px 0 0;
     padding-left: 18px;
 }
+/* Row actions and pagination controls always stay on one line */
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+.table-actions form {
+    display: inline-flex;
+}
+.table-actions .btn {
+    white-space: nowrap;
+}
 .pagination {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
     padding: 15px 20px;
     color: var(--muted);
     font-size: 11px;
@@ -1330,11 +1355,14 @@ textarea {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
 }
 .pagination-pages {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: nowrap;
 }
 .pagination-pages .btn {
     min-width: 28px;
@@ -2207,15 +2235,6 @@ body.auth-page .auth-form {
     }
     .actions-col {
         min-width: 140px;
-    }
-    .table-actions {
-        display: flex;
-        gap: 5px;
-        flex-wrap: nowrap;
-        white-space: nowrap;
-    }
-    .table-actions form {
-        display: inline;
     }
 }
 
