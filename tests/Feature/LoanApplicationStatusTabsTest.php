@@ -123,9 +123,9 @@ class LoanApplicationStatusTabsTest extends TestCase
             ->assertOk()
             ->assertViewHas('activeStatus', 'approved')
             ->assertViewHas('applications', fn ($paginator) => $paginator->total() === 1)
-            ->assertSee('href="'.route('admin.loan-applications.index', ['search' => 'TAB-A-1', 'status' => 'approved']).'"', false)
-            ->assertSee('href="'.route('admin.loan-applications.index', ['search' => 'TAB-A-1']).'"', false)
-            ->assertDontSee(route('admin.loan-applications.index', ['search' => 'TAB-A-1', 'status' => 'approved', 'page' => 3]), false);
+            ->assertSee('href="'.e(route('admin.loan-applications.index', ['search' => 'TAB-A-1', 'status' => 'approved'])).'"', false)
+            ->assertSee('href="'.e(route('admin.loan-applications.index', ['search' => 'TAB-A-1'])).'"', false)
+            ->assertDontSee(e(route('admin.loan-applications.index', ['search' => 'TAB-A-1', 'status' => 'approved', 'page' => 3])), false);
     }
 
     public function test_an_unknown_status_falls_back_to_all_applications(): void
