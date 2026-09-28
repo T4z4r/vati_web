@@ -101,11 +101,7 @@ $subjectRoutes = [
             </tbody>
         </table>
     </div>
-    @if($activities->hasPages())
-    <div style="padding: 1rem;">
-        {{ $activities->links() }}
-    </div>
-    @endif
+    @include('admin.partials.pagination', ['paginator' => $activities])
 </div>
 
 <div class="modal fade" id="auditPropsModal" tabindex="-1" aria-hidden="true">
