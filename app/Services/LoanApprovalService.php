@@ -6,13 +6,44 @@ use App\Enums\ApplicationStatus;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanApproval;
+use App\Models\SystemSetting;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
 class LoanApprovalService
 {
+    /**
+     * When this setting is on, an application is approved the moment it enters
+     * the review pipeline and a loan account awaiting disbursement is created.
+     */
+    public const AUTO_APPROVAL_SETTING = 'auto_approve_loan_applications';
+
+    public const AUTO_APPROVAL_REMARKS = 'Automatically approved: automatic loan application approval is enabled in system settings.';
+
     public function __construct(private LoanCalculatorService $calculator, private NumberGeneratorService $numbers, private ApplicationComplianceService $compliance, private NotificationService $notifications) {}
+
+    /**
+     * Approve the application without a human decision when the setting is on.
+     * Returns null when the setting is off or the automatic approval could not
+     * be completed, leaving the application in the queue for manual review.
+     */
+    public function autoApproveIfEnabled(LoanApplication $application, User $actor): ?LoanApplication
+    {
+        if (! (bool) SystemSetting::get(self::AUTO_APPROVAL_SETTING, false)) {
+            return null;
+        }
+
+        try {
+            return $this->decide($application, $actor, 'approved', self::AUTO_APPROVAL_REMARKS);
+        } catch (\Throwable $e) {
+            // Automatic approval is a convenience, never a gate: a failure here
+            // must not lose the submitted application, so it stays in the queue.
+            report($e);
+
+            return null;
+        }
+    }
 
     public function decide(LoanApplication $application, User $user, string $decision, ?string $remarks = null): LoanApplication
     {

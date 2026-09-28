@@ -16,7 +16,7 @@ use Throwable;
 
 class OnboardingService
 {
-    public function __construct(private NumberGeneratorService $numbers, private GroupMembershipService $memberships, private LoanCalculatorService $calculator) {}
+    public function __construct(private NumberGeneratorService $numbers, private GroupMembershipService $memberships, private LoanCalculatorService $calculator, private LoanApprovalService $approvals) {}
 
     public function group(array $data, User $user): MemberGroup
     {
@@ -261,6 +261,8 @@ class OnboardingService
             }
 
             activity()->causedBy($user)->performedOn($application)->withProperties(['member_id' => $member->id, 'group_id' => $member->group_id])->log('Loan application onboarded');
+
+            $application = $this->approvals->autoApproveIfEnabled($application, $user) ?? $application;
 
             return $application->load('member.nominees', 'product', 'group', 'branch', 'assessment', 'utilizations', 'guarantors', 'groupWitnesses.member');
         });

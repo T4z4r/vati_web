@@ -36,6 +36,8 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'installment_tolerance', 'value' => '0.009', 'type' => 'number', 'group' => 'business_rules', 'description' => 'Floating-point tolerance for installment balance comparisons.'],
 
             ['key' => 'restrict_loan_officer_groups', 'value' => '1', 'type' => 'boolean', 'group' => 'access', 'description' => 'Restrict loan officers to view only groups assigned to them.'],
+
+            ['key' => 'auto_approve_loan_applications', 'value' => '0', 'type' => 'boolean', 'group' => 'business_rules', 'description' => 'Automatically approve applications when they are submitted and create a loan account waiting to be issued.'],
         ];
 
         foreach ($settings as $setting) {

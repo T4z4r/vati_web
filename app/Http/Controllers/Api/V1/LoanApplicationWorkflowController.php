@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class LoanApplicationWorkflowController extends ApiController
 {
-    public function submit(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $compliance)
+    public function submit(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $compliance, LoanApprovalService $service)
     {
         abort_unless(in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::RETURNED, ApplicationStatus::REVERTED], true), 409, 'Only draft, returned, or reverted applications can be submitted.');
         $compliance->assertReadyForSubmission($loanApplication);
@@ -21,6 +21,7 @@ class LoanApplicationWorkflowController extends ApiController
             'credit_review_attempt' => in_array($loanApplication->status, [ApplicationStatus::RETURNED, ApplicationStatus::REVERTED], true) ? $loanApplication->credit_review_attempt + 1 : $loanApplication->credit_review_attempt,
         ]);
         activity()->causedBy($request->user())->performedOn($loanApplication)->log('Loan application submitted');
+        $loanApplication = $service->autoApproveIfEnabled($loanApplication, $request->user()) ?? $loanApplication->refresh();
 
         return response()->json(['success' => true, 'data' => new LoanApplicationResource($loanApplication->refresh())]);
     }

@@ -214,7 +214,7 @@ class LoanApplicationController extends Controller
             ->download('VATI-loan-application-'.$loanApplication->application_number.'.pdf');
     }
 
-    public function submit(LoanApplication $loanApplication, ApplicationComplianceService $compliance)
+    public function submit(Request $request, LoanApplication $loanApplication, ApplicationComplianceService $compliance, LoanApprovalService $approvals)
     {
         if (! in_array($loanApplication->status, [ApplicationStatus::DRAFT, ApplicationStatus::REVERTED], true)) {
             return back()->with('error', 'Only draft or reverted applications can be submitted.');
@@ -225,6 +225,10 @@ class LoanApplicationController extends Controller
             return back()->with('error', $e->getMessage());
         }
         $loanApplication->update(['status' => ApplicationStatus::SUBMITTED, 'submitted_at' => now()]);
+
+        if ($approvals->autoApproveIfEnabled($loanApplication, $request->user())) {
+            return back()->with('success', 'Application submitted and automatically approved. The loan account is waiting to be issued.');
+        }
 
         return back()->with('success', 'Application submitted for review.');
     }
