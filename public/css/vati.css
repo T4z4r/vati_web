@@ -1043,6 +1043,12 @@ body.sidebar-collapsed .main-area {
 .grid-even {
     grid-template-columns: 1fr 1fr;
 }
+.grid-stack {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+    min-width: 0;
+}
 .table-wrap {
     overflow: auto;
 }

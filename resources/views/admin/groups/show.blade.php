@@ -35,56 +35,167 @@
     </div>
 
     <div class="grid-2">
-        <div class="card">
-            <div class="card-head">
-                <h2>{{ __('Members and loan balances') }}</h2>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>{{ __('Member') }}</th>
-                            <th>{{ __('Phone') }}</th>
-                            <th>{{ __('Status') }}</th>
-                            <th>{{ __('Current loans') }}</th>
-                            <th>{{ __('Outstanding balance') }}</th>
-                            <th>{{ __('Action') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($members as $member)
+        <div class="grid-stack">
+            <div class="card">
+                <div class="card-head">
+                    <h2>{{ __('Members and loan balances') }}</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                             <tr>
-                                <td>
-                                    <div style="display:flex;align-items:center;gap:10px">@include('admin.partials.member-photo', [
-                                        'member' => $member,
-                                        'size' => 48,
-                                    ])<div>
-                                            <a class="table-link"
-                                                href="{{ route('admin.members.show', $member) }}">{{ $member->first_name }}
-                                                {{ $member->last_name }}</a><br><small>{{ $member->membership_number }}</small>
+                                <th>{{ __('Member') }}</th>
+                                <th>{{ __('Phone') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th>{{ __('Current loans') }}</th>
+                                <th>{{ __('Outstanding balance') }}</th>
+                                <th>{{ __('Action') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($members as $member)
+                                <tr>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:10px">@include('admin.partials.member-photo', [
+                                            'member' => $member,
+                                            'size' => 48,
+                                        ])<div>
+                                                <a class="table-link"
+                                                    href="{{ route('admin.members.show', $member) }}">{{ $member->first_name }}
+                                                    {{ $member->last_name }}</a><br><small>{{ $member->membership_number }}</small>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>{{ $member->phone }}</td>
-                                <td><span class="badge {{ $member->status }}">{{ $member->status }}</span></td>
-                                <td>{{ $member->current_loans_count }}</td>
-                                <td><strong>TZS
-                                        {{ number_format((float) ($member->outstanding_loan_balance ?? 0), 2) }}</strong>
-                                </td>
-                                <td>
-                                    @can('view-members')
-                                        <a class="btn btn-sm btn-secondary"
-                                            href="{{ route('admin.members.show', $member) }}">{{ __('View details') }}</a>
-                                    @endcan
-                                </td>
-                            </tr>
-                        @empty
+                                    </td>
+                                    <td>{{ $member->phone }}</td>
+                                    <td><span class="badge {{ $member->status }}">{{ $member->status }}</span></td>
+                                    <td>{{ $member->current_loans_count }}</td>
+                                    <td><strong>TZS
+                                            {{ number_format((float) ($member->outstanding_loan_balance ?? 0), 2) }}</strong>
+                                    </td>
+                                    <td>
+                                        @can('view-members')
+                                            <a class="btn btn-sm btn-secondary"
+                                                href="{{ route('admin.members.show', $member) }}">{{ __('View details') }}</a>
+                                        @endcan
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No registered members.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>{{ __('Loans') }}</h2>
+                    <span class="badge">{{ $group->loans_count }}</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                             <tr>
-                                <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No registered members.') }}</td>
+                                <th>{{ __('Loan') }}</th>
+                                <th>{{ __('Member') }}</th>
+                                <th>{{ __('Principal') }}</th>
+                                <th>{{ __('Outstanding') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th class="actions-col">{{ __('Actions') }}</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($loans as $loan)
+                                <tr>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a><br><small>{{ $loan->product->name }}</small>
+                                    </td>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.members.show', $loan->member) }}">{{ $loan->member->first_name }}
+                                            {{ $loan->member->last_name }}</a><br><small>{{ $loan->member->membership_number }}</small>
+                                    </td>
+                                    <td class="money">TZS {{ number_format((float) $loan->principal_amount, 2) }}</td>
+                                    <td class="money">TZS {{ number_format((float) $loan->total_balance, 2) }}</td>
+                                    <td>
+                                        <span class="badge {{ $loan->status->value }}">{{ str_replace('_', ' ', $loan->status->value) }}</span>
+                                    </td>
+                                    <td class="actions-col">
+                                        <div class="table-actions">
+                                            <a class="btn btn-sm btn-secondary"
+                                                href="{{ route('admin.loans.show', $loan) }}" title="{{ __('View') }}"
+                                                aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                                    aria-hidden="true"></span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty"><span class="ph ph-tray empty-icon"
+                                            aria-hidden="true"></span>{{ __('No loans recorded for this group yet.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>{{ __('Loan applications') }}</h2>
+                    <span class="badge">{{ $group->loan_applications_count }}</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Application') }}</th>
+                                <th>{{ __('Member') }}</th>
+                                <th>{{ __('Product') }}</th>
+                                <th>{{ __('Requested') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th class="actions-col">{{ __('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($applications as $application)
+                                @php($status = $application->status->value)
+                                <tr>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.loan-applications.show', $application) }}">{{ $application->application_number }}</a><br><small>{{ $application->created_at->format('d M Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.members.show', $application->member) }}">{{ $application->member->first_name }}
+                                            {{ $application->member->last_name }}</a><br><small>{{ $application->member->membership_number }}</small>
+                                    </td>
+                                    <td>{{ $application->product->name }}</td>
+                                    <td class="money">TZS {{ number_format((float) $application->requested_amount, 2) }}</td>
+                                    <td>
+                                        <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
+                                    </td>
+                                    <td class="actions-col">
+                                        <div class="table-actions">
+                                            <a class="btn btn-sm btn-secondary"
+                                                href="{{ route('admin.loan-applications.show', $application) }}" title="{{ __('View') }}"
+                                                aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                                    aria-hidden="true"></span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty"><span class="ph ph-tray empty-icon"
+                                            aria-hidden="true"></span>{{ __('No loan applications for this group yet.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <div>

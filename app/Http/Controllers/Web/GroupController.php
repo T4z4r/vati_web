@@ -97,7 +97,7 @@ class GroupController extends Controller
             ->limit(20)
             ->get();
 
-        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'loans' => $group->loans()->with('member')->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with('member')->latest()->limit(10)->get()]);
+        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'loans' => $group->loans()->with(['member', 'product'])->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get()]);
     }
 
     public function edit(Request $request, MemberGroup $group)
