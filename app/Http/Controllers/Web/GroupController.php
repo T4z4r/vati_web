@@ -85,7 +85,7 @@ class GroupController extends Controller
     {
         abort_unless($group->isOfficerAssigned($request->user()), 404);
 
-        $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications']);
+        $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications', 'visits']);
         $members = $group->members()
             ->withCount([
                 'loans as current_loans_count' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
@@ -97,7 +97,7 @@ class GroupController extends Controller
             ->limit(20)
             ->get();
 
-        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'loans' => $group->loans()->with(['member', 'product'])->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get()]);
+        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'loans' => $group->loans()->with(['member', 'product'])->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get(), 'visits' => $group->visits()->with('user')->latest('visit_date')->limit(10)->get()]);
     }
 
     public function edit(Request $request, MemberGroup $group)

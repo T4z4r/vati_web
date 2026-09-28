@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\Branch;
+use App\Models\GroupVisit;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
@@ -173,6 +174,43 @@ class GroupShowPortfolioTest extends TestCase
             ->assertSee(__('No loan applications for this group yet.'));
     }
 
+    public function test_the_group_page_lists_recent_group_visits_with_officer_and_purpose(): void
+    {
+        $officer = User::factory()->create(['branch_id' => $this->group->branch_id, 'name' => 'Juma Field Officer']);
+        $visit = GroupVisit::create([
+            'group_id' => $this->group->id,
+            'user_id' => $officer->id,
+            'visit_date' => now()->subDays(3)->toDateString(),
+            'purpose' => 'Loan appraisal',
+            'location' => 'Kiji cha Umoja',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.groups.show', $this->group->id))
+            ->assertOk()
+            ->assertSee(__('Group Visits'))
+            ->assertSee($visit->visit_date->format('d M Y'))
+            ->assertSee('Juma Field Officer')
+            ->assertSee('Loan appraisal')
+            ->assertSee(route('admin.group-visits.show', $visit), false);
+    }
+
+    public function test_the_group_page_never_shows_another_groups_visits(): void
+    {
+        GroupVisit::create([
+            'group_id' => $this->otherGroup->id,
+            'user_id' => $this->admin->id,
+            'visit_date' => now()->subDays(2)->toDateString(),
+            'purpose' => 'Other group appraisal',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.groups.show', $this->group->id))
+            ->assertOk()
+            ->assertDontSee('Other group appraisal')
+            ->assertSee(__('No group visits recorded yet.'));
+    }
+
     public function test_the_loan_and_application_cards_stack_below_the_members_table_in_the_same_column(): void
     {
         $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');
@@ -184,17 +222,24 @@ class GroupShowPortfolioTest extends TestCase
             500000,
             400000
         );
+        GroupVisit::create([
+            'group_id' => $this->group->id,
+            'user_id' => $this->admin->id,
+            'visit_date' => now()->subDay()->toDateString(),
+            'purpose' => 'Repayment follow-up',
+        ]);
 
         $response = $this->actingAs($this->admin)->get(route('admin.groups.show', $this->group->id));
         $response->assertOk();
 
         $response->assertSeeInOrder([
-            'grid-stack',
             __('Members and loan balances'),
             'GP-LN-1',
             __('Loan applications'),
             'GP-APP-1',
             __('Operating details'),
+            __('Group Visits'),
+            'Repayment follow-up',
         ], false);
     }
 }

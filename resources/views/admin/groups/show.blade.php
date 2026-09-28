@@ -198,24 +198,67 @@
                 </div>
             </div>
         </div>
-        <div>
-            <h2 class="section-title">{{ __('Operating details') }}</h2>
-            <table class="detail-table">
-                <tbody>
-                    <tr>
-                        <th>{{ __('Loan officer') }}</th><td>{{ $group->loanOfficer?->name ?? __('Unassigned') }}</td>
-                    </tr>
-                    <tr>
-                        <th>{{ __('Branch') }}</th><td>{{ $group->branch->branch_name }}</td>
-                    </tr>
-                    <tr>
-                        <th>{{ __('Ward') }}</th><td>{{ $group->ward ?: '—' }}</td>
-                    </tr>
-                    <tr>
-                        <th>{{ __('District') }}</th><td>{{ $group->district ?: '—' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="grid-stack">
+            <div>
+                <h2 class="section-title">{{ __('Operating details') }}</h2>
+                <table class="detail-table">
+                    <tbody>
+                        <tr>
+                            <th>{{ __('Loan officer') }}</th><td>{{ $group->loanOfficer?->name ?? __('Unassigned') }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('Branch') }}</th><td>{{ $group->branch->branch_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('Ward') }}</th><td>{{ $group->ward ?: '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th>{{ __('District') }}</th><td>{{ $group->district ?: '—' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>{{ __('Group Visits') }}</h2>
+                    <span class="badge">{{ $group->visits_count }}</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Date') }}</th>
+                                <th>{{ __('Officer') }}</th>
+                                <th>{{ __('Purpose') }}</th>
+                                <th class="actions-col">{{ __('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($visits as $visit)
+                                <tr>
+                                    <td>{{ $visit->visit_date->format('d M Y') }}</td>
+                                    <td>{{ $visit->user?->name ?? __('Unassigned') }}</td>
+                                    <td>{{ $visit->purpose ?: '—' }}</td>
+                                    <td class="actions-col">
+                                        <div class="table-actions">
+                                            <a class="btn btn-sm btn-secondary"
+                                                href="{{ route('admin.group-visits.show', $visit) }}" title="{{ __('View') }}"
+                                                aria-label="{{ __('View') }}"><span class="ph ph-eye"
+                                                    aria-hidden="true"></span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="empty"><span class="ph ph-tray empty-icon"
+                                            aria-hidden="true"></span>{{ __('No group visits recorded yet.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
