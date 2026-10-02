@@ -293,50 +293,61 @@ class PaymentService
     public function estimateRepaymentsCompletedUpTo(Carbon $cutoff, ?int $branchId = null): array
     {
         $loans = $this->loansForCutoff($cutoff, $branchId);
+        $affectedLoans = 0;
         $installments = 0;
         $amount = 0.0;
         $loansSettled = 0;
         $samples = [];
 
         foreach ($loans as $loan) {
-            $loanInstallments = $loan->installments;
-            $outstanding = round((float) $loan->total_balance, 2);
-            $required = 0.0;
-            foreach ($loanInstallments as $installment) {
-                $required += max(0, round(
-                    (float) $installment->total_due
-                    - (float) $installment->total_paid
-                    - (float) $installment->interest_exemption,
-                    2
-                ));
-            }
+            [$required, $applied] = $this->cutoffRequirement($loan);
 
-            if ($loanInstallments->isEmpty() || $required <= 0.009 || $outstanding <= 0.009) {
+            if ($loan->installments->isEmpty() || $required <= 0.009 || $applied <= 0.009) {
                 continue;
             }
 
-            $applied = min($required, $outstanding);
+            $settled = $applied >= round((float) $loan->total_balance, 2) - 0.009;
+            $affectedLoans++;
+            $installments += $loan->installments->count();
             $amount = round($amount + $applied, 2);
-            $installments += $loanInstallments->count();
-            if ($applied >= $outstanding - 0.009) {
+            if ($settled) {
                 $loansSettled++;
             }
             $samples[] = [
                 'loan_number' => $loan->loan_number,
-                'installments' => $loanInstallments->count(),
+                'installments' => $loan->installments->count(),
                 'amount' => $applied,
-                'settled' => $applied >= $outstanding - 0.009,
+                'settled' => $settled,
             ];
         }
 
         return [
             'cutoff_date' => $cutoff->toDateString(),
-            'loans' => $installments > 0 ? count(array_filter($loans, fn ($l) => $l->installments->isNotEmpty() && (float) $l->total_balance > 0.009)) : 0,
+            'loans' => $affectedLoans,
             'installments' => $installments,
             'amount' => $amount,
             'loans_settled' => $loansSettled,
             'samples' => array_slice($samples, 0, 10),
         ];
+    }
+
+    /**
+     * The amount still required to complete the cutoff installments of a loan,
+     * and the amount that can actually be applied within its outstanding balance.
+     */
+    private function cutoffRequirement(Loan $loan): array
+    {
+        $required = 0.0;
+        foreach ($loan->installments as $installment) {
+            $required += max(0, round(
+                (float) $installment->total_due
+                - (float) $installment->total_paid
+                - (float) $installment->interest_exemption,
+                2
+            ));
+        }
+
+        return [round($required, 2), min($required, round((float) $loan->total_balance, 2))];
     }
 
     /**
@@ -355,29 +366,16 @@ class PaymentService
 
             $processedLoans = 0;
             $processedInstallments = 0;
-            $paymentsCreated = 0;
             $settledLoans = 0;
             $totalAmount = 0.0;
 
             foreach ($loans as $loan) {
                 $installments = $loan->installments;
-                $outstanding = round((float) $loan->total_balance, 2);
+                [$required, $amount] = $this->cutoffRequirement($loan);
 
-                $required = 0.0;
-                foreach ($installments as $installment) {
-                    $required += max(0, round(
-                        (float) $installment->total_due
-                        - (float) $installment->total_paid
-                        - (float) $installment->interest_exemption,
-                        2
-                    ));
-                }
-
-                if ($installments->isEmpty() || $required <= 0.009 || $outstanding <= 0.009) {
+                if ($installments->isEmpty() || $required <= 0.009 || $amount <= 0.009) {
                     continue;
                 }
-
-                $amount = min($required, $outstanding);
 
                 $payment = Payment::create([
                     'payment_number' => $this->numbers->payment(),
@@ -394,7 +392,6 @@ class PaymentService
                     'remarks' => "Repayments completed up to {$cutoff->toDateString()} (bulk backdated completion)",
                 ]);
 
-                $before = clone $loan;
                 $this->allocate($payment, $loan, $installments, $amount);
 
                 activity()->causedBy($user)->performedOn($loan)->withProperties([
@@ -406,9 +403,8 @@ class PaymentService
 
                 $processedLoans++;
                 $processedInstallments += $installments->count();
-                $paymentsCreated++;
                 $totalAmount = round($totalAmount + $amount, 2);
-                if ($loan->fresh()->status === LoanStatus::SETTLED) {
+                if ($loan->status === LoanStatus::SETTLED) {
                     $settledLoans++;
                 }
             }
@@ -418,7 +414,6 @@ class PaymentService
                 'branch_id' => $branchId,
                 'loans' => $processedLoans,
                 'installments' => $processedInstallments,
-                'payments' => $paymentsCreated,
                 'loans_settled' => $settledLoans,
                 'amount' => $totalAmount,
             ])->log('Bulk repayment completion completed');
@@ -426,7 +421,6 @@ class PaymentService
             return [
                 'loans' => $processedLoans,
                 'installments' => $processedInstallments,
-                'payments' => $paymentsCreated,
                 'loans_settled' => $settledLoans,
                 'amount' => $totalAmount,
                 'message' => sprintf(
@@ -453,11 +447,15 @@ class PaymentService
                 ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
                 ->whereDate('due_date', '<=', $cutoff->toDateString())
             )
-            ->with(['installments' => fn ($query) => $query
-                ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
-                ->whereDate('due_date', '<=', $cutoff->toDateString())
-                ->orderBy('installment_number')
-            ])
+            ->with(['installments' => function ($query) use ($cutoff, $lock) {
+                $query->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
+                    ->whereDate('due_date', '<=', $cutoff->toDateString())
+                    ->orderBy('installment_number');
+
+                if ($lock) {
+                    $query->lockForUpdate();
+                }
+            }])
             ->when($lock, fn ($query) => $query->lockForUpdate())
             ->get();
     }

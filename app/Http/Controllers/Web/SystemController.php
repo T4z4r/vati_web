@@ -275,7 +275,7 @@ class SystemController extends Controller
     {
         $request->validate([
             'branch_id' => 'nullable|integer|exists:branches,id',
-            'cutoff_date' => 'required|date',
+            'cutoff_date' => 'required|date|before_or_equal:today',
         ]);
 
         return response()->json([
@@ -291,7 +291,7 @@ class SystemController extends Controller
     {
         $request->validate([
             'branch_id' => 'nullable|integer|exists:branches,id',
-            'cutoff_date' => 'required|date',
+            'cutoff_date' => 'required|date|before_or_equal:today',
             'confirmation_phrase' => 'required|same:expected_phrase',
             'expected_phrase' => 'required',
         ]);
