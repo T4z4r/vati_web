@@ -17,7 +17,7 @@ class GroupController extends Controller
 {
     public function index(Request $request)
     {
-        $groups = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
+        $groups = $this->filteredQuery($request)->withCount(['members', 'loans'])->orderByRaw("CASE meeting_day WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 WHEN 'Sunday' THEN 7 ELSE 8 END ASC, meeting_time ASC, group_name ASC")->paginate(20)->withQueryString();
 
         return view('admin.groups.index', ['groups' => $groups, 'stats' => $this->listingStats($request)]);
     }

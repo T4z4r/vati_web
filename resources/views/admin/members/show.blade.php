@@ -36,16 +36,15 @@
 </div>
 
 <div class="card" style="background:linear-gradient(135deg,#16452a,#267044);color:#fff;margin-bottom:20px">
-    <div class="card-body" style="display:flex;align-items:center;gap:22px">
+    <div class="card-body member-hero">
         @if($member->photo_path)
-            <img src="{{ asset('storage/'.$member->photo_path) }}" alt="{{ $displayName }} photograph"
-                style="width:132px;height:132px;border-radius:16px;object-fit:cover;border:3px solid rgba(255,255,255,.75);flex:0 0 auto">
+            <img class="member-hero-photo" src="{{ asset('storage/'.$member->photo_path) }}" alt="{{ $displayName }} photograph">
         @else
-            <div style="width:132px;height:132px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;flex:0 0 auto">
+            <div class="member-hero-photo member-hero-initials">
                 {{ $initials }}
             </div>
         @endif
-        <div class="detail-grid" style="flex:1">
+        <div class="detail-grid member-hero-meta">
         <div><small style="opacity:.75">Namba ya uanachama / SL</small><strong style="display:block;font-size:18px;margin-top:5px">{{ $member->membership_number }}</strong></div>
         <div><small style="opacity:.75">Jina la tawi</small><strong style="display:block;margin-top:5px">{{ $display($member->branch?->branch_name) }}</strong></div>
         <div><small style="opacity:.75">Jina la kikundi</small><strong style="display:block;margin-top:5px">{{ $display($member->group?->group_name) }}</strong></div>
