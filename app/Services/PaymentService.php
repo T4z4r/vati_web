@@ -6,7 +6,9 @@ use App\Enums\LoanStatus;
 use App\Models\Loan;
 use App\Models\Payment;
 use App\Models\User;
+use Carbon\Carbon;
 use DomainException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
@@ -282,4 +284,182 @@ class PaymentService
         }
         $loan->save();
     }
+
+    /**
+     * Count the repayments that would be completed for loans matching the
+     * optional branch filter when every installment due on or before the
+     * cutoff date is covered.
+     */
+    public function estimateRepaymentsCompletedUpTo(Carbon $cutoff, ?int $branchId = null): array
+    {
+        $loans = $this->loansForCutoff($cutoff, $branchId);
+        $installments = 0;
+        $amount = 0.0;
+        $loansSettled = 0;
+        $samples = [];
+
+        foreach ($loans as $loan) {
+            $loanInstallments = $loan->installments;
+            $outstanding = round((float) $loan->total_balance, 2);
+            $required = 0.0;
+            foreach ($loanInstallments as $installment) {
+                $required += max(0, round(
+                    (float) $installment->total_due
+                    - (float) $installment->total_paid
+                    - (float) $installment->interest_exemption,
+                    2
+                ));
+            }
+
+            if ($loanInstallments->isEmpty() || $required <= 0.009 || $outstanding <= 0.009) {
+                continue;
+            }
+
+            $applied = min($required, $outstanding);
+            $amount = round($amount + $applied, 2);
+            $installments += $loanInstallments->count();
+            if ($applied >= $outstanding - 0.009) {
+                $loansSettled++;
+            }
+            $samples[] = [
+                'loan_number' => $loan->loan_number,
+                'installments' => $loanInstallments->count(),
+                'amount' => $applied,
+                'settled' => $applied >= $outstanding - 0.009,
+            ];
+        }
+
+        return [
+            'cutoff_date' => $cutoff->toDateString(),
+            'loans' => $installments > 0 ? count(array_filter($loans, fn ($l) => $l->installments->isNotEmpty() && (float) $l->total_balance > 0.009)) : 0,
+            'installments' => $installments,
+            'amount' => $amount,
+            'loans_settled' => $loansSettled,
+            'samples' => array_slice($samples, 0, 10),
+        ];
+    }
+
+    /**
+     * Mark every installment due on or before the cutoff date as completed by
+     * posting a single payment per loan that covers the whole due amount.
+     * Loans whose outstanding balance is fully cleared are settled.
+     */
+    public function markRepaymentsCompletedUpTo(User $user, Carbon $cutoff, ?int $branchId = null): array
+    {
+        if ($cutoff->isFuture()) {
+            throw new DomainException('The cutoff date cannot be in the future.');
+        }
+
+        return DB::transaction(function () use ($user, $cutoff, $branchId) {
+            $loans = $this->loansForCutoff($cutoff, $branchId, true);
+
+            $processedLoans = 0;
+            $processedInstallments = 0;
+            $paymentsCreated = 0;
+            $settledLoans = 0;
+            $totalAmount = 0.0;
+
+            foreach ($loans as $loan) {
+                $installments = $loan->installments;
+                $outstanding = round((float) $loan->total_balance, 2);
+
+                $required = 0.0;
+                foreach ($installments as $installment) {
+                    $required += max(0, round(
+                        (float) $installment->total_due
+                        - (float) $installment->total_paid
+                        - (float) $installment->interest_exemption,
+                        2
+                    ));
+                }
+
+                if ($installments->isEmpty() || $required <= 0.009 || $outstanding <= 0.009) {
+                    continue;
+                }
+
+                $amount = min($required, $outstanding);
+
+                $payment = Payment::create([
+                    'payment_number' => $this->numbers->payment(),
+                    'member_id' => $loan->member_id,
+                    'loan_id' => $loan->id,
+                    'branch_id' => $loan->branch_id,
+                    'amount' => $amount,
+                    'payment_method' => 'cash',
+                    'paid_at' => $cutoff->copy()->endOfDay(),
+                    'collected_by' => $user->id,
+                    'server_received_at' => now(),
+                    'sync_status' => 'synced',
+                    'status' => 'posted',
+                    'remarks' => "Repayments completed up to {$cutoff->toDateString()} (bulk backdated completion)",
+                ]);
+
+                $before = clone $loan;
+                $this->allocate($payment, $loan, $installments, $amount);
+
+                activity()->causedBy($user)->performedOn($loan)->withProperties([
+                    'payment_number' => $payment->payment_number,
+                    'amount' => $amount,
+                    'cutoff_date' => $cutoff->toDateString(),
+                    'installments_completed' => $installments->count(),
+                ])->log('Repayments completed up to date');
+
+                $processedLoans++;
+                $processedInstallments += $installments->count();
+                $paymentsCreated++;
+                $totalAmount = round($totalAmount + $amount, 2);
+                if ($loan->fresh()->status === LoanStatus::SETTLED) {
+                    $settledLoans++;
+                }
+            }
+
+            activity()->causedBy($user)->withProperties([
+                'cutoff_date' => $cutoff->toDateString(),
+                'branch_id' => $branchId,
+                'loans' => $processedLoans,
+                'installments' => $processedInstallments,
+                'payments' => $paymentsCreated,
+                'loans_settled' => $settledLoans,
+                'amount' => $totalAmount,
+            ])->log('Bulk repayment completion completed');
+
+            return [
+                'loans' => $processedLoans,
+                'installments' => $processedInstallments,
+                'payments' => $paymentsCreated,
+                'loans_settled' => $settledLoans,
+                'amount' => $totalAmount,
+                'message' => sprintf(
+                    'Completed %d repayment(s) totalling %s across %d loan(s); %d loan(s) fully settled.',
+                    $processedInstallments,
+                    number_format($totalAmount, 2),
+                    $processedLoans,
+                    $settledLoans
+                ),
+            ];
+        });
+    }
+
+    /**
+     * Loans that still carry an unpaid installment due on or before the cutoff.
+     */
+    private function loansForCutoff(Carbon $cutoff, ?int $branchId = null, bool $lock = false): Collection
+    {
+        return Loan::query()
+            ->when($branchId, fn ($query) => $query->where('branch_id', $branchId))
+            ->whereIn('status', [LoanStatus::ACTIVE, LoanStatus::OVERDUE])
+            ->where('total_balance', '>', 0)
+            ->whereHas('installments', fn ($query) => $query
+                ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
+                ->whereDate('due_date', '<=', $cutoff->toDateString())
+            )
+            ->with(['installments' => fn ($query) => $query
+                ->whereIn('status', ['upcoming', 'due', 'partially_paid', 'overdue'])
+                ->whereDate('due_date', '<=', $cutoff->toDateString())
+                ->orderBy('installment_number')
+            ])
+            ->when($lock, fn ($query) => $query->lockForUpdate())
+            ->get();
+    }
 }
+

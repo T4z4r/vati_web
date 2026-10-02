@@ -207,6 +207,60 @@
     </div>
 </div>
 
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-head"><h2>{{ __('Mark Repayments Completed Up To Date') }}</h2></div>
+    <div class="card-body">
+        <p style="margin-bottom: 1rem;">{{ __('For all loans with unpaid installments due on or before the selected date, post payments to mark those installments as completed. Loans that become fully paid will be settled automatically.') }}</p>
+        <form id="markRepaymentsForm" method="POST" action="{{ route('admin.system.data.repayments.mark-completed') }}">
+            @csrf
+            <input type="hidden" name="expected_phrase" value="MARK REPAYMENTS COMPLETE">
+
+            <div class="form-grid">
+                <label>
+                    {{ __('Cutoff Date') }}
+                    <input type="date" name="cutoff_date" required>
+                </label>
+                <label>
+                    {{ __('Branch Filter') }}
+                    <select name="branch_id">
+                        <option value="">{{ __('All branches') }}</option>
+                        @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" id="markRepaymentsPreviewBtn">{{ __('Preview') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" id="markRepaymentsPreviewCard" style="margin-top: 1rem; display: none;">
+    <div class="card-head"><h2>{{ __('Preview') }}</h2></div>
+    <div class="card-body">
+        <div id="markRepaymentsPreviewContent"></div>
+
+        <div id="markRepaymentsExecuteSection" style="display:none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #dee2e6);">
+            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <strong>{{ __('This will create payments and update loan balances for the affected installments.') }}</strong>
+                <p style="margin: 0.5rem 0 0;">{{ __('Type') }} <code>MARK REPAYMENTS COMPLETE</code> {{ __('to confirm.') }}</p>
+            </div>
+            <div class="form-grid">
+                <label>
+                    {{ __('Confirmation Phrase') }}
+                    <input type="text" id="markRepaymentsConfirmationInput" placeholder="MARK REPAYMENTS COMPLETE" required>
+                </label>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn btn-primary" id="markRepaymentsExecuteBtn" disabled>{{ __('Mark Repayments Completed') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const previewBtn = document.getElementById('previewBtn');
@@ -525,6 +579,94 @@ vatExecuteBtn.addEventListener('click', () => {
             hidden.value = vatConfirmationInput.value;
             vatForm.appendChild(hidden);
             vatForm.submit();
+        }
+    });
+});
+
+const markRepaymentsForm = document.getElementById('markRepaymentsForm');
+const markRepaymentsPreviewBtn = document.getElementById('markRepaymentsPreviewBtn');
+const markRepaymentsPreviewCard = document.getElementById('markRepaymentsPreviewCard');
+const markRepaymentsConfirmationInput = document.getElementById('markRepaymentsConfirmationInput');
+const markRepaymentsExecuteBtn = document.getElementById('markRepaymentsExecuteBtn');
+
+markRepaymentsConfirmationInput.addEventListener('input', () => {
+    markRepaymentsExecuteBtn.disabled = markRepaymentsConfirmationInput.value !== 'MARK REPAYMENTS COMPLETE';
+});
+
+markRepaymentsPreviewBtn.addEventListener('click', async () => {
+    const dateInput = markRepaymentsForm.querySelector('input[name="cutoff_date"]');
+    if (!dateInput.value) { alert('{{ __("Please select a cutoff date.") }}'); return; }
+
+    markRepaymentsPreviewBtn.disabled = true;
+    markRepaymentsPreviewBtn.textContent = '{{ __("Loading...") }}';
+
+    const formData = new FormData(markRepaymentsForm);
+    formData.delete('confirmation_phrase');
+    formData.delete('expected_phrase');
+    const params = new URLSearchParams();
+    for (const [k, v] of formData.entries()) { if (v) params.set(k, v); }
+
+    try {
+        const resp = await fetch('{{ route("admin.system.data.repayments.mark-completed.preview") }}?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json();
+
+        if (!data.success) { alert(data.message || 'Error'); return; }
+
+        const d = data.data;
+        markRepaymentsPreviewCard.style.display = 'block';
+
+        let html = '<div class="table-wrap"><table><thead><tr><th>{{ __("Item") }}</th><th style="text-align:right;">{{ __("Value") }}</th></tr></thead><tbody>';
+        const rows = [
+            ['{{ __("Cutoff date") }}', d.cutoff_date],
+            ['{{ __("Loans affected") }}', d.loans.toLocaleString()],
+            ['{{ __("Installments to complete") }}', d.installments.toLocaleString()],
+            ['{{ __("Total amount") }}', Number(d.amount).toLocaleString()],
+            ['{{ __("Loans that will be fully settled") }}', d.loans_settled.toLocaleString()],
+        ];
+        rows.forEach(r => { html += '<tr><td>' + r[0] + '</td><td class="money" style="text-align:right;">' + r[1] + '</td></tr>'; });
+        html += '</tbody></table></div>';
+
+        if (d.samples && d.samples.length) {
+            html += '<h3 style="margin-top: 1rem;">{{ __("Sample loans") }}</h3><ul style="list-style: disc; padding-left: 1.5rem;">';
+            d.samples.forEach(s => {
+                html += '<li>' + s.loan_number + ': ' + s.installments + ' {{ __("repayment(s)") }}, ' + Number(s.amount).toLocaleString() + (s.settled ? ' ({{ __("will be settled") }})' : '') + '</li>';
+            });
+            html += '</ul>';
+        }
+
+        document.getElementById('markRepaymentsPreviewContent').innerHTML = html;
+        document.getElementById('markRepaymentsExecuteSection').style.display = d.installments > 0 ? 'block' : 'none';
+        markRepaymentsConfirmationInput.value = '';
+        markRepaymentsExecuteBtn.disabled = true;
+    } catch (e) {
+        alert('Network error.');
+    } finally {
+        markRepaymentsPreviewBtn.disabled = false;
+        markRepaymentsPreviewBtn.textContent = '{{ __("Preview") }}';
+    }
+});
+
+markRepaymentsExecuteBtn.addEventListener('click', () => {
+    Swal.fire({
+        title: '{{ __("Mark these repayments completed?") }}',
+        text: '{{ __("Payments will be posted for every installment due on or before the cutoff date, and any fully cleared loan will be settled.") }}',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '{{ __("Yes, mark completed") }}',
+        cancelButtonText: '{{ __("Cancel") }}',
+        confirmButtonColor: '#2c4b6e',
+        cancelButtonColor: '#68736b',
+        reverseButtons: true,
+    }).then(result => {
+        if (result.isConfirmed) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'confirmation_phrase';
+            hidden.value = markRepaymentsConfirmationInput.value;
+            markRepaymentsForm.appendChild(hidden);
+            markRepaymentsForm.submit();
         }
     });
 });

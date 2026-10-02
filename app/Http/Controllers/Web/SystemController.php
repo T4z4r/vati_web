@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\SystemSetting;
 use App\Services\DataPurgeService;
+use App\Services\PaymentService;
 use App\Services\SystemInfoService;
 use App\Services\VatCorrectionService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -262,6 +264,44 @@ class SystemController extends Controller
                     'schedule' => $result['schedule'],
                 ])
                 ->log('VAT computation corrected for existing loans and applications');
+
+            return redirect()->route('admin.system.data')->with('success', $result['message']);
+        } catch (\DomainException $e) {
+            return redirect()->route('admin.system.data')->with('error', $e->getMessage());
+        }
+    }
+
+    public function markRepaymentsCompletedPreview(Request $request, PaymentService $payments)
+    {
+        $request->validate([
+            'branch_id' => 'nullable|integer|exists:branches,id',
+            'cutoff_date' => 'required|date',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $payments->estimateRepaymentsCompletedUpTo(
+                Carbon::parse($request->cutoff_date),
+                $request->integer('branch_id') ?: null
+            ),
+        ]);
+    }
+
+    public function markRepaymentsCompleted(Request $request, PaymentService $payments)
+    {
+        $request->validate([
+            'branch_id' => 'nullable|integer|exists:branches,id',
+            'cutoff_date' => 'required|date',
+            'confirmation_phrase' => 'required|same:expected_phrase',
+            'expected_phrase' => 'required',
+        ]);
+
+        try {
+            $result = $payments->markRepaymentsCompletedUpTo(
+                $request->user(),
+                Carbon::parse($request->cutoff_date),
+                $request->integer('branch_id') ?: null
+            );
 
             return redirect()->route('admin.system.data')->with('success', $result['message']);
         } catch (\DomainException $e) {

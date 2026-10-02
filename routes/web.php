@@ -124,6 +124,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::post('data/tables/delete', [SystemController::class, 'forceDeleteTable'])->name('data.tables.delete');
         Route::get('data/vat-correct/preview', [SystemController::class, 'vatCorrectPreview'])->name('data.vat-correct.preview');
         Route::post('data/vat-correct', [SystemController::class, 'vatCorrect'])->name('data.vat-correct');
+        Route::get('data/repayments/mark-completed/preview', [SystemController::class, 'markRepaymentsCompletedPreview'])->name('data.repayments.mark-completed.preview');
+        Route::post('data/repayments/mark-completed', [SystemController::class, 'markRepaymentsCompleted'])->name('data.repayments.mark-completed');
         Route::get('app-versions', [AppVersionController::class, 'index'])->name('app-versions');
         Route::post('app-versions', [AppVersionController::class, 'store'])->name('app-versions.store');
         Route::delete('app-versions/{appVersion}', [AppVersionController::class, 'destroy'])->name('app-versions.destroy');
