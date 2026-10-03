@@ -576,5 +576,20 @@
     "Principal issued": "Mtaji wa msingi uliotolewa",
     "Principal and interest": "Mtaji wa msingi na riba",
     "Repaid to date": "Imelipwa hadi sasa",
-    "Of principal recovered": "Ya mtaji wa msingi uliorekebishwa"
+    "Of principal recovered": "Ya mtaji wa msingi uliorekebishwa",
+    "Repayments": "Marejesho",
+    "Every repayment collected, with daily, weekly and pending figures.": "Kila mrejesho uliokusanywa, pamoja na takwimu za kila siku, kila wiki na zilizobaki.",
+    "Today's repayments": "Marejesho ya leo",
+    "This week": "Wiki hii",
+    "Total repaid": "Jumla iliyolipwa",
+    "All methods": "Njia zote",
+    "Receipt, loan number or member": "Risiti, namba ya mkopo au mwanachama",
+    "Posted": "Imewekwa",
+    "Reversed": "Imebatilishwa",
+    "No repayments found.": "Hakuna marejesho yaliyopatikana.",
+    "receipts today": "risiti leo",
+    "receipts this week": "risiti wiki hii",
+    "installments due": "ratiba zinazodaiwa",
+    "posted receipts": "risiti zilizowekwa",
+    "Pending": "Inasubiri"
 }

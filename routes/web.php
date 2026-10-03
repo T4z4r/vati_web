@@ -14,6 +14,7 @@ use App\Http\Controllers\Web\MemberController;
 use App\Http\Controllers\Web\MemberDocumentController;
 use App\Http\Controllers\Web\OrganizationController;
 use App\Http\Controllers\Web\PaymentController;
+use App\Http\Controllers\Web\RepaymentController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SecurityController;
 use App\Http\Controllers\Web\SystemController;
@@ -45,6 +46,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('group-visits/export/{format}', [GroupVisitController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('group-visits.export.list')->middleware('permission:view-group-visits');
     Route::get('loan-applications/export/{format}', [LoanApplicationController::class, 'exportList'])->whereIn('format', ['pdf', 'xlsx'])->name('loan-applications.export.list')->middleware('permission:view-loan-applications');
     Route::get('loans/export/{format}', [LoanController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('loans.export.list')->middleware('permission:view-loans');
+    Route::get('repayments/export/{format}', [RepaymentController::class, 'export'])->whereIn('format', ['pdf', 'xlsx'])->name('repayments.export.list')->middleware('permission:view-payments');
 
     Route::get('organization', [OrganizationController::class, 'index'])->name('organization.index')->middleware('role:super_admin|head_office_admin');
     Route::post('regions', [OrganizationController::class, 'storeRegion'])->name('regions.store')->middleware('role:super_admin|head_office_admin');
@@ -94,6 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ComplianceController::class, 'downloadDocument'])->name('loan-applications.documents.download')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/cancel', [ComplianceController::class, 'cancel'])->name('loan-applications.cancel')->middleware('permission:create-loan-applications');
 
+    Route::get('repayments', [RepaymentController::class, 'index'])->name('repayments.index')->middleware('permission:view-payments');
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show')->middleware('permission:view-loans');
     Route::post('loans/{loan}/disburse', [LoanController::class, 'disburse'])->name('loans.disburse')->middleware('permission:disburse-loans');

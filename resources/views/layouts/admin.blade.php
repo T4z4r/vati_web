@@ -56,6 +56,12 @@
                         aria-hidden="true"></span>
                     {{ __('Loans & Collections') }}</a>
             @endcan
+            @can('view-payments')
+                <a class="{{ request()->routeIs('admin.repayments.*') ? 'active' : '' }}"
+                    href="{{ route('admin.repayments.index') }}"><span class="ph ph-hand-coins nav-icon"
+                        aria-hidden="true"></span>
+                    {{ __('Repayments') }}</a>
+            @endcan
             @role('super_admin|head_office_admin')
                 <p class="nav-label">{{ __('Management') }}</p>
                 @can('view-loan-products')
