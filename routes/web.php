@@ -81,6 +81,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::resource('loan-applications', LoanApplicationController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:create-loan-applications');
     Route::resource('loan-applications', LoanApplicationController::class)->only(['index', 'show'])->middleware('permission:view-loan-applications');
     Route::post('loan-applications/correct-repayments', [LoanApplicationController::class, 'correctRepayments'])->name('loan-applications.correct-repayments')->middleware('role:super_admin|head_office_admin');
+    Route::post('loan-applications/check-missing-loans', [LoanApplicationController::class, 'checkMissingLoans'])->name('loan-applications.check-missing-loans')->middleware('role:super_admin|head_office_admin');
+    Route::post('loan-applications/create-missing-loans', [LoanApplicationController::class, 'createMissingLoans'])->name('loan-applications.create-missing-loans')->middleware('role:super_admin|head_office_admin');
     Route::get('loan-applications/{loanApplication}/export', [LoanApplicationController::class, 'export'])
         ->name('loan-applications.export')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/submit', [LoanApplicationController::class, 'submit'])->name('loan-applications.submit')->middleware('permission:create-loan-applications');

@@ -45,6 +45,65 @@ class LoanApprovalService
         }
     }
 
+    /**
+     * Open the loan account an approved application is owed, priced on the
+     * approved principal and term. Idempotent: an application that already
+     * owns a loan keeps it, so a backfill run never double-issues.
+     *
+     * @throws DomainException when the application cannot be priced.
+     */
+    public function issueLoan(LoanApplication $application): Loan
+    {
+        if ($loan = $application->loan()->first()) {
+            return $loan;
+        }
+
+        if (! $application->product) {
+            throw new DomainException('This application has no linked loan product; a loan account cannot be opened.');
+        }
+
+        $approvedAmount = (float) ($application->recommended_amount ?: $application->requested_amount);
+        if ($approvedAmount <= 0 || $approvedAmount > (float) $application->requested_amount) {
+            throw new DomainException('Approved principal must be positive and cannot exceed the requested amount.');
+        }
+        $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
+        $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
+        $installments = $this->calculator->installmentCount($application->product, $approvedDuration);
+        // The starting debt is principal plus reducing-balance interest,
+        // with the principal and interest balances tracked separately.
+        $totalRepayment = round((float) $figures['total_repayment'], 2);
+        // interest_amount is the per-installment interest; the balance
+        // keeps the full interest owed over the whole tenure.
+        $totalInterest = round((float) $figures['total_interest'], 2);
+
+        return Loan::create([
+            'loan_number' => $this->numbers->loan(),
+            'loan_application_id' => $application->id,
+            'member_id' => $application->member_id,
+            'group_id' => $application->group_id,
+            'loan_product_id' => $application->loan_product_id,
+            'branch_id' => $application->branch_id,
+            'principal_amount' => $figures['principal'],
+            'interest_amount' => $figures['interest'],
+            'interest_rate' => $figures['interest_rate'],
+            'total_repayment' => $totalRepayment,
+            'principal_balance' => $figures['principal'],
+            'interest_balance' => $totalInterest,
+            'total_balance' => $totalRepayment,
+            'number_of_installments' => $installments,
+            'installment_amount' => $figures['installment_amount'],
+            'processing_fee' => $figures['processing_fee'],
+            'transaction_charges' => 0,
+            'other_charges' => 0,
+            'total_fees_and_vat' => $figures['charges'],
+            'calc_insurance_fee' => $figures['insurance_fee'],
+            'calc_vat' => $figures['vat'],
+            'calc_security_amount' => $figures['security_amount'],
+            'calc_amount_receivable' => $figures['amount_receivable'],
+            'calc_charges' => $figures['charges'],
+        ]);
+    }
+
     public function decide(LoanApplication $application, User $user, string $decision, ?string $remarks = null): LoanApplication
     {
         return DB::transaction(function () use ($application, $user, $decision, $remarks) {
@@ -68,46 +127,8 @@ class LoanApprovalService
             ]);
             $application->update(['status' => $to]);
 
-            if ($to === ApplicationStatus::APPROVED && ! $application->loan()->exists()) {
-                $approvedAmount = (float) ($application->recommended_amount ?: $application->requested_amount);
-                if ($approvedAmount <= 0 || $approvedAmount > (float) $application->requested_amount) {
-                    throw new DomainException('Approved principal must be positive and cannot exceed the requested amount.');
-                }
-                $approvedDuration = (int) ($application->recommended_duration_months ?: $application->duration_months);
-                $figures = $this->calculator->calculate($application->product, $approvedAmount, $approvedDuration);
-                $installments = $this->calculator->installmentCount($application->product, $approvedDuration);
-                // The starting debt is principal plus reducing-balance interest,
-                // with the principal and interest balances tracked separately.
-                $totalRepayment = round((float) $figures['total_repayment'], 2);
-                // interest_amount is the per-installment interest; the balance
-                // keeps the full interest owed over the whole tenure.
-                $totalInterest = round((float) $figures['total_interest'], 2);
-                Loan::create([
-                    'loan_number' => $this->numbers->loan(),
-                    'loan_application_id' => $application->id,
-                    'member_id' => $application->member_id,
-                    'group_id' => $application->group_id,
-                    'loan_product_id' => $application->loan_product_id,
-                    'branch_id' => $application->branch_id,
-                    'principal_amount' => $figures['principal'],
-                    'interest_amount' => $figures['interest'],
-                    'interest_rate' => $figures['interest_rate'],
-                    'total_repayment' => $totalRepayment,
-                    'principal_balance' => $figures['principal'],
-                    'interest_balance' => $totalInterest,
-                    'total_balance' => $totalRepayment,
-                    'number_of_installments' => $installments,
-                    'installment_amount' => $figures['installment_amount'],
-                    'processing_fee' => $figures['processing_fee'],
-                    'transaction_charges' => 0,
-                    'other_charges' => 0,
-                    'total_fees_and_vat' => $figures['charges'],
-                    'calc_insurance_fee' => $figures['insurance_fee'],
-                    'calc_vat' => $figures['vat'],
-                    'calc_security_amount' => $figures['security_amount'],
-                    'calc_amount_receivable' => $figures['amount_receivable'],
-                    'calc_charges' => $figures['charges'],
-                ]);
+            if ($to === ApplicationStatus::APPROVED) {
+                $this->issueLoan($application);
             }
 
             activity()->causedBy($user)->performedOn($application)->withProperties(['from' => $from, 'to' => $to->value])->log("Loan application {$decision}");

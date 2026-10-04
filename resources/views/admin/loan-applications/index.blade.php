@@ -21,6 +21,29 @@
                         <span class="ph ph-calculator" aria-hidden="true"></span> {{ __('Auto correct repayments') }}
                     </button>
                 </form>
+                <form method="POST" action="{{ route('admin.loan-applications.check-missing-loans') }}">
+                    @csrf
+                    @if (request('branch_id'))
+                        <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
+                    @endif
+                    <button class="btn btn-secondary" title="{{ __('Find applications missing a loan account') }}"
+                        aria-label="{{ __('Check missing loans') }}">
+                        <span class="ph ph-magnifying-glass" aria-hidden="true"></span> {{ __('Check missing loans') }}
+                    </button>
+                </form>
+                @if ($missingLoanReport && $missingLoanReport['missing'] > 0)
+                    <form method="POST" action="{{ route('admin.loan-applications.create-missing-loans') }}">
+                        @csrf
+                        @if (request('branch_id'))
+                            <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
+                        @endif
+                        <button class="btn btn-primary"
+                            data-confirm="{{ __('Open a loan account for every application missing one?') }}">
+                            <span class="ph ph-plus-circle" aria-hidden="true"></span>
+                            {{ __('Create missing loans') }} ({{ $missingLoanReport['missing'] }})
+                        </button>
+                    </form>
+                @endif
             @endrole
         </div>
     </div>
@@ -42,6 +65,74 @@
             <small>{{ __('Amount requested') }}</small><strong>TZS {{ number_format($stats['requested'], 0) }}</strong><em>{{ __('Requested to date') }}</em>
         </div>
     </div>
+    @if ($missingLoanReport)
+        <div class="card">
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">{{ __('DATA INTEGRITY') }}</p>
+                    <h2>{{ __('Applications missing a loan account') }}</h2>
+                    <p>{{ $missingLoanReport['message'] }}</p>
+                </div>
+                <div class="head-actions">
+                    <a class="btn btn-secondary"
+                        href="{{ route('admin.loan-applications.index', request()->query()) }}"><span
+                            class="ph ph-x" aria-hidden="true"></span> {{ __('Close') }}</a>
+                </div>
+            </div>
+            @if ($missingLoanReport['issued'])
+                <div class="alert alert-success"><span class="ph ph-check-circle" aria-hidden="true"></span>
+                    {{ __('Loan accounts opened') }}:
+                    @foreach ($missingLoanReport['issued'] as $issued)
+                        <strong>{{ $issued['application_number'] }}</strong> &rarr;
+                        {{ $issued['loan_number'] }}@if (! $loop->last), @endif
+                    @endforeach
+                </div>
+            @endif
+            @if ($missingLoanReport['failures'])
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($missingLoanReport['failures'] as $failure)
+                            <li>{{ $failure['application_number'] }}: {{ $failure['reason'] }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{ __('Application') }}</th>
+                            <th>{{ __('Member / Group') }}</th>
+                            <th>{{ __('Product') }}</th>
+                            <th>{{ __('Principal') }}</th>
+                            <th>{{ __('Duration') }}</th>
+                            <th>{{ __('Status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($missingLoanReport['applications'] as $missing)
+                            <tr>
+                                <td><a class="table-link"
+                                        href="{{ route('admin.loan-applications.show', $missing['id']) }}">{{ $missing['application_number'] }}</a>
+                                </td>
+                                <td>{{ $missing['member'] }}<br><small class="muted">{{ $missing['group'] }}</small></td>
+                                <td>{{ $missing['product'] }}</td>
+                                <td class="money">TZS {{ number_format($missing['amount'], 0) }}</td>
+                                <td>{{ $missing['duration'] }} {{ __('months') }}</td>
+                                <td><span class="badge {{ $missing['status'] }}">{{ str_replace('_', ' ', $missing['status']) }}</span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="empty"><span class="ph ph-seal-check empty-icon"
+                                        aria-hidden="true"></span>{{ __('Every approved application has a loan account.') }}</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
     <div class="card">
         <div class="status-tabs">
             <nav class="tabs-nav">

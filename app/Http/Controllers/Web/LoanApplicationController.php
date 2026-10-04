@@ -14,6 +14,7 @@ use App\Services\ApplicationDetailService;
 use App\Services\ExportService;
 use App\Services\LoanApprovalService;
 use App\Services\LoanCalculatorService;
+use App\Services\MissingLoanService;
 use App\Services\OnboardingService;
 use App\Services\VatCorrectionService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -52,6 +53,49 @@ class LoanApplicationController extends Controller
             'statusTabs' => $this->statusTabs($request),
             'activeStatus' => $activeStatus ?? '',
             'stats' => $this->listingStats($request),
+            'missingLoanReport' => null,
+        ]);
+    }
+
+    /**
+     * List applications that reached an approved status without a loan account.
+     */
+    public function checkMissingLoans(Request $request, MissingLoanService $service)
+    {
+        return $this->missingLoanReport($request, $service->run($this->branchId($request)));
+    }
+
+    /**
+     * Open the loan accounts those applications should have been given.
+     */
+    public function createMissingLoans(Request $request, MissingLoanService $service)
+    {
+        $branchId = $this->branchId($request);
+        $result = $service->run($branchId, true);
+
+        activity()
+            ->causedBy($request->user())
+            ->withProperties([
+                'branch_id' => $branchId,
+                'missing' => $result['missing'],
+                'created' => $result['created'],
+                'failed' => $result['failed'],
+            ])
+            ->log('Loan accounts opened for loan applications missing one');
+
+        return $this->missingLoanReport($request, $result);
+    }
+
+    private function missingLoanReport(Request $request, array $report)
+    {
+        $applications = $this->filteredQuery($request)->latest()->paginate(20)->withQueryString();
+
+        return view('admin.loan-applications.index', [
+            'applications' => $applications,
+            'statusTabs' => $this->statusTabs($request),
+            'activeStatus' => $this->activeStatus($request) ?? '',
+            'stats' => $this->listingStats($request),
+            'missingLoanReport' => $report,
         ]);
     }
 
