@@ -67,7 +67,7 @@ class DashboardController extends Controller
         $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
         $loanIds = (clone $activeLoans)->select('id');
-        $expected = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereDate('due_date', today())->sum('total_due');
+        $expected = $this->expectedCollection($loanIds);
         $collected = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereDate('paid_at', today())->sum('amount');
         $postedPayments = Payment::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->where('status', 'posted');
         $interestReceived = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
@@ -131,6 +131,16 @@ class DashboardController extends Controller
             'totalApplications' => (clone $applications)->count(),
             'requestedForDisbursement' => (float) (clone $applications)->whereNotIn('status', ['rejected', 'cancelled'])->sum('requested_amount'),
         ];
+    }
+
+    private function expectedCollection($loanIds): float
+    {
+        return (float) LoanInstallment::whereIn('loan_id', $loanIds)
+            ->whereDate('due_date', '<=', today())
+            ->whereNotIn('status', ['paid', 'waived'])
+            ->selectRaw('COALESCE(SUM(CASE WHEN total_due - total_paid - interest_exemption > 0
+                THEN total_due - total_paid - interest_exemption ELSE 0 END), 0) as total')
+            ->value('total');
     }
 
     private function collectionsTrend(?int $branchId): array
