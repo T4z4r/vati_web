@@ -181,6 +181,9 @@ class DashboardExpectedCollectionTest extends TestCase
             ->assertSee('EXP-L-1E')
             ->assertSee('partially paid')
             ->assertSee('TZS 150,000')
+            ->assertSee('TZS 20,000.00')
+            ->assertSee('TZS 130,000.00')
+            ->assertSee('2 installments')
             ->assertDontSee('TZS 75,000.00');
     }
 

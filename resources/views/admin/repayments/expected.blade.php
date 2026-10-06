@@ -104,6 +104,15 @@
                         </tr>
                     @endforelse
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4">{{ __('Totals') }}</th>
+                        <th class="money">TZS {{ number_format($stats['expectedAmount'], 2) }}</th>
+                        <th class="money">TZS {{ number_format($stats['paidAmount'], 2) }}</th>
+                        <th class="money">TZS {{ number_format($stats['outstandingAmount'], 2) }}</th>
+                        <th colspan="2">{{ number_format($stats['total']) }} {{ __('installments') }}</th>
+                    </tr>
+                </tfoot>
             </table>
         </div>
         @include('admin.partials.pagination', ['paginator' => $installments])
