@@ -44,6 +44,23 @@ class RepaymentController extends Controller
         ]);
     }
 
+    public function expected(Request $request)
+    {
+        $collectionDate = $this->collectionDate($request);
+        $query = $this->expectedQuery($request, $collectionDate);
+
+        return view('admin.repayments.expected', [
+            'installments' => (clone $query)
+                ->with(['loan.member', 'loan.group'])
+                ->orderBy('due_date')
+                ->orderBy('installment_number')
+                ->paginate($this->perPage($request))
+                ->withQueryString(),
+            'collectionDate' => $collectionDate,
+            'stats' => $this->expectedStats(clone $query),
+        ]);
+    }
+
     private function listingStats(Request $request): array
     {
         $posted = $this->filteredQuery($request, false)->where('payments.status', 'posted');
@@ -111,6 +128,59 @@ class RepaymentController extends Controller
             ->whereDate('due_date', '<=', now()->toDateString())
             ->where('outstanding_balance', '>', 0)
             ->when($this->branchId($request), fn ($q, $id) => $q->whereHas('loan', fn ($l) => $l->where('branch_id', $id)));
+    }
+
+    private function expectedQuery(Request $request, Carbon $collectionDate): Builder
+    {
+        $search = $this->stringQuery($request, 'search');
+
+        return LoanInstallment::query()
+            ->whereDate('due_date', $collectionDate->toDateString())
+            ->whereHas('loan', fn ($loan) => $loan
+                ->whereIn('status', ['active', 'overdue'])
+                ->when($this->branchId($request), fn ($loan, $id) => $loan->where('branch_id', $id)))
+            ->when($search, fn ($query, $value) => $query->whereHas('loan', fn ($loan) => $loan
+                ->where('loan_number', 'like', "%{$value}%")
+                ->orWhereHas('member', fn ($member) => $member->where(fn ($member) => $member
+                    ->where('membership_number', 'like', "%{$value}%")
+                    ->orWhere('first_name', 'like', "%{$value}%")
+                    ->orWhere('last_name', 'like', "%{$value}%")))
+                ->orWhereHas('group', fn ($group) => $group->where('group_name', 'like', "%{$value}%"))));
+    }
+
+    private function expectedStats(Builder $query): array
+    {
+        $rows = $query->toBase()
+            ->selectRaw('
+                COUNT(*) as total,
+                COALESCE(SUM(total_due), 0) as expected_amount,
+                COALESCE(SUM(total_paid), 0) as paid_amount,
+                COALESCE(SUM(CASE WHEN total_due - total_paid - interest_exemption > 0
+                    THEN total_due - total_paid - interest_exemption ELSE 0 END), 0) as outstanding_amount,
+                COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) as paid_count,
+                COALESCE(SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END), 0) as partial_count,
+                COALESCE(SUM(CASE WHEN status NOT IN ('paid', 'waived', 'partially_paid') THEN 1 ELSE 0 END), 0) as pending_count
+            ')
+            ->first();
+
+        return [
+            'total' => (int) ($rows->total ?? 0),
+            'expectedAmount' => (float) ($rows->expected_amount ?? 0),
+            'paidAmount' => (float) ($rows->paid_amount ?? 0),
+            'outstandingAmount' => (float) ($rows->outstanding_amount ?? 0),
+            'paid' => (int) ($rows->paid_count ?? 0),
+            'partial' => (int) ($rows->partial_count ?? 0),
+            'pending' => (int) ($rows->pending_count ?? 0),
+        ];
+    }
+
+    private function collectionDate(Request $request): Carbon
+    {
+        $timezone = config('app.timezone', 'Africa/Dar_es_Salaam');
+
+        return $request->filled('collection_date')
+            ? Carbon::parse($request->query('collection_date'), $timezone)->startOfDay()
+            : Carbon::now($timezone)->startOfDay();
     }
 
     private function activeStatus(Request $request): ?string

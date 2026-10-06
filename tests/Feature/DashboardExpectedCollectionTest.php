@@ -155,6 +155,35 @@ class DashboardExpectedCollectionTest extends TestCase
             ->assertViewHas('expected', 100000.0);
     }
 
+    public function test_dashboard_expected_card_links_to_expected_repayments_for_the_day(): void
+    {
+        $loan = $this->loan('EXP-L-1D');
+        $this->installment($loan, 1, today()->toDateString(), 100000);
+
+        $url = route('admin.repayments.expected', ['collection_date' => today()->toDateString()]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee($url, false);
+    }
+
+    public function test_expected_repayments_page_lists_scheduled_installments_and_statuses(): void
+    {
+        $loan = $this->loan('EXP-L-1E');
+        $this->installment($loan, 1, today()->toDateString(), 100000);
+        $this->installment($loan, 2, today()->toDateString(), 50000, ['total_paid' => 20000, 'status' => 'partially_paid']);
+        $this->installment($loan, 3, today()->addDay()->toDateString(), 75000);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.repayments.expected', ['collection_date' => today()->toDateString()]))
+            ->assertOk()
+            ->assertSee('EXP-L-1E')
+            ->assertSee('partially paid')
+            ->assertSee('TZS 150,000')
+            ->assertDontSee('TZS 75,000.00');
+    }
+
     public function test_expected_collection_excludes_fully_paid_installments(): void
     {
         $loan = $this->loan('EXP-L-2');

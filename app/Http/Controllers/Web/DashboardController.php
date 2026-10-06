@@ -94,6 +94,7 @@ class DashboardController extends Controller
 
         $data = compact('branchId', 'recentPayments', 'managementSummary', 'charts') + [
             'branches' => Branch::where('status', true)->orderBy('branch_name')->get(),
+            'collectionDate' => $collectionDate,
             'totalMembers' => $totalMembers,
             'activeMembers' => (clone $members)->where('status', 'active')->count(),
             'newMembersToday' => $newMembersToday,

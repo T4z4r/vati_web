@@ -44,9 +44,9 @@
                 <small>{{ __('Collection rate') }}</small><strong>{{ number_format($collectionRate, 1) }}%</strong>
                 <div class="progress"><span style="width:{{ min(100, $collectionRate) }}%"></span></div>
             </div>
-            <div class="stat"><span class="ph ph-clock stat-icon"
+            <a class="stat" href="{{ route('admin.repayments.expected', array_filter(['branch_id' => $branchId, 'collection_date' => $collectionDate->toDateString()])) }}"><span class="ph ph-clock stat-icon"
                     aria-hidden="true"></span><small>{{ __('Expected today') }}</small><strong>TZS
-                    {{ number_format($expected) }}</strong><em>{{ __('Scheduled collections') }}</em></div>
+                    {{ number_format($expected) }}</strong><em>{{ __('Scheduled collections') }}</em></a>
             <div class="stat"><span class="ph ph-currency-circle-dollar stat-icon"
                     aria-hidden="true"></span><small>{{ __('Collected today') }}</small><strong>TZS
                     {{ number_format($collected) }}</strong><em>{{ __('Posted payments') }}</em></div>

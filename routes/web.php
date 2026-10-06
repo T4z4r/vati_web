@@ -98,6 +98,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ComplianceController::class, 'downloadDocument'])->name('loan-applications.documents.download')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/cancel', [ComplianceController::class, 'cancel'])->name('loan-applications.cancel')->middleware('permission:create-loan-applications');
 
+    Route::get('repayments/expected', [RepaymentController::class, 'expected'])->name('repayments.expected')->middleware('permission:view-payments');
     Route::get('repayments', [RepaymentController::class, 'index'])->name('repayments.index')->middleware('permission:view-payments');
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show')->middleware('permission:view-loans');
