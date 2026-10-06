@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\Loan;
+use App\Models\LoanApplication;
 use App\Models\LoanInstallment;
 use App\Models\LoanProduct;
 use App\Models\Member;
@@ -13,6 +14,7 @@ use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class DashboardExpectedCollectionTest extends TestCase
@@ -60,14 +62,30 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->admin->assignRole('super_admin');
     }
 
-    private function loan(string $number, string $status = 'active'): Loan
+    private function loan(string $number, string $status = 'active', ?Branch $branch = null, ?MemberGroup $group = null, ?Member $member = null): Loan
     {
+        $branch ??= $this->branch;
+        $group ??= $this->group;
+        $member ??= $this->member;
+        $application = LoanApplication::create([
+            'application_number' => $number.'-LAF',
+            'member_id' => $member->id,
+            'loan_product_id' => $this->product->id,
+            'group_id' => $group->id,
+            'branch_id' => $branch->id,
+            'requested_amount' => 1000000,
+            'duration_months' => 6,
+            'status' => 'approved',
+            'created_by' => $this->admin->id,
+        ]);
+
         return Loan::create([
             'loan_number' => $number,
-            'member_id' => $this->member->id,
-            'group_id' => $this->group->id,
+            'loan_application_id' => $application->id,
+            'member_id' => $member->id,
+            'group_id' => $group->id,
             'loan_product_id' => $this->product->id,
-            'branch_id' => $this->branch->id,
+            'branch_id' => $branch->id,
             'principal_amount' => 1000000,
             'interest_amount' => 0,
             'total_repayment' => 1000000,
@@ -94,7 +112,7 @@ class DashboardExpectedCollectionTest extends TestCase
         ], $overrides));
     }
 
-    public function test_expected_collection_counts_arrears_and_today_but_not_the_future(): void
+    public function test_expected_collection_counts_the_given_day_but_not_arrears_or_future(): void
     {
         $loan = $this->loan('EXP-L-1');
         $this->installment($loan, 1, today()->subDays(7)->toDateString(), 100000, ['status' => 'overdue']);
@@ -104,7 +122,37 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertViewHas('expected', 150000.0);
+            ->assertViewHas('expected', 50000.0);
+    }
+
+    public function test_expected_collection_uses_east_african_day_for_today(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-10 00:30:00', config('app.timezone')));
+
+        try {
+            $loan = $this->loan('EXP-L-1B');
+            $this->installment($loan, 1, '2026-07-09', 100000, ['status' => 'overdue']);
+            $this->installment($loan, 2, '2026-07-10', 50000);
+
+            $this->actingAs($this->admin)
+                ->get(route('admin.dashboard'))
+                ->assertOk()
+                ->assertViewHas('expected', 50000.0);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_expected_collection_can_use_a_requested_collection_date(): void
+    {
+        $loan = $this->loan('EXP-L-1C');
+        $this->installment($loan, 1, '2026-07-09', 100000);
+        $this->installment($loan, 2, '2026-07-10', 50000);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard', ['collection_date' => '2026-07-09']))
+            ->assertOk()
+            ->assertViewHas('expected', 100000.0);
     }
 
     public function test_expected_collection_excludes_fully_paid_installments(): void
@@ -129,7 +177,7 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertViewHas('expected', 115000.0);
+            ->assertViewHas('expected', 70000.0);
     }
 
     public function test_expected_collection_ignores_installments_on_loans_that_are_not_active_or_overdue(): void
@@ -146,7 +194,7 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertViewHas('expected', 25000.0);
+            ->assertViewHas('expected', 0.0);
     }
 
     public function test_expected_collection_respects_branch_scope(): void
@@ -166,31 +214,8 @@ class DashboardExpectedCollectionTest extends TestCase
             'last_name' => 'Ali',
             'phone' => '255711111121',
         ]);
-        $otherLoan = Loan::create([
-            'loan_number' => 'EXP-L-8',
-            'member_id' => $otherMember->id,
-            'group_id' => $otherGroup->id,
-            'loan_product_id' => $this->product->id,
-            'branch_id' => $otherBranch->id,
-            'principal_amount' => 500000,
-            'interest_amount' => 0,
-            'total_repayment' => 500000,
-            'principal_balance' => 500000,
-            'interest_balance' => 0,
-            'total_balance' => 500000,
-            'number_of_installments' => 6,
-            'installment_amount' => 83333.33,
-            'status' => 'active',
-        ]);
-        $otherLoan->installments()->create([
-            'installment_number' => 1,
-            'due_date' => today()->subDays(4)->toDateString(),
-            'principal_due' => 600000,
-            'interest_due' => 0,
-            'total_due' => 600000,
-            'outstanding_balance' => 600000,
-            'status' => 'overdue',
-        ]);
+        $otherLoan = $this->loan('EXP-L-8', 'active', $otherBranch, $otherGroup, $otherMember);
+        $this->installment($otherLoan, 1, today()->toDateString(), 600000);
 
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard', ['branch_id' => $otherBranch->id]))
@@ -198,12 +223,17 @@ class DashboardExpectedCollectionTest extends TestCase
             ->assertViewHas('expected', 600000.0);
 
         $this->actingAs($this->admin)
-            ->get(route('admin.dashboard'))
+            ->get(route('admin.dashboard', ['branch_id' => $this->branch->id]))
             ->assertOk()
             ->assertViewHas('expected', 200000.0);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertViewHas('expected', 800000.0);
     }
 
-    public function test_collection_rate_is_computed_against_arrears_inclusive_expected(): void
+    public function test_collection_rate_is_computed_against_given_day_expected(): void
     {
         $loan = $this->loan('EXP-L-9');
         $this->installment($loan, 1, today()->subDays(7)->toDateString(), 100000, ['status' => 'overdue']);
@@ -222,9 +252,9 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertViewHas('expected', 150000.0)
+            ->assertViewHas('expected', 50000.0)
             ->assertViewHas('collected', 60000.0)
-            ->assertViewHas('collectionRate', 40.0);
+            ->assertViewHas('collectionRate', 120.0);
     }
 
     public function test_expected_collection_is_zero_when_there_is_nothing_outstanding(): void

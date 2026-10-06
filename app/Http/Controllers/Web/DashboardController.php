@@ -15,6 +15,7 @@ use App\Models\Member;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -67,8 +68,12 @@ class DashboardController extends Controller
         $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
         $loanIds = (clone $activeLoans)->select('id');
-        $expected = $this->expectedCollection($loanIds);
-        $collected = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereDate('paid_at', today())->sum('amount');
+        $collectionDate = $this->collectionDate($request);
+        $expected = $this->expectedCollection($loanIds, $collectionDate);
+        $collected = (float) Payment::whereIn('loan_id', clone $loanIds)
+            ->where('status', 'posted')
+            ->whereBetween('paid_at', [$collectionDate->copy()->startOfDay(), $collectionDate->copy()->endOfDay()])
+            ->sum('amount');
         $postedPayments = Payment::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->where('status', 'posted');
         $interestReceived = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
             ->selectRaw('COALESCE(SUM(interest_amount), 0) as total')->value('total');
@@ -133,14 +138,23 @@ class DashboardController extends Controller
         ];
     }
 
-    private function expectedCollection($loanIds): float
+    private function expectedCollection($loanIds, Carbon $collectionDate): float
     {
         return (float) LoanInstallment::whereIn('loan_id', $loanIds)
-            ->whereDate('due_date', '<=', today())
+            ->whereDate('due_date', $collectionDate->toDateString())
             ->whereNotIn('status', ['paid', 'waived'])
             ->selectRaw('COALESCE(SUM(CASE WHEN total_due - total_paid - interest_exemption > 0
                 THEN total_due - total_paid - interest_exemption ELSE 0 END), 0) as total')
             ->value('total');
+    }
+
+    private function collectionDate(Request $request): Carbon
+    {
+        $timezone = config('app.timezone', 'Africa/Dar_es_Salaam');
+
+        return $request->filled('collection_date')
+            ? Carbon::parse($request->input('collection_date'), $timezone)->startOfDay()
+            : Carbon::now($timezone)->startOfDay();
     }
 
     private function collectionsTrend(?int $branchId): array
