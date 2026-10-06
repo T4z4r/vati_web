@@ -151,7 +151,7 @@ class RepaymentController extends Controller
     private function expectedStats(Builder $query): array
     {
         $rows = $query->toBase()
-            ->selectRaw('
+            ->selectRaw("
                 COUNT(*) as total,
                 COALESCE(SUM(total_due), 0) as expected_amount,
                 COALESCE(SUM(total_paid), 0) as paid_amount,
@@ -160,7 +160,7 @@ class RepaymentController extends Controller
                 COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) as paid_count,
                 COALESCE(SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END), 0) as partial_count,
                 COALESCE(SUM(CASE WHEN status NOT IN ('paid', 'waived', 'partially_paid') THEN 1 ELSE 0 END), 0) as pending_count
-            ')
+            ")
             ->first();
 
         return [
