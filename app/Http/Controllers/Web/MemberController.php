@@ -22,6 +22,11 @@ use Throwable;
 
 class MemberController extends Controller
 {
+    private const LOAN_TABS = [
+        'with' => 'With loan',
+        'without' => 'Without loan',
+    ];
+
     public function index(Request $request)
     {
         $members = $this->filteredQuery($request)->latest()->paginate($this->perPage($request))->withQueryString();
@@ -30,6 +35,8 @@ class MemberController extends Controller
             'members' => $members,
             'groups' => MemberGroup::where('status', true)->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id))->orderBy('group_name')->get(),
             'stats' => $this->listingStats($request),
+            'loanTabs' => $this->loanTabs($request),
+            'activeLoanTab' => $this->activeLoanTab($request) ?? '',
         ]);
     }
 
@@ -57,7 +64,34 @@ class MemberController extends Controller
 
     private function filteredQuery(Request $request)
     {
-        return $this->baseQuery($request)->when($request->status, fn ($q, $v) => $q->where('status', $v));
+        return $this->baseQuery($request)
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->when($this->activeLoanTab($request), fn ($q, $v) => $this->applyLoanTab($q, $v));
+    }
+
+    private function loanTabs(Request $request): array
+    {
+        $query = $this->baseQuery($request)->when($request->status, fn ($q, $v) => $q->where('status', $v));
+
+        $tabs = [['key' => '', 'label' => 'All members', 'count' => (int) (clone $query)->toBase()->count()]];
+
+        foreach (self::LOAN_TABS as $key => $label) {
+            $tabs[] = ['key' => $key, 'label' => $label, 'count' => (int) $this->applyLoanTab(clone $query, $key)->toBase()->count()];
+        }
+
+        return $tabs;
+    }
+
+    private function activeLoanTab(Request $request): ?string
+    {
+        $tab = (string) $request->query('loan', '');
+
+        return array_key_exists($tab, self::LOAN_TABS) ? $tab : null;
+    }
+
+    private function applyLoanTab($query, string $tab)
+    {
+        return $tab === 'with' ? $query->whereHas('loans') : $query->whereDoesntHave('loans');
     }
 
     private function baseQuery(Request $request)

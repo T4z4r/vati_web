@@ -32,8 +32,22 @@
         </div>
     </div>
     <div class="card">
+        <div class="status-tabs">
+            <nav class="tabs-nav">
+                @foreach ($loanTabs as $tab)
+                    <a class="tab @if ($activeLoanTab === $tab['key']) active @endif"
+                        href="{{ route('admin.members.index', $tab['key'] === '' ? request()->except('loan', 'page') : array_merge(request()->except('loan', 'page'), ['loan' => $tab['key']])) }}"
+                        @if ($activeLoanTab === $tab['key']) aria-current="page" @endif>
+                        <span>{{ __($tab['label']) }}</span>
+                        <span class="badge">{{ $tab['count'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+        </div>
         <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-                placeholder="{{ __('Search name, number or phone') }}"><select name="group_id">
+                placeholder="{{ __('Search name, number or phone') }}">
+            <input type="hidden" name="loan" value="{{ request('loan') }}">
+            <select name="group_id">
                 <option value="">{{ __('All groups') }}</option>
                 @foreach ($groups as $group)
                     <option value="{{ $group->id }}" @selected(request('group_id') == $group->id)>{{ $group->group_name }}</option>

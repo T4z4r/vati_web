@@ -150,6 +150,11 @@ class RepaymentController extends Controller
 
     private function expectedStats(Builder $query): array
     {
+        $borrowers = (clone $query)
+            ->join('loans', 'loan_installments.loan_id', '=', 'loans.id')
+            ->distinct('loans.member_id')
+            ->count('loans.member_id');
+
         $rows = $query->toBase()
             ->selectRaw("
                 COUNT(*) as total,
@@ -165,6 +170,7 @@ class RepaymentController extends Controller
 
         return [
             'total' => (int) ($rows->total ?? 0),
+            'borrowers' => (int) $borrowers,
             'expectedAmount' => (float) ($rows->expected_amount ?? 0),
             'paidAmount' => (float) ($rows->paid_amount ?? 0),
             'outstandingAmount' => (float) ($rows->outstanding_amount ?? 0),

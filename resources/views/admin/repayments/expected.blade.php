@@ -22,6 +22,12 @@
             <em>{{ number_format($stats['total']) }} {{ __('scheduled installments') }}</em>
         </div>
         <div class="stat">
+            <span class="ph ph-users stat-icon" aria-hidden="true"></span>
+            <small>{{ __('Expected borrowers') }}</small>
+            <strong>{{ number_format($stats['borrowers']) }}</strong>
+            <em>{{ __('people expected to repay') }}</em>
+        </div>
+        <div class="stat">
             <span class="ph ph-check-circle stat-icon" aria-hidden="true"></span>
             <small>{{ __('Paid') }}</small>
             <strong>TZS {{ number_format($stats['paidAmount']) }}</strong>
@@ -110,7 +116,7 @@
                         <th class="money">TZS {{ number_format($stats['expectedAmount'], 2) }}</th>
                         <th class="money">TZS {{ number_format($stats['paidAmount'], 2) }}</th>
                         <th class="money">TZS {{ number_format($stats['outstandingAmount'], 2) }}</th>
-                        <th colspan="2">{{ number_format($stats['total']) }} {{ __('installments') }}</th>
+                        <th colspan="2">{{ number_format($stats['total']) }} {{ __('installments') }} &middot; {{ number_format($stats['borrowers']) }} {{ \Illuminate\Support\Str::plural(__('borrower'), $stats['borrowers']) }}</th>
                     </tr>
                 </tfoot>
             </table>
