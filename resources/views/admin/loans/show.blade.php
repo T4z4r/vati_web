@@ -109,14 +109,17 @@
                                                             step="0.01"
                                                             value="{{ number_format($installmentBalance, 2, '.', '') }}"
                                                             required></label><label
-                                                        style="margin:0;min-width:100px"><small>{{ __('Method') }}</small><select
+                                                            style="margin:0;min-width:100px"><small>{{ __('Method') }}</small><select
                                                             name="payment_method" data-select2="false">
                                                             <option value="cash">{{ __('Cash') }}</option>
                                                             <option value="mpesa">M-Pesa</option>
                                                             <option value="airtel_money">Airtel Money</option>
                                                             <option value="mixx">Mixx</option>
                                                             <option value="bank_transfer">{{ __('Bank') }}</option>
-                                                        </select></label><button class="btn btn-sm btn-primary"
+                                                        </select></label><label
+                                                        style="margin:0;min-width:140px"><small>{{ __('Repayment date') }}</small><input
+                                                            type="date" name="paid_at"
+                                                            value="{{ today()->toDateString() }}"></label><button class="btn btn-sm btn-primary"
                                                         data-confirm="{{ __('Confirm this installment repayment?') }}">{{ __('Confirm repayment') }}</button>
                                                 </form>
                                             @else

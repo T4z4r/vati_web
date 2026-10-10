@@ -15,6 +15,8 @@
                     <option value="{{ $branch->id }}" @selected($branchId == $branch->id)>{{ $branch->branch_name }}</option>
                 @endforeach
             </select>
+            <input type="date" name="collection_date" value="{{ $collectionDate->toDateString() }}"
+                aria-label="{{ __('Collection date') }}">
             <button class="btn btn-secondary">{{ __('Apply filter') }}</button>
         </form>
     </div>
@@ -45,10 +47,10 @@
                 <div class="progress"><span style="width:{{ min(100, $collectionRate) }}%"></span></div>
             </div>
             <a class="stat" href="{{ route('admin.repayments.expected', array_filter(['branch_id' => $branchId, 'collection_date' => $collectionDate->toDateString()])) }}"><span class="ph ph-clock stat-icon"
-                    aria-hidden="true"></span><small>{{ __('Expected today') }}</small><strong>TZS
+                    aria-hidden="true"></span><small>@if ($collectionDate->isToday()){{ __('Expected today') }}@else{{ __('Expected on') }} {{ $collectionDate->format('d M Y') }}@endif</small><strong>TZS
                     {{ number_format($expected) }}</strong><em>{{ __('Scheduled collections') }}</em></a>
             <div class="stat"><span class="ph ph-currency-circle-dollar stat-icon"
-                    aria-hidden="true"></span><small>{{ __('Collected today') }}</small><strong>TZS
+                    aria-hidden="true"></span><small>@if ($collectionDate->isToday()){{ __('Collected today') }}@else{{ __('Collected on') }} {{ $collectionDate->format('d M Y') }}@endif</small><strong>TZS
                     {{ number_format($collected) }}</strong><em>{{ __('Posted payments') }}</em></div>
             <div class="stat">
                 <span class="ph ph-money stat-icon" aria-hidden="true"></span>

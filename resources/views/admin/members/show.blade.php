@@ -310,6 +310,7 @@
                                                 <input type="hidden" name="loan_installment_id" value="{{ $installment->id }}">
                                                 <label style="margin:0;min-width:115px"><small>Amount</small><input type="number" name="amount" min="0.01" max="{{ number_format($installmentBalance, 2, '.', '') }}" step="0.01" value="{{ number_format($installmentBalance, 2, '.', '') }}" required></label>
                                                 <label style="margin:0;min-width:100px"><small>Method</small><select name="payment_method" data-select2="false"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx">Mixx</option><option value="bank_transfer">Bank</option></select></label>
+                                                <label style="margin:0;min-width:140px"><small>{{ __('Repayment date') }}</small><input type="date" name="paid_at" value="{{ today()->toDateString() }}"></label>
                                                 <button class="btn btn-sm btn-primary" data-confirm="Thibitisha malipo ya awamu hii?">Thibitisha marejesho</button>
                                             </form>
                                         @else
