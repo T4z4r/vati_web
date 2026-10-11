@@ -33,7 +33,7 @@ All monetary values are returned as **numbers (float, 2-decimal precision alread
 | `members_with_active_loans` | int | Distinct members holding an active/overdue loan. |
 | `total_loan_applications` | int | All loan applications ever submitted for the group. |
 | `outstanding_portfolio` | float | Sum of `total_balance` across active/overdue loans. |
-| `total_disbursed` | float | Sum of `principal_amount` for disbursed (non-pending/rejected/cancelled) loans. |
+| `total_disbursed` | float | Sum of issued disbursement amounts for completed disbursements on disbursed loans. |
 | `expected_weekly_collection` | float | Sum of `total_due` for installments due this week. |
 | `actual_weekly_collection` | float | Sum of **posted** payments received this week. |
 | `monthly_collections` | float | Sum of **posted** payments received this month, up to today. |

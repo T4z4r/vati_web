@@ -99,7 +99,7 @@ $this->postJson($url, ['method' => 'cash', 'amount' => 873200])->assertConflict(
         $this->assertSame(today()->addDays(4)->toDateString(), $loan->installments()->orderBy('installment_number')->first()->due_date->toDateString());
         $this->assertSame('1000000.00', $loan->fresh()->principal_amount);
         $this->assertSame('873200.00', $loan->fresh()->calc_amount_receivable);
-        $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', $loan->fresh()->total_repayment);
+        $this->getJson('/api/v1/portfolio/summary')->assertOk()->assertJsonPath('data.total_issued_amount', '873200.00');
         $this->assertSame('1068000.00', $loan->fresh()->total_balance);
         $this->assertSame(1068000.0, round((float) $loan->installments()->sum('total_due'), 2));
         $this->assertSame(24, $loan->installments()->count());

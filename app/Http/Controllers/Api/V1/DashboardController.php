@@ -109,7 +109,8 @@ class DashboardController extends ApiController
             'repayment_profit_loss' => $repaymentIncome - $repaymentLoss,
             'total_disbursements' => (float) (clone $loans)
                 ->whereHas('disbursement', fn ($q) => $q->where('status', 'completed'))
-                ->sum('total_repayment'),
+                ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
+                ->sum('loan_disbursements.amount'),
             'total_applications' => (clone $applications)->count(),
             'requested_for_disbursement' => (float) (clone $applications)->whereNotIn('status', ['rejected', 'cancelled'])->sum('requested_amount'),
         ];

@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "e76df713-1cda-4a85-a77d-f0c4a9a49f54",
         "name": "VATI Microfinance API",
-        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nLatest notes: dashboard `total_issued_amount` and management `total_disbursements` include disbursed principal plus interest (`total_repayment`) for completed disbursements. Member asset input uses `asset_matrix` (fixed/custom asset name, category, quantity, estimated value, and description) and is normalized to the canonical `assets` response; the legacy `assets` array remains supported. Validation errors use HTTP 422; unauthenticated requests use HTTP 401. Group deletion uses `DELETE /api/v1/groups/{group}`: 403 without the `delete-groups` permission or for a loan officer outside their assigned groups, 409/422 with a `message` when members, loans, applications, meetings, collections, visits, or witnesses still reference the group, and 204 on success. Member security pay-off uses `POST /api/v1/members/{member}/security-payoff`: the balance settles the member's eligible active or overdue loans oldest first (interest before principal) and the remainder is refunded, which requires a `payout_method`; it returns 403 without `manage-security` and 422 with a `message` when there is nothing to pay off. `GET /api/v1/payments` lists repayments with filters (search, status, payment method, member, loan, group, product, branch, collector, date range, amount range, sort, pagination) and returns a `summary` block with the filtered totals.",
+        "description": "Complete Postman collection for the VATI Microfinance Laravel API.\n\nQuick start:\n1. Set `base_url`, `admin_email`, and `admin_password` in collection variables.\n2. Run **Authentication / Login**. The Bearer token is saved automatically.\n3. Run requests in folder order to create organization, member, product, application, loan, and payment data.\n4. Requests prefixed with `[Destructive]` should normally be run manually and last.\n\nLatest notes: dashboard `total_issued_amount` and management `total_disbursements` use the issued disbursement amount for completed disbursements. Member asset input uses `asset_matrix` (fixed/custom asset name, category, quantity, estimated value, and description) and is normalized to the canonical `assets` response; the legacy `assets` array remains supported. Validation errors use HTTP 422; unauthenticated requests use HTTP 401. Group deletion uses `DELETE /api/v1/groups/{group}`: 403 without the `delete-groups` permission or for a loan officer outside their assigned groups, 409/422 with a `message` when members, loans, applications, meetings, collections, visits, or witnesses still reference the group, and 204 on success. Member security pay-off uses `POST /api/v1/members/{member}/security-payoff`: the balance settles the member's eligible active or overdue loans oldest first (interest before principal) and the remainder is refunded, which requires a `payout_method`; it returns 403 without `manage-security` and 422 with a `message` when there is nothing to pay off. `GET /api/v1/payments` lists repayments with filters (search, status, payment method, member, loan, group, product, branch, collector, date range, amount range, sort, pagination) and returns a `summary` block with the filtered totals.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -258,7 +258,7 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/dashboard?branch_id={{branch_id}}",
-                        "description": "Response blocks are role-aware. Credit officers receive queues/targets; administrators receive approval and portfolio metrics. Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
+                        "description": "Response blocks are role-aware. Credit officers receive queues/targets; administrators receive approval and portfolio metrics. Dashboard and portfolio issued/disbursement totals use the issued amount for completed disbursements."
                     },
                     "response": []
                 },
@@ -268,7 +268,7 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/portfolio/summary?branch_id={{branch_id}}&from=2026-08-01&to=2026-08-31",
-                        "description": "Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
+                        "description": "Dashboard and portfolio issued/disbursement totals use the issued amount for completed disbursements."
                     },
                     "response": []
                 },
@@ -727,7 +727,7 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/dashboard",
-                        "description": "Dashboard and portfolio issued/disbursement totals include completed-disbursement principal plus interest."
+                        "description": "Dashboard and portfolio issued/disbursement totals use the issued amount for completed disbursements."
                     },
                     "response": []
                 }
@@ -1231,10 +1231,10 @@
                         "method": "GET",
                         "header": [],
                         "url": "{{base_url}}/api/v1/groups/{{group_id}}/statistics",
-                        "description": "Returns group-level portfolio statistics including members, active loans, disbursed principal, collections, outstanding portfolio, and PAR metrics."
+                        "description": "Returns group-level portfolio statistics including members, active loans, issued disbursement amount, collections, outstanding portfolio, and PAR metrics."
                     },
                     "response": [],
-                    "description": "Returns group-level portfolio statistics including members, active loans, disbursed principal, collections, outstanding portfolio, and PAR metrics."
+                    "description": "Returns group-level portfolio statistics including members, active loans, issued disbursement amount, collections, outstanding portfolio, and PAR metrics."
                 },
                 {
                     "name": "Group Members",

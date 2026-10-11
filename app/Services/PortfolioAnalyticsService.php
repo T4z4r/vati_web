@@ -38,13 +38,14 @@ class PortfolioAnalyticsService
             ->selectRaw('COALESCE(SUM(total_due - total_paid - interest_exemption), 0) as total')
             ->value('total');
 
-        $totalIssuedQuery = Loan::query()->where('status', '!=', 'cancelled');
+        $totalIssuedQuery = Loan::query()->where('loans.status', '!=', 'cancelled');
         if ($branchId) {
             $totalIssuedQuery->where('branch_id', $branchId);
         }
         $totalIssuedAmount = (float) $totalIssuedQuery
             ->whereHas('disbursement', fn (Builder $query) => $query->where('status', 'completed'))
-            ->sum('total_repayment');
+            ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
+            ->sum('loan_disbursements.amount');
 
         return [
             'as_of' => now()->toDateString(),

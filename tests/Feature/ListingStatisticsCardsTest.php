@@ -176,16 +176,16 @@ class ListingStatisticsCardsTest extends TestCase
     public function test_the_loans_listing_reports_portfolio_totals(): void
     {
         $member = $this->member('LSC-LM1', 'Imani', 'active', $this->group);
-        $this->loan('LSC-P1', $member, null, 1000, 0, 0);
-        $this->loan('LSC-P2', $member, null, 2000, 1500, 1800);
+        $this->loan('LSC-P1', $member, null, 1000, 0, 0, 800);
+        $this->loan('LSC-P2', $member, null, 2000, 1500, 1800, 1500);
 
         $this->actingAs($this->admin)
             ->get(route('admin.loans.index'))
             ->assertOk()
             ->assertViewHas('stats.total', 2)
-            ->assertViewHas('stats.disbursed', 3000.0)
+            ->assertViewHas('stats.disbursed', 2300.0)
             ->assertViewHas('stats.outstanding', 1800.0)
-            ->assertViewHas('stats.repaidShare', 50.0)
+            ->assertViewHas('stats.repaidShare', 34.8)
             ->assertSee(__('Outstanding balance'));
 
         $this->actingAs($this->admin)
@@ -193,7 +193,7 @@ class ListingStatisticsCardsTest extends TestCase
             ->assertOk()
             ->assertViewHas('loans', fn ($paginator) => $paginator->total() === 0)
             ->assertViewHas('stats.total', 2)
-            ->assertViewHas('stats.repaidShare', 50.0);
+            ->assertViewHas('stats.repaidShare', 34.8);
     }
 
     public function test_empty_listings_report_zero_percentages(): void
@@ -237,7 +237,7 @@ class ListingStatisticsCardsTest extends TestCase
         return Member::create($data);
     }
 
-    private function loan(string $number, Member $member, ?MemberGroup $group = null, int $principal = 1000, int $principalBalance = 1000, int $totalBalance = 1200): Loan
+    private function loan(string $number, Member $member, ?MemberGroup $group = null, int $principal = 1000, int $principalBalance = 1000, int $totalBalance = 1200, ?int $issuedAmount = null): Loan
     {
         $application = LoanApplication::create([
             'application_number' => 'APP-'.$number,
@@ -251,7 +251,7 @@ class ListingStatisticsCardsTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        return Loan::create([
+        $loan = Loan::create([
             'loan_number' => $number,
             'loan_application_id' => $application->id,
             'member_id' => $member->id,
@@ -268,6 +268,17 @@ class ListingStatisticsCardsTest extends TestCase
             'installment_amount' => $principal + 200,
             'status' => LoanStatus::ACTIVE->value,
         ]);
+
+        $loan->disbursement()->create([
+            'amount' => $issuedAmount ?? $principal,
+            'method' => 'cash',
+            'status' => 'completed',
+            'disbursed_at' => now(),
+            'processed_by' => $this->admin->id,
+            'approved_by' => $this->admin->id,
+        ]);
+
+        return $loan;
     }
 
     private function application(string $number, ApplicationStatus $status, Member $member, int $amount): LoanApplication

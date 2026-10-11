@@ -44,7 +44,11 @@ class LoanController extends Controller
     private function listingStats(Request $request): array
     {
         $query = $this->baseQuery($request);
-        $disbursed = (float) ((clone $query)->toBase()->sum('principal_amount') ?? 0);
+        $disbursed = (float) ((clone $query)
+            ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
+            ->where('loan_disbursements.status', 'completed')
+            ->toBase()
+            ->sum('loan_disbursements.amount') ?? 0);
         $balance = (float) ((clone $query)->toBase()->sum('principal_balance') ?? 0);
 
         return [

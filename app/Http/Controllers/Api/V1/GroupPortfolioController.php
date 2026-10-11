@@ -51,7 +51,11 @@ class GroupPortfolioController extends ApiController
         $expected = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereBetween('due_date', [$weekStart, $weekEnd])->sum('total_due');
         $actual = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereBetween('paid_at', [$weekStart, $weekEnd])->sum('amount');
         $monthlyCollections = (float) Payment::whereIn('loan_id', clone $loanIds)->where('status', 'posted')->whereBetween('paid_at', [$monthStart, today()->endOfDay()])->sum('amount');
-        $disbursed = (float) Loan::where('group_id', $group->id)->whereNotIn('status', ['pending_disbursement', 'rejected', 'cancelled'])->sum('principal_amount');
+        $disbursed = (float) Loan::where('loans.group_id', $group->id)
+            ->whereNotIn('loans.status', ['pending_disbursement', 'rejected', 'cancelled'])
+            ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
+            ->where('loan_disbursements.status', 'completed')
+            ->sum('loan_disbursements.amount');
         $arrears = (float) LoanInstallment::whereIn('loan_id', clone $loanIds)->whereDate('due_date', '<', today())->whereNotIn('status', ['paid', 'waived'])->get()->sum(fn ($item) => max(0, (float) $item->total_due - (float) $item->total_paid - (float) $item->interest_exemption));
 
         return response()->json(['success' => true, 'data' => [
