@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TestMail;
 use App\Models\Branch;
 use App\Models\SystemSetting;
 use App\Services\DataPurgeService;
@@ -12,6 +13,7 @@ use App\Services\VatCorrectionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class SystemController extends Controller
@@ -102,6 +104,24 @@ class SystemController extends Controller
         $branches = Branch::orderBy('branch_name')->get();
 
         return view('admin.system.settings', compact('settings', 'branches'));
+    }
+
+    public function testMail(Request $request)
+    {
+        $data = $request->validate(['test_email' => ['required', 'email', 'max:254']]);
+
+        try {
+            Mail::to($data['test_email'])->send(new TestMail);
+        } catch (\Exception $exception) {
+            return back()->withInput($request->only('test_email'))
+                ->withErrors(['test_email' => __('Unable to send the test email. Check the mail service configuration and try again.')]);
+        }
+
+        $message = in_array(config('mail.default'), ['log', 'array'], true)
+            ? __('Test email generated using the :mailer mailer. This mailer does not deliver email to an inbox.', ['mailer' => config('mail.default')])
+            : __('Test email submitted to the mail service for :email. Check the recipient inbox.', ['email' => $data['test_email']]);
+
+        return back()->with('success', $message);
     }
 
     public function updateSettings(Request $request)

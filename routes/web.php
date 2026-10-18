@@ -124,6 +124,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
         Route::get('audit', [SystemController::class, 'audit'])->name('audit');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
         Route::put('settings', [SystemController::class, 'updateSettings'])->name('settings.update');
+        Route::post('settings/test-mail', [SystemController::class, 'testMail'])->name('settings.test-mail')->middleware('throttle:5,1');
         Route::get('data', [SystemController::class, 'data'])->name('data');
         Route::get('data/preview', [SystemController::class, 'preview'])->name('data.preview');
         Route::get('data/tables/preview', [SystemController::class, 'previewTable'])->name('data.tables.preview');

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Area;
+use App\Mail\TestMail;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MemberGroup;
@@ -47,6 +49,42 @@ class SystemDataTest extends TestCase
             'phone' => '255710000001',
             'created_by' => $this->admin->id,
         ]);
+    }
+
+    public function test_admin_can_send_test_mail_and_invalid_recipients_are_rejected(): void
+    {
+        Mail::fake();
+        config(['mail.default' => 'smtp']);
+        $this->actingAs($this->admin)
+            ->from(route('admin.system.settings'))
+            ->post(route('admin.system.settings.test-mail'), ['test_email' => 'recipient@example.com'])
+            ->assertRedirect(route('admin.system.settings'))
+            ->assertSessionHas('success');
+        Mail::assertSent(TestMail::class, fn ($mail) => $mail->hasTo('recipient@example.com'));
+
+        $this->post(route('admin.system.settings.test-mail'), ['test_email' => 'invalid'])
+            ->assertSessionHasErrors('test_email');
+        Mail::assertSentCount(1);
+    }
+
+    public function test_test_mail_handles_transport_failure_without_exposing_credentials(): void
+    {
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('secret SMTP password'));
+        $this->actingAs($this->admin)->from(route('admin.system.settings'))
+            ->post(route('admin.system.settings.test-mail'), ['test_email' => 'recipient@example.com'])
+            ->assertRedirect(route('admin.system.settings'))
+            ->assertSessionHasErrors('test_email');
+        $this->assertStringNotContainsString('secret', session('errors')->first('test_email'));
+    }
+
+    public function test_non_admin_cannot_send_test_mail(): void
+    {
+        Mail::fake();
+        $user = User::factory()->create(['branch_id' => $this->branch->id]);
+        $user->assignRole('loan_officer');
+        $this->actingAs($user)->post(route('admin.system.settings.test-mail'), ['test_email' => 'recipient@example.com'])
+            ->assertForbidden();
+        Mail::assertNothingSent();
     }
 
     public function test_tables_returns_curated_allowlist_with_counts(): void

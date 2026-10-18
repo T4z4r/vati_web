@@ -46,4 +46,18 @@
         <button class="btn btn-primary">{{ __('Save Settings') }}</button>
     </div>
 </form>
+<form class="card" method="POST" action="{{ route('admin.system.settings.test-mail') }}">
+    @csrf
+    <div class="card-head"><h2>{{ __('Test email') }}</h2></div>
+    <div class="card-body">
+        <p>{{ __('Send a test email using the configured mail service.') }}</p>
+        <label>{{ __('Recipient email') }}
+            <input type="email" name="test_email" required maxlength="254" value="{{ old('test_email', auth()->user()->email) }}">
+        </label>
+        @error('test_email')<p class="muted">{{ $message }}</p>@enderror
+    </div>
+    <div class="form-actions" style="padding: 1rem;">
+        <button class="btn btn-primary">{{ __('Send test email') }}</button>
+    </div>
+</form>
 @endsection
