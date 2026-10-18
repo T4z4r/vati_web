@@ -8,7 +8,15 @@
             <p>{{ __('Monitor origination, collections, arrears, and portfolio quality.') }}</p>
         </div><button class="btn btn-secondary" onclick="window.print()">{{ __('Print report') }}</button>
     </div>
-    <form class="card card-body filters"><select name="branch_id">
+    <form class="card card-body filters">
+        <select name="report_type" aria-label="{{ __('Report type') }}">
+            <option value="portfolio">{{ __('Portfolio report') }}</option>
+            <option value="expected_repayments">{{ __('Expected repayments') }}</option>
+        </select>
+        <label>{{ __('Scheduled repayment date') }}
+            <input type="date" name="collection_date" value="{{ request('collection_date', today()->toDateString()) }}">
+        </label>
+        <select name="branch_id">
             <option value="">{{ __('All branches') }}</option>
             @foreach ($branches as $branch)
                 <option value="{{ $branch->id }}" @selected($branchId == $branch->id)>{{ $branch->branch_name }}</option>

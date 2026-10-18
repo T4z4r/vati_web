@@ -344,6 +344,50 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_expected_repayments_report_filters_scheduled_day_and_totals_all_pages(): void
+    {
+        $loan = $this->loan('REPORT-A');
+        $settled = $this->loan('REPORT-S', 'settled');
+        $date = today()->addDays(3)->toDateString();
+        for ($number = 1; $number <= 11; $number++) {
+            $this->installment($loan, $number, $date, 10000, [
+                'total_paid' => 4000,
+                'status' => 'partially_paid',
+            ]);
+        }
+        $this->installment($settled, 1, $date, 20000, ['total_paid' => 20000, 'status' => 'paid']);
+        $this->installment($loan, 12, today()->toDateString(), 90000);
+
+        $filters = [
+            'report_type' => 'expected_repayments',
+            'collection_date' => $date,
+            'branch_id' => $this->branch->id,
+            'group_id' => $this->group->id,
+            'loan_product_id' => $this->product->id,
+            'per_page' => 10,
+        ];
+        $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', $filters))
+            ->assertOk()
+            ->assertViewHas('stats', fn ($stats) => $stats['total'] === 12
+                && $stats['expectedAmount'] === 130000.0
+                && $stats['paidAmount'] === 64000.0
+                && $stats['outstandingAmount'] === 66000.0
+                && $stats['paid'] === 1 && $stats['partial'] === 11)
+            ->assertViewHas('installments', fn ($rows) => $rows->count() === 10 && $rows->total() === 12)
+            ->assertSee('name="report_type" value="expected_repayments"', false);
+
+        foreach (['branch_id', 'group_id', 'loan_product_id'] as $filter) {
+            $this->get(route('admin.reports.index', array_replace($filters, [$filter => 999999])))
+                ->assertOk()
+                ->assertViewHas('stats', fn ($stats) => $stats['total'] === 0 && $stats['expectedAmount'] === 0.0);
+        }
+
+        $this->get(route('admin.reports.index'))
+            ->assertOk()
+            ->assertSee('value="expected_repayments"', false);
+    }
+
     public function test_expected_collection_is_zero_when_there_is_nothing_outstanding(): void
     {
         $loan = $this->loan('EXP-L-10');

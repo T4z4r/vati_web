@@ -8,6 +8,10 @@
             <p>{{ __('Repayments scheduled for') }} {{ $collectionDate->format('d M Y') }}.</p>
         </div>
         <div class="head-actions">
+            @if (request()->routeIs('admin.reports.index'))
+                <a class="btn btn-secondary" href="{{ route('admin.reports.index', request()->only(['branch_id', 'group_id', 'loan_product_id'])) }}">{{ __('Portfolio report') }}</a>
+                <button class="btn btn-secondary" onclick="window.print()">{{ __('Print report') }}</button>
+            @endif
             <a class="btn btn-secondary" href="{{ route('admin.repayments.index', request()->except('collection_date')) }}">
                 <span class="ph ph-receipt" aria-hidden="true"></span> {{ __('Posted repayments') }}
             </a>
@@ -43,6 +47,14 @@
 
     <div class="card">
         <form class="filters">
+            @if (request()->routeIs('admin.reports.index'))
+                <input type="hidden" name="report_type" value="expected_repayments">
+                @foreach (['group_id', 'loan_product_id'] as $filter)
+                    @if (request()->filled($filter))
+                        <input type="hidden" name="{{ $filter }}" value="{{ request($filter) }}">
+                    @endif
+                @endforeach
+            @endif
             @if (request()->filled('branch_id'))
                 <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
             @endif

@@ -16,6 +16,15 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'report_type' => ['nullable', 'in:portfolio,expected_repayments'],
+            'collection_date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        if ($request->query('report_type') === 'expected_repayments') {
+            return app(RepaymentController::class)->expected($request);
+        }
+
         $branchId = $this->branchId($request);
         $from = $request->date('date_from') ?? today()->startOfMonth();
         $to = $request->date('date_to') ?? today();

@@ -137,8 +137,10 @@ class RepaymentController extends Controller
         return LoanInstallment::query()
             ->whereDate('due_date', $collectionDate->toDateString())
             ->whereHas('loan', fn ($loan) => $loan
-                ->whereIn('status', ['active', 'overdue'])
-                ->when($this->branchId($request), fn ($loan, $id) => $loan->where('branch_id', $id)))
+                ->whereIn('status', $request->routeIs('admin.reports.index') ? ['active', 'overdue', 'settled'] : ['active', 'overdue'])
+                ->when($this->branchId($request), fn ($loan, $id) => $loan->where('branch_id', $id))
+                ->when($request->integer('group_id'), fn ($loan, $id) => $loan->where('group_id', $id))
+                ->when($request->integer('loan_product_id'), fn ($loan, $id) => $loan->where('loan_product_id', $id)))
             ->when($search, fn ($query, $value) => $query->whereHas('loan', fn ($loan) => $loan
                 ->where('loan_number', 'like', "%{$value}%")
                 ->orWhereHas('member', fn ($member) => $member->where(fn ($member) => $member
