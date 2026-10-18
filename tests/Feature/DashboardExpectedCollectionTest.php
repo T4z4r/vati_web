@@ -271,9 +271,9 @@ class DashboardExpectedCollectionTest extends TestCase
     {
         $loan = $this->loan('EXP-L-9');
         $this->installment($loan, 1, today()->subDays(7)->toDateString(), 100000, ['status' => 'overdue']);
-        $this->installment($loan, 2, today()->toDateString(), 50000);
+        $installment = $this->installment($loan, 2, today()->toDateString(), 50000);
 
-        $loan->payments()->create([
+        $payment = $loan->payments()->create([
             'payment_number' => 'EXP-PAY-1',
             'member_id' => $this->member->id,
             'branch_id' => $this->branch->id,
@@ -282,6 +282,10 @@ class DashboardExpectedCollectionTest extends TestCase
             'paid_at' => now(),
             'status' => 'posted',
         ]);
+        $payment->allocations()->create([
+            'loan_installment_id' => $installment->id,
+            'principal_amount' => 60000,
+        ]);
 
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
@@ -289,6 +293,55 @@ class DashboardExpectedCollectionTest extends TestCase
             ->assertViewHas('expected', 50000.0)
             ->assertViewHas('collected', 60000.0)
             ->assertViewHas('collectionRate', 120.0);
+    }
+
+    public function test_collected_uses_scheduled_date_instead_of_payment_or_creation_date(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-18 12:00:00'));
+        $loan = $this->loan('EXP-L-DATE');
+        $scheduledToday = $this->installment($loan, 1, today()->toDateString(), 100000);
+        $scheduledYesterday = $this->installment($loan, 2, today()->subDay()->toDateString(), 100000);
+
+        foreach ([
+            ['number' => 'TODAY', 'paid_at' => today(), 'created_at' => now()->subDay(), 'amount' => 60000, 'status' => 'posted'],
+            ['number' => 'BACKDATED', 'paid_at' => today()->subDay(), 'created_at' => now(), 'amount' => 25000, 'status' => 'posted'],
+            ['number' => 'FUTURE', 'paid_at' => today()->addDay(), 'created_at' => now(), 'amount' => 30000, 'status' => 'posted'],
+            ['number' => 'REVERSED', 'paid_at' => now(), 'created_at' => now(), 'amount' => 10000, 'status' => 'reversed'],
+        ] as $payment) {
+            $paymentRecord = $loan->payments()->create([
+                'payment_number' => 'EXP-PAY-'.$payment['number'],
+                'member_id' => $this->member->id,
+                'branch_id' => $this->branch->id,
+                'amount' => $payment['amount'],
+                'payment_method' => 'cash',
+                'paid_at' => $payment['paid_at'],
+                'created_at' => $payment['created_at'],
+                'status' => $payment['status'],
+            ]);
+            $paymentRecord->allocations()->create([
+                'loan_installment_id' => $payment['number'] === 'TODAY' ? $scheduledYesterday->id : $scheduledToday->id,
+                'principal_amount' => $payment['amount'] - 3000 - ($payment['number'] === 'TODAY' ? 20000 : 0),
+                'interest_amount' => 2000,
+                'penalty_amount' => 1000,
+            ]);
+            if ($payment['number'] === 'TODAY') {
+                $paymentRecord->allocations()->create([
+                    'loan_installment_id' => $scheduledToday->id,
+                    'principal_amount' => 20000,
+                ]);
+            }
+        }
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertViewHas('collected', 75000.0);
+
+        $this->get(route('admin.dashboard', ['collection_date' => today()->subDay()->toDateString()]))
+            ->assertOk()
+            ->assertViewHas('collected', 40000.0);
+
+        $this->travelBack();
     }
 
     public function test_expected_collection_is_zero_when_there_is_nothing_outstanding(): void
