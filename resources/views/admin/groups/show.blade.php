@@ -26,6 +26,7 @@
 
     <div class="stats">
         <div class="stat"><small>{{ __('Total members') }}</small><strong>{{ $group->members_count }}</strong></div>
+        <div class="stat gold"><small>{{ __('Next collection') }}</small><strong>TZS {{ number_format($nextCollection, 2) }}</strong><em>{{ __('Outstanding on each member’s next repayment date') }}</em></div>
         <div class="stat">
             <small>{{ __('Loan applications') }}</small><strong>{{ $group->loan_applications_count }}</strong></div>
         <div class="stat gold"><small>{{ __('Loans originated') }}</small><strong>{{ $group->loans_count }}</strong></div>

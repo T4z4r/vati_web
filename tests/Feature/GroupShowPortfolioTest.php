@@ -124,9 +124,20 @@ class GroupShowPortfolioTest extends TestCase
         }
 
         $expected = today()->subDay();
+        // Members outside the visible 20 rows must still contribute to the group total.
+        for ($index = 3; $index <= 23; $index++) {
+            $this->member($this->group, 'GP-M'.$index, 'Member', 'Test', '255700'.str_pad((string) $index, 6, '0', STR_PAD_LEFT));
+        }
+        $collectionResponse = $this->actingAs($this->admin)->get(route('admin.groups.show', $this->group));
+        $collectionResponse->assertOk()->assertViewHas('nextCollection', 9000.0);
+        // Restore the original members to the visible rows for the date assertions.
+        $member->update(['created_at' => now()->addDay()]);
+        $emptyMember->update(['created_at' => now()->addDay()]);
         $this->actingAs($this->admin)->get(route('admin.groups.show', $this->group))
             ->assertOk()
             ->assertSee('Next repayment date')
+            ->assertSee('Next collection')
+            ->assertViewHas('nextCollection', 9000.0)
             ->assertSee($expected->format('d M Y'))
             ->assertViewHas('members', fn ($members) =>
                 \Illuminate\Support\Carbon::parse($members->firstWhere('id', $member->id)->next_repayment_date)->toDateString() === $expected->toDateString()
