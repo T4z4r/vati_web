@@ -48,6 +48,7 @@
                                 <th>{{ __('Phone') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th>{{ __('Current loans') }}</th>
+                                <th>{{ __('Next repayment date') }}</th>
                                 <th>{{ __('Outstanding balance') }}</th>
                                 <th>{{ __('Action') }}</th>
                             </tr>
@@ -69,6 +70,7 @@
                                     <td>{{ $member->phone }}</td>
                                     <td><span class="badge {{ $member->status }}">{{ $member->status }}</span></td>
                                     <td>{{ $member->current_loans_count }}</td>
+                                    <td>{{ $member->next_repayment_date ? \Illuminate\Support\Carbon::parse($member->next_repayment_date)->format('d M Y') : '—' }}</td>
                                     <td><strong>TZS
                                             {{ number_format((float) ($member->outstanding_loan_balance ?? 0), 2) }}</strong>
                                     </td>
@@ -81,7 +83,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No registered members.') }}</td>
+                                    <td colspan="7" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No registered members.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>

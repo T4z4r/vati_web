@@ -102,6 +102,37 @@ class GroupShowPortfolioTest extends TestCase
         ]);
     }
 
+    public function test_member_next_repayment_date_is_the_earliest_outstanding_installment(): void
+    {
+        $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');
+        $emptyMember = $this->member($this->group, 'GP-M2', 'Neema', 'Juma', '255700111223');
+        foreach (['active', 'overdue', 'settled'] as $index => $status) {
+            $loan = $this->loan($this->group, $member,
+                $this->application($this->group, $member, 'GP-APP-'.$index, 100000),
+                'GP-LN-'.$index, 100000, 50000, $status);
+            foreach (['paid', 'waived', 'partially_paid', 'upcoming'] as $number => $installmentStatus) {
+                $loan->installments()->create([
+                    'installment_number' => $number + 1,
+                    'due_date' => today()->addDays($number - $index - 2),
+                    'principal_due' => 10000,
+                    'total_due' => 10000,
+                    'total_paid' => $installmentStatus === 'paid' ? 10000 : 1000,
+                    'outstanding_balance' => 9000,
+                    'status' => $installmentStatus,
+                ]);
+            }
+        }
+
+        $expected = today()->subDay();
+        $this->actingAs($this->admin)->get(route('admin.groups.show', $this->group))
+            ->assertOk()
+            ->assertSee('Next repayment date')
+            ->assertSee($expected->format('d M Y'))
+            ->assertViewHas('members', fn ($members) =>
+                \Illuminate\Support\Carbon::parse($members->firstWhere('id', $member->id)->next_repayment_date)->toDateString() === $expected->toDateString()
+                && $members->firstWhere('id', $emptyMember->id)->next_repayment_date === null);
+    }
+
     public function test_the_group_page_lists_the_groups_loans_with_product_amounts_and_links(): void
     {
         $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');

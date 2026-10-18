@@ -2,11 +2,13 @@
 @section('title', $loan->loan_number)
 @section('content')
     @php($status = $loan->status->value)
+    @php($disbursedDate = $loan->disbursement_date ?? $loan->disbursement?->disbursed_at)
     <div class="page-head">
         <div style="display:flex;align-items:center;gap:16px">@include('admin.partials.member-photo', ['member' => $loan->member, 'size' => 88])<div>
                 <p class="eyebrow">{{ $loan->loan_number }}</p>
                 <h1>{{ $loan->member->first_name }} {{ $loan->member->last_name }}</h1>
                 <p>{{ $loan->product->name }} · {{ $loan->group->group_name }}</p>
+                <p>{{ __('Disbursement date') }}: {{ $disbursedDate?->format('d M Y') ?? '—' }}</p>
             </div>
         </div>
         <div class="head-actions">
@@ -263,7 +265,7 @@
                 <table class="detail-table">
                     <tbody>
                         <tr>
-                            <th>{{ __('Disbursed') }}</th><td>{{ $loan->disbursement_date?->format('d M Y') ?? '—' }}</td>
+                            <th>{{ __('Disbursement date') }}</th><td>{{ $disbursedDate?->format('d M Y') ?? '—' }}</td>
                         </tr>
                         <tr>
                             <th>{{ __('Maturity') }}</th><td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\LoanInstallment;
 use App\Models\MemberGroup;
 use App\Models\User;
 use App\Services\ExportService;
@@ -93,6 +94,13 @@ class GroupController extends Controller
             ->withSum([
                 'loans as outstanding_loan_balance' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
             ], 'total_balance')
+            ->addSelect(['next_repayment_date' => LoanInstallment::query()
+                ->selectRaw('MIN(due_date)')
+                ->whereNotIn('status', ['paid', 'waived'])
+                ->whereRaw('total_due - total_paid - interest_exemption > 0')
+                ->whereHas('loan', fn ($query) => $query
+                    ->whereColumn('loans.member_id', 'members.id')
+                    ->whereIn('status', ['active', 'overdue']))])
             ->latest()
             ->limit(20)
             ->get();
