@@ -3,10 +3,12 @@
 use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\AppVersionController;
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\ClearRepaymentsController;
 use App\Http\Controllers\Web\ComplianceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GroupController;
 use App\Http\Controllers\Web\GroupVisitController;
+use App\Http\Controllers\Web\HolidayController;
 use App\Http\Controllers\Web\LoanApplicationController;
 use App\Http\Controllers\Web\LoanController;
 use App\Http\Controllers\Web\LoanProductController;
@@ -98,6 +100,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('loan-applications/{loanApplication}/documents/{loanDocument}/download', [ComplianceController::class, 'downloadDocument'])->name('loan-applications.documents.download')->middleware('permission:view-loan-applications');
     Route::post('loan-applications/{loanApplication}/cancel', [ComplianceController::class, 'cancel'])->name('loan-applications.cancel')->middleware('permission:create-loan-applications');
 
+    Route::get('repayments/clear', [ClearRepaymentsController::class, 'index'])->name('repayments.clear')->middleware('role:super_admin|head_office_admin');
+    Route::post('repayments/clear', [ClearRepaymentsController::class, 'store'])->name('repayments.clear.store')->middleware('role:super_admin|head_office_admin');
     Route::get('repayments/expected', [RepaymentController::class, 'expected'])->name('repayments.expected')->middleware('permission:view-payments');
     Route::get('repayments', [RepaymentController::class, 'index'])->name('repayments.index')->middleware('permission:view-payments');
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');
@@ -122,6 +126,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::prefix('system')->name('system.')->middleware('role:super_admin|head_office_admin')->group(function () {
         Route::get('/', [SystemController::class, 'overview'])->name('overview');
         Route::get('audit', [SystemController::class, 'audit'])->name('audit');
+        Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
+        Route::post('holidays', [HolidayController::class, 'store'])->name('holidays.store');
+        Route::post('holidays/import', [HolidayController::class, 'import'])->name('holidays.import');
+        Route::post('holidays/correct', [HolidayController::class, 'correct'])->name('holidays.correct');
+        Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
         Route::put('settings', [SystemController::class, 'updateSettings'])->name('settings.update');
         Route::post('settings/test-mail', [SystemController::class, 'testMail'])->name('settings.test-mail')->middleware('throttle:5,1');

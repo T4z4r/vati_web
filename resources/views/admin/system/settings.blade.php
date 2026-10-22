@@ -9,6 +9,7 @@
     </div>
 </div>
 
+<p><a class="btn btn-secondary" href="{{ route('admin.system.holidays.index') }}">{{ __('Manage repayment holidays and forward schedules') }}</a></p>
 <form class="card" method="POST" action="{{ route('admin.system.settings.update') }}">
     @csrf
     @method('PUT')

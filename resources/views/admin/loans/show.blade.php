@@ -3,6 +3,7 @@
 @section('content')
     @php($status = $loan->status->value)
     @php($disbursedDate = $loan->disbursement_date ?? $loan->disbursement?->disbursed_at)
+    @php($paymentMethods = ['cash' => __('Cash'), 'mpesa' => 'M-Pesa', 'airtel_money' => 'Airtel Money', 'mixx' => 'Mixx', 'halopesa' => 'HaloPesa', 'bank_transfer' => __('Bank transfer')])
     <div class="page-head">
         <div style="display:flex;align-items:center;gap:16px">@include('admin.partials.member-photo', ['member' => $loan->member, 'size' => 88])<div>
                 <p class="eyebrow">{{ $loan->loan_number }}</p>
@@ -13,7 +14,7 @@
         </div>
         <div class="head-actions">
             <a class="btn btn-secondary" href="{{ route('admin.loans.index') }}"><span class="ph ph-arrow-left" aria-hidden="true"></span> {{ __('Back') }}</a>
-            <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
+            <span class="badge {{ $status }}">{{ __(ucwords(str_replace('_', ' ', $status))) }}</span>
         </div>
     </div>
     <div class="stats">
@@ -96,7 +97,7 @@
                                     <td class="money">{{ number_format($item->total_paid, 2) }}</td>
                                     <td class="money">{{ number_format($installmentBalance, 2) }}</td>
                                     <td><span
-                                            class="badge {{ $item->status }}">{{ str_replace('_', ' ', $item->status) }}</span>
+                                            class="badge {{ $item->status }}">{{ __(ucwords(str_replace('_', ' ', $item->status))) }}</span>
                                     </td>
                                     <td>
                                         @if (in_array($status, ['active', 'overdue']) && $installmentBalance > 0)
@@ -163,9 +164,9 @@
                                 <tr>
                                     <td>{{ $payment->payment_number }}</td>
                                     <td>{{ $payment->paid_at->format('d M Y H:i') }}</td>
-                                    <td>{{ str_replace('_', ' ', $payment->payment_method) }}</td>
+                                    <td>{{ $paymentMethods[$payment->payment_method] ?? __(ucwords(str_replace('_', ' ', $payment->payment_method))) }}</td>
                                     <td class="money">TZS {{ number_format($payment->amount) }}</td>
-                                    <td><span class="badge {{ $payment->status }}">{{ $payment->status }}</span></td>
+                                    <td><span class="badge {{ $payment->status }}">{{ __(ucwords($payment->status)) }}</span></td>
                                     <td>
                                         @if ($payment->status === 'posted')
                                             <form method="POST" action="{{ route('admin.payments.reverse', $payment) }}">
@@ -311,7 +312,7 @@
         <div class="card">
             <div class="card-head">
                 <h2>{{ __('Loan-clearance authorization') }}</h2>
-                <span>{{ $loan->clearance?->status ?? __('pending') }}</span>
+                <span>{{ __(ucwords($loan->clearance?->status ?? 'pending')) }}</span>
             </div>
             @if ($loan->clearance?->status === 'authorized')
                 <div class="card-body">

@@ -70,13 +70,10 @@ class DashboardController extends Controller
         $loanIds = (clone $activeLoans)->select('id');
         $collectionDate = $this->collectionDate($request);
         $expected = $this->expectedCollection($loanIds, $collectionDate);
-        $collected = (float) PaymentAllocation::query()
-            ->whereHas('installment', fn ($q) => $q
-                ->whereIn('loan_id', clone $loanIds)
-                ->whereDate('due_date', $collectionDate->toDateString()))
-            ->whereHas('payment', fn ($q) => $q->where('status', 'posted'))
-            ->selectRaw('COALESCE(SUM(principal_amount + interest_amount + penalty_amount), 0) as total')
-            ->value('total');
+        $collected = (float) Payment::whereIn('loan_id', clone $loanIds)
+            ->where('status', 'posted')
+            ->whereBetween('paid_at', [$collectionDate->copy()->startOfDay(), $collectionDate->copy()->endOfDay()])
+            ->sum('amount');
         $postedPayments = Payment::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->where('status', 'posted');
         $interestReceived = (float) PaymentAllocation::whereIn('payment_id', (clone $postedPayments)->select('id'))
             ->selectRaw('COALESCE(SUM(interest_amount), 0) as total')->value('total');

@@ -86,8 +86,19 @@
                 </label>
                 <label>Kiasi kinachoombwa (TZS)<input id="amount" type="number" min="1" name="requested_amount"
                         value="{{ old('requested_amount', $application->requested_amount) }}" required></label>
-                <label>Muda (miezi)<input id="months" type="number" min="1" name="duration_months"
-                        value="{{ old('duration_months', $application->duration_months) }}" required></label>
+                @php
+                    $durationMonths = (int) old('duration_months', $application->duration_months);
+                    $durationOptions = [6, 8, 10];
+                    if ($durationMonths > 0 && ! in_array($durationMonths, $durationOptions, true)) {
+                        $durationOptions[] = $durationMonths;
+                        sort($durationOptions);
+                    }
+                @endphp
+                <label>Muda (miezi)<select id="months" name="duration_months" required>
+                        @foreach ($durationOptions as $durationOption)
+                            <option value="{{ $durationOption }}" @selected($durationMonths === $durationOption)>{{ $durationOption }}</option>
+                        @endforeach
+                    </select></label>
                 <label>Tarehe ya ombi (Application date)<input type="date" name="application_date"
                         value="{{ old('application_date', $application->application_date?->toDateString() ?? $application->created_at?->toDateString() ?? now()->toDateString()) }}"></label>
                 <label>Tarehe tarajiwa ya kutoa mkopo (Expected disbursement date)<input type="date"

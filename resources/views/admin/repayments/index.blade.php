@@ -8,6 +8,9 @@
             <p>{{ __('Every repayment collected, with daily, weekly and pending figures.') }}</p>
         </div>
         <div class="head-actions">
+            @role('super_admin|head_office_admin')
+            <a class="btn btn-danger" href="{{ route('admin.repayments.clear') }}">{{ __('Clear repayments by date') }}</a>
+            @endrole
             <a class="btn btn-secondary"
                 href="{{ route('admin.repayments.export.list', ['format' => 'pdf'] + request()->query()) }}"
                 title="{{ __('Export PDF') }}"><span class="ph ph-file-pdf" aria-hidden="true"></span> {{ __('PDF') }}</a>

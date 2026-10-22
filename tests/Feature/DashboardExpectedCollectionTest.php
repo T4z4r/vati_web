@@ -295,7 +295,7 @@ class DashboardExpectedCollectionTest extends TestCase
             ->assertViewHas('collectionRate', 120.0);
     }
 
-    public function test_collected_uses_scheduled_date_instead_of_payment_or_creation_date(): void
+    public function test_collected_uses_repayment_date_instead_of_scheduled_or_creation_date(): void
     {
         $this->travelTo(Carbon::parse('2026-10-18 12:00:00'));
         $loan = $this->loan('EXP-L-DATE');
@@ -335,11 +335,11 @@ class DashboardExpectedCollectionTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertViewHas('collected', 75000.0);
+            ->assertViewHas('collected', 60000.0);
 
         $this->get(route('admin.dashboard', ['collection_date' => today()->subDay()->toDateString()]))
             ->assertOk()
-            ->assertViewHas('collected', 40000.0);
+            ->assertViewHas('collected', 25000.0);
 
         $this->travelBack();
     }

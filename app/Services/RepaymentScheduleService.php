@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Loan;
+use App\Models\SystemSetting;
 use Carbon\CarbonInterface;
 
 class RepaymentScheduleService
@@ -64,6 +65,8 @@ class RepaymentScheduleService
                 $remainingTotal = round($remainingTotal - $total, 2);
             }
 
+            $this->applyHolidays($loan);
+
             return;
         }
 
@@ -78,6 +81,14 @@ class RepaymentScheduleService
                 'total_due' => $row['total_due'],
                 'outstanding_balance' => max(0, round($row['outstanding_balance'], 2)),
             ]);
+        }
+        $this->applyHolidays($loan);
+    }
+
+    private function applyHolidays(Loan $loan): void
+    {
+        if (SystemSetting::get('forward_holiday_repayments', false)) {
+            app(HolidayScheduleService::class)->correct($loan);
         }
     }
 }
