@@ -4,8 +4,7 @@
     <div class="page-head dashboard-hero">
         <div>
             <p class="eyebrow">{{ __('PORTFOLIO OVERVIEW') }}</p>
-            <h1>{{ __('Good') }}
-                {{ now()->hour < 12 ? __('morning') : (now()->hour < 17 ? __('afternoon') : __('evening')) }},
+            <h1>{{ now()->hour < 12 ? __('Good morning') : (now()->hour < 17 ? __('Good afternoon') : __('Good evening')) }},
                 {{ explode(' ', auth()->user()->name)[0] }}</h1>
             <p>{{ __("Here is today's operating position across your portfolio.") }}</p>
         </div>
