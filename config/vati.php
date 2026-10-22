@@ -19,8 +19,8 @@ return [
     // Overrides the default 4 weeks/month calculation.
     'installment_weeks' => [
         6 => 25,
-        8 => 32,
-        10 => 40,
+        8 => 34,
+        10 => 43,
         12 => 50,
     ],
 ];
