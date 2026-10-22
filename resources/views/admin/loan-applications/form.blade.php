@@ -436,15 +436,13 @@
             }
         }
 
-        function weeklyInstallmentsFor(duration) {
-            return Math.max(1, duration * 4);
-        }
+        // Use the same configured tiers and installment counts as LoanCalculatorService.
+        const interestTiers = @json(config('vati.interest_tiers', []));
+        const installmentWeeks = @json(config('vati.installment_weeks', []));
 
-        // Flat weekly interest factors (not percentages), keyed by duration in
-        // months. Each factor is charged on the full principal per installment.
-        // They must mirror config/vati.php (interest_tiers) and
-        // LoanCalculatorService.
-        const interestTiers = { 6: 0.0445, 8: 0.036, 10: 0.0295 };
+        function weeklyInstallmentsFor(duration) {
+            return Math.max(1, installmentWeeks[duration] ?? duration * 4);
+        }
 
         function round2(value) {
             return Math.round(value * 100) / 100;
@@ -457,6 +455,7 @@
         }
 
         function amortizeRows(principal, duration, frequency) {
+            principal = round2(principal);
             const rate = periodRateFor(duration, frequency);
             const count = frequency === 'weekly'
                 ? weeklyInstallmentsFor(duration)
@@ -464,7 +463,7 @@
             const rows = [];
             let remaining = round2(principal);
 
-            if (!rate) {
+            if (rate <= 0) {
                 const even = round2(remaining / count);
                 for (let i = 1; i <= count; i++) {
                     const total = i === count ? remaining : Math.min(even, remaining);
@@ -547,21 +546,21 @@
 
         function calculate() {
             const option = product.selectedOptions[0];
-            const principal = Number(amount.value);
+            const principal = round2(Number(amount.value));
             const duration = Number(months.value);
-            if (option?.dataset.rate && principal && duration) {
+            if (option?.value && principal > 0 && duration > 0) {
                 amount.min = option.dataset.min;
                 amount.max = option.dataset.max;
                 months.min = option.dataset.minmonths;
                 months.max = option.dataset.maxmonths;
                 const frequency = option.dataset.frequency || 'monthly';
                 const totalRepayment = scheduledTotalFor(principal, duration, frequency);
-                const processingFee = principal * (Number(option.dataset.processingFee) / 100);
-                const insuranceFee = principal * (Number(option.dataset.insuranceFee) / 100);
-                const vat = principal * (Number(option.dataset.vat) / 100);
-                const securityAmount = principal * (Number(option.dataset.securityPercentage) / 100);
-                const totalCharges = processingFee + insuranceFee + vat;
-                const receivableAmount = principal - securityAmount - totalCharges;
+                const processingFee = round2(principal * (Number(option.dataset.processingFee) / 100));
+                const insuranceFee = round2(principal * (Number(option.dataset.insuranceFee) / 100));
+                const vat = round2(principal * (Number(option.dataset.vat) / 100));
+                const securityAmount = round2(principal * (Number(option.dataset.securityPercentage) / 100));
+                const totalCharges = round2(processingFee + insuranceFee + vat);
+                const receivableAmount = round2(principal - securityAmount - totalCharges);
 
                 estimate.value = formatMoney(totalRepayment);
                 charges.value = formatMoney(totalCharges);
