@@ -592,7 +592,13 @@
             const allocated = allocations.reduce((sum, input) => sum + Number(input.value || 0), 0);
             document.getElementById('allocated-total').textContent = 'TZS ' + allocated.toLocaleString();
         }
-        [product, amount, months, ...allocations].forEach(input => input.addEventListener('input', calculate));
+        [amount, ...allocations].forEach(input => input.addEventListener('input', calculate));
+        // Select2 emits jQuery change events when a dropdown option is selected.
+        if (window.jQuery) {
+            window.jQuery([product, months]).on('change', calculate);
+        } else {
+            [product, months].forEach(select => select.addEventListener('change', calculate));
+        }
         memberSelect.addEventListener('change', () => {
             showMemberProfile();
             calculate();
