@@ -56,7 +56,7 @@ class LoanController extends Controller
 
     private function listingStats(Request $request, bool $overdueOnly = false): array
     {
-        $query = $this->baseQuery($request)->when($overdueOnly, fn ($query) => $query->where('status', 'overdue'));
+        $query = $this->baseQuery($request)->when($overdueOnly, fn ($query) => $query->where('loans.status', 'overdue'));
         $disbursed = (float) ((clone $query)
             ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
             ->where('loan_disbursements.status', 'completed')
@@ -79,7 +79,7 @@ class LoanController extends Controller
 
     private function baseQuery(Request $request)
     {
-        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('branch_id', $id));
+        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('loans.branch_id', $id));
     }
 
     private function activeStatus(Request $request): ?string
