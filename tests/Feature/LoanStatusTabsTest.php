@@ -89,6 +89,21 @@ class LoanStatusTabsTest extends TestCase
         ]);
     }
 
+    public function test_overdue_page_only_lists_overdue_loans_and_scopes_totals(): void
+    {
+        $this->loan('LST-ACTIVE', LoanStatus::ACTIVE);
+        $overdue = $this->loan('LST-LATE', LoanStatus::OVERDUE);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.loans.overdue', ['status' => 'active']))
+            ->assertOk()
+            ->assertViewHas('overduePage', true)
+            ->assertViewHas('loans', fn ($loans) => $loans->total() === 1 && $loans->first()->id === $overdue->id)
+            ->assertViewHas('stats', fn ($stats) => $stats['total'] === 1 && $stats['outstanding'] === 110000.0)
+            ->assertSee('LST-LATE')
+            ->assertDontSee('LST-ACTIVE');
+    }
+
     public function test_it_renders_a_tab_for_every_loan_status_with_counts(): void
     {
         $this->loan('LST-L1', LoanStatus::ACTIVE);
