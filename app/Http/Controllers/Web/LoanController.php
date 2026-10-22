@@ -41,9 +41,22 @@ class LoanController extends Controller
         ]);
     }
 
-    private function listingStats(Request $request): array
+    public function overdue(Request $request)
     {
-        $query = $this->baseQuery($request);
+        $request->query->set('status', 'overdue');
+
+        return view('admin.loans.index', [
+            'loans' => $this->filteredQuery($request)->latest()->paginate(20)->withQueryString(),
+            'statusTabs' => [],
+            'activeStatus' => 'overdue',
+            'overduePage' => true,
+            'stats' => $this->listingStats($request, true),
+        ]);
+    }
+
+    private function listingStats(Request $request, bool $overdueOnly = false): array
+    {
+        $query = $this->baseQuery($request)->when($overdueOnly, fn ($query) => $query->where('status', 'overdue'));
         $disbursed = (float) ((clone $query)
             ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
             ->where('loan_disbursements.status', 'completed')

@@ -105,6 +105,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'branch.access'])->g
     Route::get('repayments/expected', [RepaymentController::class, 'expected'])->name('repayments.expected')->middleware('permission:view-payments');
     Route::get('repayments', [RepaymentController::class, 'index'])->name('repayments.index')->middleware('permission:view-payments');
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index')->middleware('permission:view-loans');
+    Route::get('loans/overdue', [LoanController::class, 'overdue'])->name('loans.overdue')->middleware('permission:view-loans');
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show')->middleware('permission:view-loans');
     Route::post('loans/{loan}/disburse', [LoanController::class, 'disburse'])->name('loans.disburse')->middleware('permission:disburse-loans');
     Route::post('loans/{loan}/settle', [LoanController::class, 'settle'])->name('loans.settle')->middleware('permission:settle-loans');

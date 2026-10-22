@@ -1,10 +1,10 @@
 @extends('layouts.admin')
-@section('title', 'Loans')
+@section('title', !empty($overduePage) ? __('Overdue loans') : __('Loans'))
 @section('content')
     <div class="page-head">
         <div>
             <p class="eyebrow">{{ __('LOANS AND COLLECTIONS') }}</p>
-            <h1>{{ __('Loan accounts') }}</h1>
+            <h1>{{ !empty($overduePage) ? __('Overdue loans') : __('Loan accounts') }}</h1>
             <p>{{ __('Review loan balances, maturity, and repayment status.') }}</p>
         </div>
         <div class="head-actions">
@@ -15,7 +15,7 @@
     <div class="stats">
         <div class="stat">
             <span class="ph ph-stack stat-icon" aria-hidden="true"></span>
-            <small>{{ __('Loans') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ __('All statuses in scope') }}</em>
+            <small>{{ __('Loans') }}</small><strong>{{ number_format($stats['total']) }}</strong><em>{{ !empty($overduePage) ? __('Requires follow-up') : __('All statuses in scope') }}</em>
         </div>
         <div class="stat">
             <span class="ph ph-money stat-icon" aria-hidden="true"></span>
@@ -31,6 +31,7 @@
         </div>
     </div>
     <div class="card">
+        @if (empty($overduePage))
         <div class="status-tabs">
             <nav class="tabs-nav">
                 @foreach ($statusTabs as $tab)
@@ -43,8 +44,12 @@
                 @endforeach
             </nav>
         </div>
+        @endif
         <form class="filters"><input class="search" name="search" value="{{ request('search') }}"
-                placeholder="{{ __('Loan number or member') }}"><button class="btn btn-secondary">{{ __('Filter') }}</button></form>
+                placeholder="{{ __('Loan number or member') }}">
+            @if (request('branch_id'))<input type="hidden" name="branch_id" value="{{ request('branch_id') }}">@endif
+            @if ($activeStatus)<input type="hidden" name="status" value="{{ $activeStatus }}">@endif
+            <button class="btn btn-secondary">{{ __('Filter') }}</button></form>
         <div class="table-wrap">
             <table>
                 <thead>

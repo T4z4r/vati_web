@@ -57,10 +57,10 @@
                 <small>{{ __('Interest received') }}</small><strong>TZS
                 {{ number_format($interestReceived, 2) }}</strong><em>{{ __('Posted payments') }}</em>
             </div>
-            <div class="stat danger">
+            <a class="stat danger" href="{{ route('admin.loans.overdue', array_filter(['branch_id' => $branchId])) }}">
                 <span class="ph ph-warning stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Overdue loans') }}</small><strong>{{ number_format($overdueLoans) }}</strong><em>{{ __('Requires follow-up') }}</em>
-            </div>
+            </a>
             <div class="stat gold">
                 <span class="ph ph-file-text stat-icon" aria-hidden="true"></span>
                 <small>{{ __('Open applications') }}</small><strong>{{ number_format($pendingApplications) }}</strong><em>{{ __('In the approval pipeline') }}</em>
