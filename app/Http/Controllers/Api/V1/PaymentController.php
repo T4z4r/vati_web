@@ -112,7 +112,7 @@ class PaymentController extends ApiController
             'loan' => [
                 'id' => $loan->id,
                 'loan_number' => $loan->loan_number,
-                'status' => $loan->refresh()->status->value,
+                'status' => $loan->refresh()->effective_status->value,
                 'principal_balance' => (string) $loan->principal_balance,
                 'interest_balance' => (string) $loan->interest_balance,
                 'total_balance' => (string) $loan->total_balance,
@@ -136,7 +136,7 @@ class PaymentController extends ApiController
             'loan' => [
                 'id' => $payment->loan->id,
                 'loan_number' => $payment->loan->loan_number,
-                'status' => $payment->loan->refresh()->status->value,
+                'status' => $payment->loan->refresh()->effective_status->value,
                 'principal_balance' => (string) $payment->loan->principal_balance,
                 'interest_balance' => (string) $payment->loan->interest_balance,
                 'total_balance' => (string) $payment->loan->total_balance,

@@ -73,12 +73,10 @@ class SystemInfoService
 
     public function summaryStats(): array
     {
-        $activeLoanStatuses = ['active', 'overdue'];
-
         return [
             'total_members' => Member::count(),
-            'active_loans' => Loan::whereIn('status', $activeLoanStatuses)->count(),
-            'total_portfolio' => (float) Loan::whereIn('status', $activeLoanStatuses)->sum('total_balance'),
+            'active_loans' => Loan::activeOrOverdue()->count(),
+            'total_portfolio' => (float) Loan::activeOrOverdue()->sum('total_balance'),
             'activity_today' => DB::table('activity_log')->whereDate('created_at', today())->count(),
             'pending_applications' => LoanApplication::whereIn('status', ['draft', 'submitted', 'reverted', 'credit_review', 'recommended'])->count(),
         ];

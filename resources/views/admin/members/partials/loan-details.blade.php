@@ -10,8 +10,8 @@
                 </div>
                 <span
                     class="px-4 py-2 rounded-full text-sm font-semibold 
-                    {{ $loan->status->value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                    {{ ucfirst($loan->status->value) }}
+                    {{ $loan->effective_status->value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                    {{ ucfirst($loan->effective_status->value) }}
                 </span>
             </div>
 

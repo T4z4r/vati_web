@@ -84,7 +84,7 @@ class DashboardController extends ApiController
 
         $loans = Loan::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
-        $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
+        $activeLoans = (clone $loans)->activeOrOverdue();
         $data['management'] = $this->managementSummary($loans, $applications, $activeLoans, $branchId);
 
         return response()->json(['success' => true, 'data' => $data]);

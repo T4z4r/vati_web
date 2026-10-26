@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\LoanStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,6 +18,42 @@ class Loan extends Model
         return number_format(round((float) $this->principal_amount
             - (float) ($this->calc_security_amount ?? 0)
             - (float) ($this->calc_charges ?? $this->total_fees_and_vat ?? 0), 2), 2, '.', '');
+    }
+
+    public function getEffectiveStatusAttribute(): LoanStatus
+    {
+        if ($this->status === LoanStatus::OVERDUE) {
+            return LoanStatus::OVERDUE;
+        }
+
+        $hasPastDueUnpaidRepayment = array_key_exists('has_past_due_unpaid_repayment', $this->attributes)
+            ? (bool) $this->attributes['has_past_due_unpaid_repayment']
+            : $this->installments()->unpaidPastDue()->exists();
+
+        return $hasPastDueUnpaidRepayment ? LoanStatus::OVERDUE : $this->status;
+    }
+
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->where('status', LoanStatus::OVERDUE->value)
+                ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
+        });
+    }
+
+    public function scopeActiveOrOverdue(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereIn('status', [LoanStatus::ACTIVE->value, LoanStatus::OVERDUE->value])
+                ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
+        });
+    }
+
+    public function scopeWithOverdueStatus(Builder $query): Builder
+    {
+        return $query->withExists([
+            'installments as has_past_due_unpaid_repayment' => fn (Builder $installments) => $installments->unpaidPastDue(),
+        ]);
     }
 
     protected function casts(): array

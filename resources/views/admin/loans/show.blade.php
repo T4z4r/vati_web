@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', $loan->loan_number)
 @section('content')
-    @php($status = $loan->status->value)
+    @php($status = $loan->effective_status->value)
     @php($disbursedDate = $loan->disbursement_date ?? $loan->disbursement?->disbursed_at)
     @php($paymentMethods = ['cash' => __('Cash'), 'mpesa' => 'M-Pesa', 'airtel_money' => 'Airtel Money', 'mixx' => 'Mixx', 'halopesa' => 'HaloPesa', 'bank_transfer' => __('Bank transfer')])
     <div class="page-head">

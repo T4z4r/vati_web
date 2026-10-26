@@ -18,7 +18,7 @@ class PortfolioAnalyticsService
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : now()->startOfMonth();
         $toDate = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay();
 
-        $loans = Loan::query()->whereIn('status', ['active', 'overdue']);
+        $loans = Loan::query()->activeOrOverdue();
         $payments = Payment::query()->where('status', 'posted');
         if ($branchId) {
             $loans->where('branch_id', $branchId);

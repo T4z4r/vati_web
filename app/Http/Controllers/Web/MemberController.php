@@ -214,6 +214,7 @@ class MemberController extends Controller
                 'settlement',
                 'clearance',
             ])
+            ->withOverdueStatus()
             ->latest()
             ->get();
 
@@ -233,7 +234,7 @@ class MemberController extends Controller
             'assets.assetType',
             'securityAccount.transactions',
             'passbookReplacements',
-            'loans' => fn ($query) => $query->latest(),
+            'loans' => fn ($query) => $query->withOverdueStatus()->latest(),
             'loans.product',
             'loans.application.guarantors',
             'loans.cycles',

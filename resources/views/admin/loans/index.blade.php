@@ -85,7 +85,7 @@
                             <td class="money">TZS {{ number_format($loan->installment_amount) }}</td>
                             <td>{{ $loan->maturity_date?->format('d M Y') ?? '-' }}</td>
                             <td><span
-                                    class="badge {{ $loan->status->value }}">{{ str_replace('_', ' ', $loan->status->value) }}</span>
+                                    class="badge {{ $loan->effective_status->value }}">{{ str_replace('_', ' ', $loan->effective_status->value) }}</span>
                             </td>
                             <td>
                                 <div class="table-actions"><a class="btn btn-sm btn-secondary"

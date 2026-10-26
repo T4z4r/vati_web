@@ -29,7 +29,7 @@ class PaymentResource extends JsonResource
                 'id' => $this->loan->id,
                 'loan_number' => $this->loan->loan_number,
                 'loan_cycle' => $this->loan->loan_cycle,
-                'status' => $this->loan->status->value,
+                'status' => $this->loan->effective_status->value,
                 'group_id' => $this->loan->group_id,
                 'loan_product_id' => $this->loan->loan_product_id,
             ]),

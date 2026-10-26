@@ -68,6 +68,63 @@ class ApiAccessTest extends TestCase
             ->assertJsonPath('data.applications.0.application_number', 'APP-B');
     }
 
+    public function test_loan_api_uses_past_due_unpaid_repayments_for_loan_status(): void
+    {
+        ['branch' => $branch, 'group' => $group, 'product' => $product, 'user' => $user] = $this->baseData();
+        $member = Member::create([
+            'membership_number' => 'M-OVERDUE',
+            'branch_id' => $branch->id,
+            'group_id' => $group->id,
+            'first_name' => 'Asha',
+            'last_name' => 'Musa',
+            'phone' => '255710000001',
+            'created_by' => $user->id,
+        ]);
+        $application = LoanApplication::create([
+            'application_number' => 'APP-OVERDUE',
+            'member_id' => $member->id,
+            'loan_product_id' => $product->id,
+            'group_id' => $group->id,
+            'branch_id' => $branch->id,
+            'requested_amount' => 100000,
+            'duration_months' => 6,
+            'status' => 'approved',
+            'created_by' => $user->id,
+        ]);
+        $loan = Loan::create([
+            'loan_number' => 'LN-OVERDUE',
+            'loan_application_id' => $application->id,
+            'member_id' => $member->id,
+            'group_id' => $group->id,
+            'loan_product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'principal_amount' => 100000,
+            'total_repayment' => 110000,
+            'principal_balance' => 100000,
+            'total_balance' => 110000,
+            'status' => 'active',
+        ]);
+        $loan->installments()->create([
+            'installment_number' => 1,
+            'due_date' => today()->subDay(),
+            'total_due' => 10000,
+            'total_paid' => 2000,
+            'status' => 'partially_paid',
+        ]);
+
+        $this->getJson('/api/v1/loans?status=overdue')
+            ->assertOk()
+            ->assertJsonPath('data.0.status', 'overdue');
+
+        $this->getJson('/api/v1/loans?status=active')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson("/api/v1/loans/{$loan->id}")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'overdue');
+    }
+
     private function baseData(): array
     {
         $region = Region::create(['name' => 'Test Region']);

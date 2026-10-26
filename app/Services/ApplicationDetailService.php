@@ -252,7 +252,7 @@ class ApplicationDetailService
         $group = $application->group;
         $attendanceTotal = GroupAttendance::whereHas('meeting', fn ($query) => $query->where('group_id', $group->id))->count();
         $attendancePresent = GroupAttendance::whereHas('meeting', fn ($query) => $query->where('group_id', $group->id))->where('status', 'present')->count();
-        $loanIds = Loan::where('group_id', $group->id)->pluck('id');
+        $loanIds = Loan::where('group_id', $group->id)->activeOrOverdue()->pluck('id');
         $expected = (float) LoanInstallment::whereIn('loan_id', $loanIds)->whereDate('due_date', '<=', today())->sum('total_due');
         $paid = (float) Payment::whereIn('loan_id', $loanIds)->where('status', 'posted')->sum('amount');
 
@@ -262,7 +262,7 @@ class ApplicationDetailService
             'attendance_rate' => $attendanceTotal > 0 ? round($attendancePresent / $attendanceTotal * 100, 2) : 0,
             'repayment_rate' => $expected > 0 ? round(min(100, $paid / $expected * 100), 2) : 0,
             'active_member_count' => $group->members()->where('status', 'active')->count(),
-            'loans_in_arrears' => $group->loans()->whereIn('status', ['active', 'overdue'])->whereHas('installments', fn ($query) => $query->whereDate('due_date', '<', today())->whereNotIn('status', ['paid', 'waived']))->count(),
+            'loans_in_arrears' => $group->loans()->overdue()->count(),
         ];
     }
 

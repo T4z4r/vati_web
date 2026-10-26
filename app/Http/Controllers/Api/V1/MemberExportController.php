@@ -12,7 +12,7 @@ class MemberExportController extends ApiController
         $member->load([
             'branch.area.region', 'branch.manager', 'group.loanOfficer', 'createdBy', 'kyc', 'nominees',
             'familyMembers', 'assets.assetType', 'securityAccount.transactions', 'passbookReplacements',
-            'loans' => fn ($query) => $query->latest(), 'loans.product', 'loans.application.guarantors',
+            'loans' => fn ($query) => $query->withOverdueStatus()->latest(), 'loans.product', 'loans.application.guarantors',
             'loans.cycles', 'loans.installments', 'loans.installmentRecords.collector',
             'loans.securityTransactions.collectedBy', 'loans.securityTransactions.approvedBy',
             'loans.payments.allocations', 'loans.settlement', 'loans.clearance',

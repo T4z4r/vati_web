@@ -56,7 +56,7 @@ class LoanController extends Controller
 
     private function listingStats(Request $request, bool $overdueOnly = false): array
     {
-        $query = $this->baseQuery($request)->when($overdueOnly, fn ($query) => $query->where('loans.status', 'overdue'));
+        $query = $this->baseQuery($request)->when($overdueOnly, fn ($query) => $query->overdue());
         $disbursed = (float) ((clone $query)
             ->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')
             ->where('loan_disbursements.status', 'completed')
@@ -74,12 +74,27 @@ class LoanController extends Controller
 
     private function filteredQuery(Request $request, bool $applyStatus = true)
     {
-        return $this->baseQuery($request)->when($applyStatus ? $this->activeStatus($request) : null, fn ($q, $v) => $q->where('status', $v))->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('loan_number', 'like', "%{$v}%")->orWhereHas('member', fn ($m) => $m->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"))));
+        return $this->baseQuery($request)
+            ->when($applyStatus ? $this->activeStatus($request) : null, function ($query, $status) {
+                if ($status === LoanStatus::OVERDUE->value) {
+                    return $query->overdue();
+                }
+
+                $query->where('status', $status);
+                if ($status === LoanStatus::ACTIVE->value) {
+                    $query->whereDoesntHave('installments', fn ($installments) => $installments->unpaidPastDue());
+                }
+
+                return $query;
+            })
+            ->when($request->search, fn ($query, $value) => $query->where(fn ($query) => $query->where('loan_number', 'like', "%{$value}%")->orWhereHas('member', fn ($member) => $member->where('first_name', 'like', "%{$value}%")->orWhere('last_name', 'like', "%{$value}%"))));
     }
 
     private function baseQuery(Request $request)
     {
-        return Loan::with(['member', 'product', 'group'])->when($this->branchId($request), fn ($q, $id) => $q->where('loans.branch_id', $id));
+        return Loan::with(['member', 'product', 'group'])
+            ->withOverdueStatus()
+            ->when($this->branchId($request), fn ($query, $id) => $query->where('loans.branch_id', $id));
     }
 
     private function activeStatus(Request $request): ?string
@@ -91,16 +106,18 @@ class LoanController extends Controller
 
     private function statusTabs(Request $request): array
     {
-        $counts = $this->filteredQuery($request, false)
-            ->toBase()
-            ->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $tabs = [['key' => '', 'label' => 'All', 'count' => (int) $counts->sum()]];
+        $query = $this->filteredQuery($request, false);
+        $tabs = [['key' => '', 'label' => 'All', 'count' => (int) (clone $query)->count()]];
 
         foreach (self::STATUS_TABS as $key => $label) {
-            $tabs[] = ['key' => $key, 'label' => $label, 'count' => (int) $counts->get($key, 0)];
+            $statusQuery = clone $query;
+            if ($key === LoanStatus::OVERDUE->value) {
+                $statusQuery->overdue();
+            } else {
+                $statusQuery->where('status', $key);
+                $statusQuery->whereDoesntHave('installments', fn ($installments) => $installments->unpaidPastDue());
+            }
+            $tabs[] = ['key' => $key, 'label' => $label, 'count' => (int) $statusQuery->count()];
         }
 
         return $tabs;
@@ -117,7 +134,7 @@ class LoanController extends Controller
             'outstanding' => 'TZS '.number_format((float) $loan->total_balance),
             'installment' => 'TZS '.number_format((float) $loan->installment_amount),
             'maturity' => $loan->maturity_date?->format('d M Y') ?? '-',
-            'status' => str_replace('_', ' ', $loan->status->value ?? $loan->status),
+            'status' => str_replace('_', ' ', $loan->effective_status->value),
         ])->values()->all();
 
         return $exporter->export(

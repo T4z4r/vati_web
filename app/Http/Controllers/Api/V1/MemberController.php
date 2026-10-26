@@ -71,6 +71,7 @@ class MemberController extends ApiController
             'passbookReplacements',
             'loanApplications.product',
             'loanApplications.loan',
+            'loans' => fn ($query) => $query->withOverdueStatus(),
             'loans.product',
             'loans.application.guarantors',
             'loans.cycles',

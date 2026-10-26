@@ -77,7 +77,7 @@
                             <td>{{ $loan->group->group_name }}</td>
                             <td class="money">TZS {{ number_format($loan->total_balance) }}</td>
                             <td>{{ $loan->maturity_date?->format('d M Y') ?? '—' }}</td>
-                            <td><span class="badge {{ $loan->status->value }}">{{ $loan->status->value }}</span></td>
+                            <td><span class="badge {{ $loan->effective_status->value }}">{{ $loan->effective_status->value }}</span></td>
                     </tr>@empty<tr>
                             <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No arrears in the selected portfolio.') }}</td>
                         </tr>

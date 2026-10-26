@@ -66,7 +66,7 @@ class DashboardController extends Controller
         $members = Member::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $loans = Loan::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $applications = LoanApplication::query()->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
-        $activeLoans = (clone $loans)->whereIn('status', ['active', 'overdue']);
+        $activeLoans = (clone $loans)->activeOrOverdue();
         $loanIds = (clone $activeLoans)->select('id');
         $collectionDate = $this->collectionDate($request);
         $expected = $this->expectedCollection($loanIds, $collectionDate);
@@ -104,7 +104,7 @@ class DashboardController extends Controller
             'collected' => $collected,
             'interestReceived' => $interestReceived,
             'collectionRate' => $expected > 0 ? round($collected / $expected * 100, 1) : 0,
-            'overdueLoans' => (clone $loans)->where('status', 'overdue')->count(),
+            'overdueLoans' => (clone $loans)->overdue()->count(),
             'pendingApplications' => (clone $applications)->whereNotIn('status', ['approved', 'rejected', 'disbursed', 'cancelled'])->count(),
             'totalIssuedAmount' => (float) (clone $loans)
                 ->where('loans.status', '!=', 'cancelled')
@@ -167,7 +167,7 @@ class DashboardController extends Controller
 
         $scopedLoanIds = Loan::query()
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->whereIn('status', ['active', 'overdue'])
+            ->activeOrOverdue()
             ->select('id');
 
         $expectedByDate = LoanInstallment::whereIn('loan_id', clone $scopedLoanIds)
@@ -199,7 +199,7 @@ class DashboardController extends Controller
 
     private function loanStatusBreakdown($loans): array
     {
-        $counts = (clone $loans)->select('status')->get()->countBy(fn ($loan) => $loan->status->value);
+        $counts = (clone $loans)->withOverdueStatus()->get()->countBy(fn ($loan) => $loan->effective_status->value);
 
         $labels = [];
         $data = [];
@@ -236,7 +236,7 @@ class DashboardController extends Controller
     private function branchPortfolioBreakdown(): array
     {
         $totalsByBranch = Loan::query()
-            ->whereIn('status', ['active', 'overdue'])
+            ->activeOrOverdue()
             ->selectRaw('branch_id, SUM(total_balance) as total')
             ->groupBy('branch_id')
             ->pluck('total', 'branch_id');

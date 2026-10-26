@@ -39,7 +39,7 @@
     $date = fn ($value) => filled($value) ? \Carbon\Carbon::parse($value)->format('d/m/Y') : $blank;
     $dateTime = fn ($value) => filled($value) ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : $blank;
     $logo = base64_encode(file_get_contents(public_path('images/vati_wordmark.png')));
-    $status = $loan->status->value;
+    $status = $loan->effective_status->value;
     $paidInstallments = $loan->installments->where('status', 'paid')->count();
     $repaymentProgress = $loan->total_repayment > 0
         ? max(0, 100 - ($loan->total_balance / $loan->total_repayment) * 100)

@@ -164,7 +164,7 @@
                                     <td class="money">TZS {{ number_format((float) $loan->principal_amount, 2) }}</td>
                                     <td class="money">TZS {{ number_format((float) $loan->total_balance, 2) }}</td>
                                     <td>
-                                        @php($status = $loan->has_past_due_unpaid_repayment ? 'overdue' : $loan->status->value)
+                                        @php($status = $loan->effective_status->value)
                                         <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
                                     </td>
                                     <td class="actions-col">

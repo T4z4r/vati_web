@@ -172,7 +172,7 @@
 <div class="section">Member financial summary</div>
 <table>
     <tr><td class="label">Jumla ya mikopo / Total loans</td><td>{{ $loans->count() }}</td><td class="label">Jumla iliyotolewa / Total disbursed</td><td class="right">TZS {{ $money($loans->sum('principal_amount')) }}</td></tr>
-    <tr><td class="label">Jumla ya marejesho / Posted payments</td><td class="right">TZS {{ $money($loans->flatMap->payments->where('status', 'posted')->sum('amount')) }}</td><td class="label">Salio la mkopo / Outstanding</td><td class="right">TZS {{ $money($loans->whereIn('status', [\App\Enums\LoanStatus::ACTIVE, \App\Enums\LoanStatus::OVERDUE])->sum('total_balance')) }}</td></tr>
+    <tr><td class="label">Jumla ya marejesho / Posted payments</td><td class="right">TZS {{ $money($loans->flatMap->payments->where('status', 'posted')->sum('amount')) }}</td><td class="label">Salio la mkopo / Outstanding</td><td class="right">TZS {{ $money($loans->filter(fn ($loan) => in_array($loan->effective_status, [\App\Enums\LoanStatus::ACTIVE, \App\Enums\LoanStatus::OVERDUE], true))->sum('total_balance')) }}</td></tr>
     <tr><td class="label">Akaunti ya dhamana / Security balance</td><td class="right">TZS {{ $money($member->securityAccount?->balance) }}</td><td class="label">Vitabu mbadala / Passbook replacements</td><td>{{ $member->passbookReplacements->count() }}</td></tr>
 </table>
 

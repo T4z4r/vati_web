@@ -179,7 +179,7 @@ class MemberResource extends JsonResource
             'disbursement_date' => $loan->disbursement_date?->toDateString(),
             'first_payment_date' => $loan->first_payment_date?->toDateString(),
             'maturity_date' => $loan->maturity_date?->toDateString(),
-            'status' => $loan->status?->value,
+            'status' => $loan->effective_status?->value,
             'application' => $loan->relationLoaded('application') && $loan->application ? [
                 'id' => $loan->application->id,
                 'application_number' => $loan->application->application_number,

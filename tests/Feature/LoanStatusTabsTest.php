@@ -104,6 +104,46 @@ class LoanStatusTabsTest extends TestCase
             ->assertDontSee('LST-ACTIVE');
     }
 
+    public function test_past_due_unpaid_installments_make_a_loan_overdue_in_lists_and_tabs(): void
+    {
+        $loanWithArrears = $this->loan('LST-ACTIVE-LATE', LoanStatus::ACTIVE);
+        $loanWithArrears->installments()->create([
+            'installment_number' => 1,
+            'due_date' => today()->subDay(),
+            'total_due' => 10000,
+            'total_paid' => 2500,
+            'status' => 'partially_paid',
+        ]);
+        $currentLoan = $this->loan('LST-ACTIVE-CURRENT', LoanStatus::ACTIVE);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.loans.overdue'))
+            ->assertOk()
+            ->assertViewHas('loans', fn ($loans) => $loans->total() === 1 && $loans->first()->is($loanWithArrears))
+            ->assertSee('LST-ACTIVE-LATE')
+            ->assertDontSee('LST-ACTIVE-CURRENT');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.loans.index'))
+            ->assertOk()
+            ->assertViewHas('statusTabs', function (array $tabs) {
+                $counts = array_column($tabs, 'count', 'key');
+                $this->assertSame(1, $counts['active']);
+                $this->assertSame(1, $counts['overdue']);
+
+                return true;
+            })
+            ->assertSee('LST-ACTIVE-LATE')
+            ->assertSee('overdue')
+            ->assertSee('LST-ACTIVE-CURRENT');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.loans.index', ['status' => 'active']))
+            ->assertOk()
+            ->assertSee('LST-ACTIVE-CURRENT')
+            ->assertDontSee('LST-ACTIVE-LATE');
+    }
+
     public function test_it_renders_a_tab_for_every_loan_status_with_counts(): void
     {
         $this->loan('LST-L1', LoanStatus::ACTIVE);

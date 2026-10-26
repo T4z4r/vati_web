@@ -59,7 +59,7 @@ class LoanResource extends JsonResource
             'total_fees_and_vat' => $this->total_fees_and_vat,
             'refinancing_amount' => $this->refinancing_amount,
             'increment_amount' => $this->increment_amount,
-            'status' => $this->status->value,
+            'status' => $this->effective_status->value,
             'calculator_breakdown' => $breakdown,
             'repayment_progress' => round($repaymentProgress, 2),
             'paid_installments' => $paidInstallments,

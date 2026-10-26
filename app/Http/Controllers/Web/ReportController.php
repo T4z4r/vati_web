@@ -28,8 +28,8 @@ class ReportController extends Controller
         $branchId = $this->branchId($request);
         $from = $request->date('date_from') ?? today()->startOfMonth();
         $to = $request->date('date_to') ?? today();
-        $loans = Loan::query()->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->loan_product_id, fn ($q, $id) => $q->where('loan_product_id', $id));
-        $active = (clone $loans)->whereIn('status', ['active', 'overdue']);
+        $loans = Loan::query()->withOverdueStatus()->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->when($request->group_id, fn ($q, $id) => $q->where('group_id', $id))->when($request->loan_product_id, fn ($q, $id) => $q->where('loan_product_id', $id));
+        $active = (clone $loans)->activeOrOverdue();
         $portfolio = (float) (clone $active)->sum('total_balance');
         $collections = (float) Payment::where('status', 'posted')->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->whereBetween('paid_at', [$from->startOfDay(), $to->endOfDay()])->sum('amount');
         $par = function (int $days) use ($active, $portfolio) {
@@ -40,7 +40,7 @@ class ReportController extends Controller
             return round($amount / $portfolio * 100, 2);
         };
 
-        return view('admin.reports.index', ['branches' => Branch::where('status', true)->get(), 'groups' => MemberGroup::where('status', true)->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->get(), 'products' => LoanProduct::where('status', true)->get(), 'branchId' => $branchId, 'from' => $from, 'to' => $to, 'activeMembers' => Member::where('status', 'active')->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->count(), 'applications' => LoanApplication::when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])->count(), 'disbursements' => (clone $loans)->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')->where('loan_disbursements.status', 'completed')->whereBetween('loan_disbursements.disbursed_at', [$from, $to])->sum('loan_disbursements.amount'), 'collections' => $collections, 'portfolio' => $portfolio, 'par1' => $par(1), 'par7' => $par(7), 'par30' => $par(30), 'arrearsLoans' => (clone $active)->whereHas('installments', fn ($q) => $q->whereDate('due_date', '<', today())->whereNotIn('status', ['paid', 'waived']))->with(['member', 'group'])->orderByDesc('total_balance')->limit(20)->get()]);
+        return view('admin.reports.index', ['branches' => Branch::where('status', true)->get(), 'groups' => MemberGroup::where('status', true)->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->get(), 'products' => LoanProduct::where('status', true)->get(), 'branchId' => $branchId, 'from' => $from, 'to' => $to, 'activeMembers' => Member::where('status', 'active')->when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->count(), 'applications' => LoanApplication::when($branchId, fn ($q, $id) => $q->where('branch_id', $id))->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])->count(), 'disbursements' => (clone $loans)->join('loan_disbursements', 'loan_disbursements.loan_id', '=', 'loans.id')->where('loan_disbursements.status', 'completed')->whereBetween('loan_disbursements.disbursed_at', [$from, $to])->sum('loan_disbursements.amount'), 'collections' => $collections, 'portfolio' => $portfolio, 'par1' => $par(1), 'par7' => $par(7), 'par30' => $par(30), 'arrearsLoans' => (clone $loans)->overdue()->with(['member', 'group'])->orderByDesc('total_balance')->limit(20)->get()]);
     }
 
     private function branchId(Request $request): ?int

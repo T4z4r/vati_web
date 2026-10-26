@@ -211,7 +211,7 @@
 
         @forelse($loans as $loan)
             @php
-                $loanStatus = $loan->status->value;
+                $loanStatus = $loan->effective_status->value;
                 $paidAmount = max(0, (float) $loan->total_repayment - (float) $loan->total_balance);
                 $progress = (float) $loan->total_repayment > 0 ? min(100, max(0, $paidAmount / (float) $loan->total_repayment * 100)) : 0;
             @endphp
@@ -303,7 +303,7 @@
                             <tr>
                                 <td>{{ $installment->installment_number }}</td><td>{{ $installment->due_date?->format('d M Y') }}</td><td class="money">{{ $money($installment->principal_due) }}</td><td class="money">{{ $money($installment->interest_due) }}</td><td class="money">{{ $money($installment->total_due) }}</td><td class="money">{{ $money($installment->total_paid) }}</td><td class="money">{{ $money($installment->interest_exemption) }}</td><td class="money">{{ $money($installmentBalance) }}</td><td>—</td><td><span class="badge {{ $installment->status }}">{{ str_replace('_', ' ', $installment->status) }}</span></td>
                                 <td>
-                                    @if(in_array($loan->status->value, ['active', 'overdue']) && $installmentBalance > 0)
+                                    @if(in_array($loan->effective_status->value, ['active', 'overdue']) && $installmentBalance > 0)
                                         @can('collect-payments')
                                             <form method="POST" action="{{ route('admin.payments.store', $loan) }}" class="repayment-form">
                                                 @csrf

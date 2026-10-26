@@ -14,7 +14,7 @@ class GroupPortfolioController extends ApiController
 {
     public function dashboard(MemberGroup $group)
     {
-        $activeLoans = $group->loans()->whereIn('status', ['active', 'overdue']);
+        $activeLoans = $group->loans()->activeOrOverdue();
         $portfolio = (float) (clone $activeLoans)->sum('total_balance');
         $loanIds = (clone $activeLoans)->select('id');
         $weekStart = today()->startOfWeek();
@@ -42,7 +42,7 @@ class GroupPortfolioController extends ApiController
 
     public function statistics(MemberGroup $group)
     {
-        $activeLoans = $group->loans()->whereIn('status', ['active', 'overdue']);
+        $activeLoans = $group->loans()->activeOrOverdue();
         $portfolio = (float) (clone $activeLoans)->sum('total_balance');
         $loanIds = (clone $activeLoans)->select('id');
         $weekStart = today()->startOfWeek();
@@ -82,7 +82,7 @@ class GroupPortfolioController extends ApiController
 
     public function loans(Request $request, MemberGroup $group)
     {
-        return LoanResource::collection($group->loans()->with(['member', 'product'])->latest()->paginate($this->perPage($request)));
+        return LoanResource::collection($group->loans()->with(['member', 'product'])->withOverdueStatus()->latest()->paginate($this->perPage($request)));
     }
 
     public function applications(Request $request, MemberGroup $group)
@@ -105,7 +105,7 @@ class GroupPortfolioController extends ApiController
         if ($portfolio <= 0) {
             return 0;
         }
-        $atRisk = (float) Loan::where('group_id', $group->id)->whereIn('status', ['active', 'overdue'])
+        $atRisk = (float) Loan::where('group_id', $group->id)->activeOrOverdue()
             ->whereHas('installments', fn ($query) => $query->whereDate('due_date', '<=', today()->subDays($days))->whereNotIn('status', ['paid', 'waived']))
             ->sum('principal_balance');
 
