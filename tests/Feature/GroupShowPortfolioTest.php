@@ -182,6 +182,52 @@ class GroupShowPortfolioTest extends TestCase
             ->assertSee(route('admin.members.show', $member), false);
     }
 
+    public function test_the_group_page_lists_all_loans_with_past_due_unpaid_repayments_as_overdue(): void
+    {
+        $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');
+        $overdue = $this->loan(
+            $this->group,
+            $member,
+            $this->application($this->group, $member, 'GP-APP-1', 500000),
+            'GP-LN-OVERDUE',
+            500000,
+            400000
+        );
+        $overdue->installments()->create([
+            'installment_number' => 1,
+            'due_date' => today()->subDay(),
+            'total_due' => 50000,
+            'total_paid' => 10000,
+            'status' => 'partially_paid',
+        ]);
+
+        $notOverdue = $this->loan(
+            $this->group,
+            $member,
+            $this->application($this->group, $member, 'GP-APP-2', 300000),
+            'GP-LN-NOT-OVERDUE',
+            300000,
+            300000
+        );
+        $notOverdue->installments()->create([
+            'installment_number' => 1,
+            'due_date' => today()->addDay(),
+            'total_due' => 30000,
+            'status' => 'upcoming',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.groups.show', $this->group->id))
+            ->assertOk()
+            ->assertSee(__('Overdue loans'))
+            ->assertSee('GP-LN-OVERDUE')
+            ->assertSee('GP-LN-NOT-OVERDUE')
+            ->assertSee(__('Overdue'))
+            ->assertSee(route('admin.loans.show', $overdue), false)
+            ->assertViewHas('overdueLoans', fn ($loans) => $loans->count() === 1 && $loans->first()->is($overdue))
+            ->assertViewHas('loans', fn ($loans) => $loans->firstWhere('id', $overdue->id)->has_past_due_unpaid_repayment);
+    }
+
     public function test_the_group_page_lists_the_groups_loan_applications_with_product_and_requested_amount(): void
     {
         $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');

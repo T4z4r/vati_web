@@ -94,6 +94,46 @@
 
             <div class="card">
                 <div class="card-head">
+                    <h2>{{ __('Overdue loans') }}</h2>
+                    <span class="badge">{{ $overdueLoans->count() }}</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Loan') }}</th>
+                                <th>{{ __('Member') }}</th>
+                                <th>{{ __('Outstanding') }}</th>
+                                <th>{{ __('Status') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($overdueLoans as $loan)
+                                <tr>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.loans.show', $loan) }}">{{ $loan->loan_number }}</a><br><small>{{ $loan->product->name }}</small>
+                                    </td>
+                                    <td>
+                                        <a class="table-link"
+                                            href="{{ route('admin.members.show', $loan->member) }}">{{ $loan->member->first_name }}
+                                            {{ $loan->member->last_name }}</a><br><small>{{ $loan->member->membership_number }}</small>
+                                    </td>
+                                    <td class="money">TZS {{ number_format((float) $loan->total_balance, 2) }}</td>
+                                    <td><span class="badge overdue">{{ __('Overdue') }}</span></td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No overdue loans for this group.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
                     <h2>{{ __('Loans') }}</h2>
                     <span class="badge">{{ $group->loans_count }}</span>
                 </div>
@@ -124,7 +164,8 @@
                                     <td class="money">TZS {{ number_format((float) $loan->principal_amount, 2) }}</td>
                                     <td class="money">TZS {{ number_format((float) $loan->total_balance, 2) }}</td>
                                     <td>
-                                        <span class="badge {{ $loan->status->value }}">{{ str_replace('_', ' ', $loan->status->value) }}</span>
+                                        @php($status = $loan->has_past_due_unpaid_repayment ? 'overdue' : $loan->status->value)
+                                        <span class="badge {{ $status }}">{{ str_replace('_', ' ', $status) }}</span>
                                     </td>
                                     <td class="actions-col">
                                         <div class="table-actions">

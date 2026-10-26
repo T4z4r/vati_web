@@ -87,6 +87,10 @@ class GroupController extends Controller
         abort_unless($group->isOfficerAssigned($request->user()), 404);
 
         $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications', 'visits']);
+        $hasUnpaidPastDueInstallment = fn ($query) => $query
+            ->whereDate('due_date', '<', today())
+            ->whereNotIn('status', ['paid', 'waived'])
+            ->whereRaw('total_due - total_paid - interest_exemption > 0');
         $nextCollection = LoanInstallment::query()
             ->join('loans', 'loans.id', '=', 'loan_installments.loan_id')
             ->whereIn('loans.member_id', $group->members()->select('members.id'))
@@ -117,7 +121,27 @@ class GroupController extends Controller
             ->limit(20)
             ->get();
 
-        return view('admin.groups.show', ['group' => $group, 'members' => $members, 'nextCollection' => $nextCollection, 'loans' => $group->loans()->with(['member', 'product'])->latest()->limit(10)->get(), 'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get(), 'visits' => $group->visits()->with('user')->latest('visit_date')->limit(10)->get()]);
+        $loans = $group->loans()
+            ->with(['member', 'product'])
+            ->withExists(['installments as has_past_due_unpaid_repayment' => $hasUnpaidPastDueInstallment])
+            ->latest()
+            ->limit(10)
+            ->get();
+        $overdueLoans = $group->loans()
+            ->whereHas('installments', $hasUnpaidPastDueInstallment)
+            ->with(['member', 'product'])
+            ->latest()
+            ->get();
+
+        return view('admin.groups.show', [
+            'group' => $group,
+            'members' => $members,
+            'nextCollection' => $nextCollection,
+            'loans' => $loans,
+            'overdueLoans' => $overdueLoans,
+            'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get(),
+            'visits' => $group->visits()->with('user')->latest('visit_date')->limit(10)->get(),
+        ]);
     }
 
     public function edit(Request $request, MemberGroup $group)
