@@ -303,6 +303,41 @@
                     </table>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>{{ __('Day collections') }}</h2>
+                    <span class="badge">{{ $group->collections_count }}</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Collection date') }}</th>
+                                <th>{{ __('Expected') }}</th>
+                                <th>{{ __('Collected') }}</th>
+                                <th>{{ __('Outstanding') }}</th>
+                                <th>{{ __('Status') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($collections as $collection)
+                                <tr>
+                                    <td>{{ $collection->collection_date->format('d M Y') }}</td>
+                                    <td class="money">TZS {{ number_format((float) $collection->expected_amount, 2) }}</td>
+                                    <td class="money">TZS {{ number_format((float) $collection->collected_amount, 2) }}</td>
+                                    <td class="money">TZS {{ number_format((float) $collection->outstanding_amount, 2) }}</td>
+                                    <td><span class="badge {{ $collection->status }}">{{ str_replace('_', ' ', $collection->status) }}</span></td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No day collections recorded for this group yet.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

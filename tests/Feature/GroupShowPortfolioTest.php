@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\GroupVisit;
+use App\Models\GroupCollection;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
@@ -297,6 +298,42 @@ class GroupShowPortfolioTest extends TestCase
             ->assertOk()
             ->assertDontSee('Other group appraisal')
             ->assertSee(__('No group visits recorded yet.'));
+    }
+
+    public function test_the_group_page_lists_day_collections_below_group_visits(): void
+    {
+        $collection = GroupCollection::create([
+            'group_id' => $this->group->id,
+            'collection_date' => today()->subDay()->toDateString(),
+            'expected_amount' => 45000,
+            'collected_amount' => 30000,
+            'outstanding_amount' => 15000,
+            'status' => 'open',
+        ]);
+        GroupCollection::create([
+            'group_id' => $this->otherGroup->id,
+            'collection_date' => today()->toDateString(),
+            'expected_amount' => 999000,
+            'collected_amount' => 999000,
+            'status' => 'completed',
+        ]);
+        GroupVisit::create([
+            'group_id' => $this->group->id,
+            'user_id' => $this->admin->id,
+            'visit_date' => today()->subDays(2)->toDateString(),
+            'purpose' => 'Weekly meeting',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.groups.show', $this->group->id))
+            ->assertOk()
+            ->assertSeeInOrder([__('Group Visits'), 'Weekly meeting', __('Day collections')], false)
+            ->assertSee($collection->collection_date->format('d M Y'))
+            ->assertSee('TZS '.number_format(45000, 2))
+            ->assertSee('TZS '.number_format(30000, 2))
+            ->assertSee('TZS '.number_format(15000, 2))
+            ->assertDontSee('999,000.00')
+            ->assertViewHas('collections', fn ($collections) => $collections->count() === 1 && $collections->first()->is($collection));
     }
 
     public function test_the_loan_and_application_cards_stack_below_the_members_table_in_the_same_column(): void

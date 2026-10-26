@@ -36,7 +36,7 @@ class Loan extends Model
     public function scopeOverdue(Builder $query): Builder
     {
         return $query->where(function (Builder $query) {
-            $query->where('status', LoanStatus::OVERDUE->value)
+            $query->where('loans.status', LoanStatus::OVERDUE->value)
                 ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
         });
     }
@@ -44,7 +44,7 @@ class Loan extends Model
     public function scopeActiveOrOverdue(Builder $query): Builder
     {
         return $query->where(function (Builder $query) {
-            $query->whereIn('status', [LoanStatus::ACTIVE->value, LoanStatus::OVERDUE->value])
+            $query->whereIn('loans.status', [LoanStatus::ACTIVE->value, LoanStatus::OVERDUE->value])
                 ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
         });
     }

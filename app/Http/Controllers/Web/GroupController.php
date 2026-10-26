@@ -86,7 +86,7 @@ class GroupController extends Controller
     {
         abort_unless($group->isOfficerAssigned($request->user()), 404);
 
-        $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications', 'visits']);
+        $group->load(['branch', 'loanOfficer'])->loadCount(['members', 'loans', 'loanApplications', 'visits', 'collections']);
         $nextCollection = LoanInstallment::query()
             ->join('loans', 'loans.id', '=', 'loan_installments.loan_id')
             ->whereIn('loans.member_id', $group->members()->select('members.id'))
@@ -150,6 +150,7 @@ class GroupController extends Controller
             'overdueLoans' => $overdueLoans,
             'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get(),
             'visits' => $group->visits()->with('user')->latest('visit_date')->limit(10)->get(),
+            'collections' => $group->collections()->with('meeting')->latest('collection_date')->limit(10)->get(),
         ]);
     }
 
