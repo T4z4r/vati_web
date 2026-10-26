@@ -26,6 +26,10 @@ class Loan extends Model
             return LoanStatus::OVERDUE;
         }
 
+        if ($this->status !== LoanStatus::ACTIVE) {
+            return $this->status;
+        }
+
         $hasPastDueUnpaidRepayment = array_key_exists('has_past_due_unpaid_repayment', $this->attributes)
             ? (bool) $this->attributes['has_past_due_unpaid_repayment']
             : $this->installments()->unpaidPastDue()->exists();
@@ -37,15 +41,17 @@ class Loan extends Model
     {
         return $query->where(function (Builder $query) {
             $query->where('loans.status', LoanStatus::OVERDUE->value)
-                ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
+                ->orWhere(function (Builder $query) {
+                    $query->where('loans.status', LoanStatus::ACTIVE->value)
+                        ->whereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
+                });
         });
     }
 
     public function scopeActiveOrOverdue(Builder $query): Builder
     {
         return $query->where(function (Builder $query) {
-            $query->whereIn('loans.status', [LoanStatus::ACTIVE->value, LoanStatus::OVERDUE->value])
-                ->orWhereHas('installments', fn (Builder $installments) => $installments->unpaidPastDue());
+            $query->whereIn('loans.status', [LoanStatus::ACTIVE->value, LoanStatus::OVERDUE->value]);
         });
     }
 

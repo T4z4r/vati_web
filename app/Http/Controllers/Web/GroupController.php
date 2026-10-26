@@ -90,16 +90,7 @@ class GroupController extends Controller
         $nextCollection = LoanInstallment::query()
             ->join('loans', 'loans.id', '=', 'loan_installments.loan_id')
             ->whereIn('loans.member_id', $group->members()->select('members.id'))
-            ->where(function ($query) {
-                $query->whereIn('loans.status', ['active', 'overdue'])
-                    ->orWhereExists(fn ($installments) => $installments
-                        ->selectRaw('1')
-                        ->from('loan_installments as past_due_installments')
-                        ->whereColumn('past_due_installments.loan_id', 'loans.id')
-                        ->whereDate('past_due_installments.due_date', '<', today())
-                        ->whereNotIn('past_due_installments.status', ['paid', 'waived'])
-                        ->whereRaw('past_due_installments.total_due - past_due_installments.total_paid - past_due_installments.interest_exemption > 0'));
-            })
+            ->whereIn('loans.status', ['active', 'overdue'])
             ->whereNotIn('loan_installments.status', ['paid', 'waived'])
             ->whereRaw('total_due - total_paid - interest_exemption > 0')
             ->selectRaw('loans.member_id, due_date, SUM(total_due - total_paid - interest_exemption) as amount')
@@ -110,14 +101,10 @@ class GroupController extends Controller
             ->sum(fn ($dates) => (float) $dates->first()->amount);
         $members = $group->members()
             ->withCount([
-                'loans as current_loans_count' => fn ($query) => $query->where(fn ($query) => $query
-                    ->whereIn('status', ['pending_disbursement', 'active', 'overdue'])
-                    ->orWhereHas('installments', fn ($installments) => $installments->unpaidPastDue())),
+                'loans as current_loans_count' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
             ])
             ->withSum([
-                'loans as outstanding_loan_balance' => fn ($query) => $query->where(fn ($query) => $query
-                    ->whereIn('status', ['pending_disbursement', 'active', 'overdue'])
-                    ->orWhereHas('installments', fn ($installments) => $installments->unpaidPastDue())),
+                'loans as outstanding_loan_balance' => fn ($query) => $query->whereIn('status', ['pending_disbursement', 'active', 'overdue']),
             ], 'total_balance')
             ->addSelect(['next_repayment_date' => LoanInstallment::query()
                 ->selectRaw('MIN(due_date)')
@@ -125,7 +112,7 @@ class GroupController extends Controller
                 ->whereRaw('total_due - total_paid - interest_exemption > 0')
                 ->whereHas('loan', fn ($query) => $query
                     ->whereColumn('loans.member_id', 'members.id')
-                    ->activeOrOverdue())])
+                    ->whereIn('status', ['active', 'overdue']))])
             ->latest()
             ->limit(20)
             ->get();
