@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\LoanInstallment;
 use App\Models\MemberGroup;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\ExportService;
 use App\Services\GroupDeletionService;
@@ -128,6 +129,27 @@ class GroupController extends Controller
             ->with(['member', 'product'])
             ->latest()
             ->get();
+        $todayRepaymentQuery = LoanInstallment::query()
+            ->whereDate('due_date', today())
+            ->whereHas('loan', fn ($query) => $query
+                ->where('group_id', $group->id)
+                ->whereIn('status', ['active', 'overdue']));
+        $todayRepayments = (clone $todayRepaymentQuery)
+            ->with(['loan.member'])
+            ->orderBy('loan_id')
+            ->orderBy('installment_number')
+            ->get();
+        $todayExpected = (float) (clone $todayRepaymentQuery)->sum('total_due');
+        $todayInstallmentPaid = (float) (clone $todayRepaymentQuery)->sum('total_paid');
+        $todayOutstanding = (float) (clone $todayRepaymentQuery)
+            ->selectRaw('COALESCE(SUM(CASE WHEN total_due - total_paid - interest_exemption > 0
+                THEN total_due - total_paid - interest_exemption ELSE 0 END), 0) as total')
+            ->value('total');
+        $todayCollected = (float) Payment::query()
+            ->whereIn('loan_id', $group->loans()->select('id'))
+            ->where('status', 'posted')
+            ->whereBetween('paid_at', [today()->startOfDay(), today()->endOfDay()])
+            ->sum('amount');
 
         return view('admin.groups.show', [
             'group' => $group,
@@ -138,6 +160,11 @@ class GroupController extends Controller
             'applications' => $group->loanApplications()->with(['member', 'product'])->latest()->limit(10)->get(),
             'visits' => $group->visits()->with('user')->latest('visit_date')->limit(10)->get(),
             'collections' => $group->collections()->with('meeting')->latest('collection_date')->limit(10)->get(),
+            'todayRepayments' => $todayRepayments,
+            'todayExpected' => $todayExpected,
+            'todayInstallmentPaid' => $todayInstallmentPaid,
+            'todayOutstanding' => $todayOutstanding,
+            'todayCollected' => $todayCollected,
         ]);
     }
 

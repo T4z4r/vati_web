@@ -309,6 +309,66 @@
                     <h2>{{ __('Day collections') }}</h2>
                     <span class="badge">{{ $group->collections_count }}</span>
                 </div>
+                <div class="stats">
+                    <div class="stat">
+                        <small>{{ __('Expected today') }}</small>
+                        <strong>TZS {{ number_format($todayExpected, 2) }}</strong>
+                        <em>{{ number_format($todayRepayments->count()) }} {{ __('scheduled installments') }}</em>
+                    </div>
+                    <div class="stat">
+                        <small>{{ __('Collected today') }}</small>
+                        <strong>TZS {{ number_format($todayCollected, 2) }}</strong>
+                        <em>{{ __('Posted loan repayments') }}</em>
+                    </div>
+                    <div class="stat gold">
+                        <small>{{ __('Paid toward today’s installments') }}</small>
+                        <strong>TZS {{ number_format($todayInstallmentPaid, 2) }}</strong>
+                        <em>{{ __('Paid to date') }}</em>
+                    </div>
+                    <div class="stat danger">
+                        <small>{{ __('Outstanding due today') }}</small>
+                        <strong>TZS {{ number_format($todayOutstanding, 2) }}</strong>
+                        <em>{{ today()->format('d M Y') }}</em>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Member') }}</th>
+                                <th>{{ __('Loan') }}</th>
+                                <th>{{ __('Installment') }}</th>
+                                <th>{{ __('Expected') }}</th>
+                                <th>{{ __('Paid to date') }}</th>
+                                <th>{{ __('Outstanding') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($todayRepayments as $installment)
+                                @php($remaining = max(0, (float) $installment->total_due - (float) $installment->total_paid - (float) $installment->interest_exemption))
+                                <tr>
+                                    <td>
+                                        <a class="table-link" href="{{ route('admin.members.show', $installment->loan->member) }}">
+                                            {{ $installment->loan->member->first_name }} {{ $installment->loan->member->last_name }}
+                                        </a>
+                                    </td>
+                                    <td><a class="table-link" href="{{ route('admin.loans.show', $installment->loan) }}">{{ $installment->loan->loan_number }}</a></td>
+                                    <td>{{ $installment->installment_number }}</td>
+                                    <td class="money">TZS {{ number_format((float) $installment->total_due, 2) }}</td>
+                                    <td class="money">TZS {{ number_format((float) $installment->total_paid, 2) }}</td>
+                                    <td class="money">TZS {{ number_format($remaining, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty"><span class="ph ph-tray empty-icon" aria-hidden="true"></span>{{ __('No repayments are scheduled for this group today.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-head">
+                    <h3>{{ __('Recorded day collections') }}</h3>
+                </div>
                 <div class="table-wrap">
                     <table>
                         <thead>

@@ -11,6 +11,7 @@ use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\Member;
 use App\Models\MemberGroup;
+use App\Models\Payment;
 use App\Models\Region;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -334,6 +335,80 @@ class GroupShowPortfolioTest extends TestCase
             ->assertSee('TZS '.number_format(15000, 2))
             ->assertDontSee('999,000.00')
             ->assertViewHas('collections', fn ($collections) => $collections->count() === 1 && $collections->first()->is($collection));
+    }
+
+    public function test_group_day_collections_show_expected_due_today_and_posted_payments_today(): void
+    {
+        $member = $this->member($this->group, 'GP-M1', 'Asha', 'Musa', '255700111222');
+        $loan = $this->loan(
+            $this->group,
+            $member,
+            $this->application($this->group, $member, 'GP-APP-TODAY', 500000),
+            'GP-LN-TODAY',
+            500000,
+            400000
+        );
+        $loan->installments()->create([
+            'installment_number' => 1,
+            'due_date' => today(),
+            'total_due' => 50000,
+            'total_paid' => 10000,
+            'status' => 'partially_paid',
+        ]);
+        Payment::create([
+            'payment_number' => 'GP-PAY-TODAY',
+            'member_id' => $member->id,
+            'loan_id' => $loan->id,
+            'branch_id' => $this->group->branch_id,
+            'amount' => 15000,
+            'payment_method' => 'cash',
+            'paid_at' => now(),
+            'status' => 'posted',
+        ]);
+        Payment::create([
+            'payment_number' => 'GP-PAY-REVERSED',
+            'member_id' => $member->id,
+            'loan_id' => $loan->id,
+            'branch_id' => $this->group->branch_id,
+            'amount' => 8000,
+            'payment_method' => 'cash',
+            'paid_at' => now(),
+            'status' => 'reversed',
+        ]);
+
+        $otherMember = $this->member($this->otherGroup, 'GP-M2', 'Neema', 'Juma', '255700111223');
+        $otherLoan = $this->loan(
+            $this->otherGroup,
+            $otherMember,
+            $this->application($this->otherGroup, $otherMember, 'GP-APP-OTHER', 200000),
+            'GP-LN-OTHER',
+            200000,
+            200000
+        );
+        Payment::create([
+            'payment_number' => 'GP-PAY-OTHER',
+            'member_id' => $otherMember->id,
+            'loan_id' => $otherLoan->id,
+            'branch_id' => $this->otherGroup->branch_id,
+            'amount' => 99000,
+            'payment_method' => 'cash',
+            'paid_at' => now(),
+            'status' => 'posted',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.groups.show', $this->group->id))
+            ->assertOk()
+            ->assertViewHas('todayExpected', 50000.0)
+            ->assertViewHas('todayInstallmentPaid', 10000.0)
+            ->assertViewHas('todayOutstanding', 40000.0)
+            ->assertViewHas('todayCollected', 15000.0)
+            ->assertSee('GP-LN-TODAY')
+            ->assertSee('Asha Musa')
+            ->assertSee('TZS 50,000.00')
+            ->assertSee('TZS 15,000.00')
+            ->assertDontSee('GP-LN-OTHER')
+            ->assertDontSee('TZS 99,000.00');
     }
 
     public function test_the_loan_and_application_cards_stack_below_the_members_table_in_the_same_column(): void
